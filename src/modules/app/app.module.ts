@@ -12,11 +12,11 @@ import {
 import { ThrottlerModule } from '@nestjs/throttler';
 import { UserModule } from '@modules/users/user.module';
 import { AuthModule } from '@modules/auth/auth.module';
+import { GameModule } from '@modules/game/game.module';
 
 import { HppMiddleware } from '@middleware/hpp.middleware';
 import { User } from '@entities/user.entity';
-// import { Artist } from '@entities/artist.entity';
-// import { UserArtist } from '@entities/user-artist.entity';
+import { Game } from '@entities/game.entity';
 
 const options = databaseConfig as TypeOrmModuleOptions;
 
@@ -27,7 +27,7 @@ const options = databaseConfig as TypeOrmModuleOptions;
       limit: 10,
     }),
 
-    TypeOrmModule.forFeature([User]),
+    TypeOrmModule.forFeature([User, Game]),
 
     TypeOrmModule.forRoot({
       ...options,
@@ -44,6 +44,7 @@ const options = databaseConfig as TypeOrmModuleOptions;
 
     //other module
     UserModule,
+    GameModule,
     AuthModule,
   ],
   controllers: [AppController],
