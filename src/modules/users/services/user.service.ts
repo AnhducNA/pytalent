@@ -18,6 +18,10 @@ export class UserService {
     return userList;
   }
 
+  async findOne(id: number): Promise<User> {
+    return await this.usersRepository.findOneBy({ id });
+  }
+
   async checkOrCreateUser(params: FindUserInterface) {
     let user: User = await this.usersRepository.findOne({
       where: {

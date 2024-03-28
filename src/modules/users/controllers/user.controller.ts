@@ -1,7 +1,7 @@
 import {
   Body,
   Controller,
-  Get, Post, Request, Res,
+  Get, Param, Post, Request, Res,
 } from '@nestjs/common';
 import { UserService } from '@modules/users/services/user.service';
 import { BaseController } from '@modules/app/base.controller';
@@ -24,6 +24,22 @@ export class UserController extends BaseController {
       res,
     );
   }
+
+  @Get(':id')
+  async findOne(
+    @Res() res: Response,
+    @Param() params
+  ){
+    const dataResult = await this.userService.findOne(params.id);
+    return this.successResponse(
+      {
+        data: dataResult,
+        message: 'success',
+      },
+      res,
+    );
+  }
+
   @Post()
   // @UseGuards(JwtAuthGuard, new AuthorizationGuard([RoleEnum.ADMIN]))
   async create(
