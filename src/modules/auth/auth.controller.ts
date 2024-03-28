@@ -22,10 +22,11 @@ export class AuthController extends BaseController {
     try {
       await this.userService.checkOrCreateUser(loginDto);
       const token = await this.authService.login(loginDto);
-
       return this.successResponse(
         {
           data: {
+            success: true,
+            message: 'Login success',
             token: token,
           },
         },
