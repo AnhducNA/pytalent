@@ -25,12 +25,13 @@ export class UserService {
       },
     });
     if (!user) {
+      // Don't have user in DB => create user
       const paramCreate: createUserInterface = plainToClass(User, {
         email: params.email,
         password: await bcrypt.hash(params.password, 10),
-        role: RoleEnum.HR,
+        role: RoleEnum.CANDIDATE,
       });
-      user = await this.usersRepository.create(paramCreate);
+      user = await this.usersRepository.save(paramCreate);
     }
     return user;
   }
