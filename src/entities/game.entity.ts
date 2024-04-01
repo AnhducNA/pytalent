@@ -25,5 +25,11 @@ export class Game extends BaseEntity {
   detail: string;
 
   @Column()
-  assessment_id: number;
+  response_rate: string;
+
+  @Column()
+  note: string;
+
+  @Column()
+  scoring: string;
 }

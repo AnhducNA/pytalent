@@ -17,7 +17,7 @@ export class BaseController {
 
   public errorsResponse(result: ResponseInterface, @Res() res: Response) {
     const { data, message } = result;
-    return this.apiResponse(res, {
+    return res.status(HttpStatus.OK).json({
       status: false,
       data: data ?? {},
       message: message ?? 'errors',
