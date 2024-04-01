@@ -19,6 +19,8 @@ import { RolesDecorator } from '@shared/decorator/roles.decorator';
 import { RoleEnum } from '@enum/role.enum';
 import { AuthGuard } from '@guards/auth.guard';
 
+const currentdate = new Date();
+
 @Controller('api/assessments')
 export class AssessmentController extends BaseController {
   constructor(private readonly assessmentService: AssessmentService) {
@@ -34,16 +36,26 @@ export class AssessmentController extends BaseController {
   }
 
   @Get(':id')
+  @UseGuards(AuthGuard, RolesGuard)
+  @RolesDecorator(RoleEnum.HR)
   findOne(@Param() params) {
     return this.assessmentService.findOne(params.id);
   }
 
   @Post()
+  @UseGuards(AuthGuard, RolesGuard)
+  @RolesDecorator(RoleEnum.HR)
   async create(
     @Request() req,
     @Body() assessmentDto: object,
     @Res() res: Response,
   ) {
+    if (!assessmentDto['time_start']) {
+      assessmentDto['time_start'] = currentdate
+        .toJSON()
+        .slice(0, 19)
+        .replace('T', ':');
+    }
     const result = await this.assessmentService.create(assessmentDto);
     if (!result) {
       return this.errorsResponse(

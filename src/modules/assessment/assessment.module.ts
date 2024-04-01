@@ -9,9 +9,10 @@ import { AssessmentService } from './assessment.service';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { Assessment } from '@entities/assessment.entity';
 import { checkLogin } from '@middleware/authentication.middleware';
+import { AssessmentGame } from '@entities/assessmentGame.entity';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([Assessment])],
+  imports: [TypeOrmModule.forFeature([Assessment, AssessmentGame])],
   controllers: [AssessmentController],
   providers: [AssessmentService],
   exports: [AssessmentService],

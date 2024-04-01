@@ -2,12 +2,15 @@ import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Assessment } from '@entities/assessment.entity';
 import { DeleteResult, Repository, UpdateResult } from 'typeorm';
+import { AssessmentGame } from '@entities/assessmentGame.entity';
 
 @Injectable()
 export class AssessmentService {
   constructor(
     @InjectRepository(Assessment)
     private readonly assessmentRepository: Repository<Assessment>,
+    @InjectRepository(AssessmentGame)
+    private readonly assessmentGameRepository: Repository<AssessmentGame>,
   ) {}
 
   async findAll(): Promise<Assessment[]> {
@@ -19,7 +22,17 @@ export class AssessmentService {
   }
 
   async create(params: object) {
-    return await this.assessmentRepository.save(params);
+    const assessmentResult = await this.assessmentRepository.save(params);
+    if (params['game_id']) {
+      params['game_id'].map(async (game_id: string) => {
+        const paramsAssessmentGame = {
+          assessment_id: assessmentResult.id,
+          game_id: parseInt(game_id),
+        };
+        await this.assessmentGameRepository.save(paramsAssessmentGame);
+      });
+    }
+    return assessmentResult;
   }
 
   async update(user: Assessment): Promise<UpdateResult> {

@@ -7,18 +7,17 @@ export class Assessment extends BaseEntity {
   id: number;
 
   @Column()
+  name: string;
+
+  @Column()
   hr_id: number;
 
   @Column()
   candidate_id: number;
 
   @Column()
-  game_id: number;
-
-  @Column()
   time_start: Date;
 
   @Column()
   time_end: Date;
-
 }
