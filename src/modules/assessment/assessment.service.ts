@@ -2,7 +2,6 @@ import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Assessment } from '@entities/assessment.entity';
 import { DeleteResult, Repository, UpdateResult } from 'typeorm';
-import { CreateAssessmentDto } from '@modules/assessment/create-assessment.dto';
 
 @Injectable()
 export class AssessmentService {
@@ -19,9 +18,8 @@ export class AssessmentService {
     return await this.assessmentRepository.findOneBy({ id: id });
   }
 
-  async create(params: CreateAssessmentDto) {
-    console.log(params, 456);
-    // return await this.assessmentRepository.save(user);
+  async create(params: object) {
+    return await this.assessmentRepository.save(params);
   }
 
   async update(user: Assessment): Promise<UpdateResult> {

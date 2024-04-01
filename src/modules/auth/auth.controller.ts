@@ -1,4 +1,4 @@
-import { Controller, Post, Body, Res, HttpCode } from '@nestjs/common';
+import { Controller, Post, Body, Res } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { LoginDto } from '@modules/auth/dto/login.dto';
 import { BaseController } from '@modules/app/base.controller';
@@ -20,18 +20,31 @@ export class AuthController extends BaseController {
   @Post('login')
   async login(@Body() loginDto: LoginDto, @Res() res: Response) {
     try {
-      await this.userService.checkOrCreateUser(loginDto);
+      // await this.userService.checkOrCreateUser(loginDto);
       const token = await this.authService.login(loginDto);
-      return this.successResponse(
-        {
-          data: {
-            success: true,
-            message: 'Login success',
-            token: token,
+      if (token) {
+        return this.successResponse(
+          {
+            data: {
+              success: true,
+              message: 'Login success',
+              token: token,
+              data: loginDto,
+            },
           },
-        },
-        res,
-      );
+          res,
+        );
+      } else {
+        return this.errorsResponse(
+          {
+            data: {
+              success: false,
+              message: 'Login fail',
+            },
+          },
+          res,
+        );
+      }
     } catch (e) {
       logger.error('login errors: ' + e.message);
       throw new CustomizeException(

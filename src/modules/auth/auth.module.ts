@@ -14,6 +14,7 @@ import { AssessmentModule } from '@modules/assessment/assessment.module';
     AssessmentModule,
     PassportModule,
     JwtModule.register({
+      global: true,
       secret: env.jwt.secret,
       signOptions: { expiresIn: env.jwt.expires },
     }),
