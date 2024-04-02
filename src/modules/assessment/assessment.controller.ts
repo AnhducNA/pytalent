@@ -101,7 +101,27 @@ export class AssessmentController extends BaseController {
       );
     }
   }
-
+  @Put('invite-candidate')
+  @UseGuards(AuthGuard, RolesGuard)
+  @RolesDecorator(RoleEnum.HR)
+  async inviteCandidate(@Body() assessmentDto: object, @Res() res: Response) {
+    const result = await this.assessmentService.inviteCandidate(assessmentDto);
+    if (!result) {
+      return this.errorsResponse(
+        {
+          message: 'error',
+        },
+        res,
+      );
+    } else {
+      return this.successResponse(
+        {
+          message: 'success',
+        },
+        res,
+      );
+    }
+  }
   @Delete(':id')
   delete(@Param() params) {
     return this.assessmentService.delete(params.id);

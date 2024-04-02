@@ -1,8 +1,9 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Assessment } from '@entities/assessment.entity';
-import { DeleteResult, Repository, UpdateResult } from 'typeorm';
+import { DeleteResult, Repository } from 'typeorm';
 import { AssessmentGame } from '@entities/assessmentGame.entity';
+import { AssessmentCandidate } from '@entities/assessmentCandidate.entity';
 
 @Injectable()
 export class AssessmentService {
@@ -11,6 +12,8 @@ export class AssessmentService {
     private readonly assessmentRepository: Repository<Assessment>,
     @InjectRepository(AssessmentGame)
     private readonly assessmentGameRepository: Repository<AssessmentGame>,
+    @InjectRepository(AssessmentCandidate)
+    private readonly assessmentCandidateRepository: Repository<AssessmentCandidate>,
   ) {}
 
   async findAll(): Promise<Assessment[]> {
@@ -82,6 +85,29 @@ export class AssessmentService {
       });
     }
     return assessmentResult;
+  }
+
+  async inviteCandidate(params: object) {
+    if (params['candidate_id']) {
+      params['candidate_id'].map(async (candidate_id: string) => {
+        const paramsAssessmentCandidate = {
+          assessment_id: params['id'],
+          candidate_id: parseInt(candidate_id),
+        };
+        await this.assessmentCandidateRepository
+          .createQueryBuilder()
+          .delete()
+          .from(AssessmentCandidate)
+          .where(
+            `assessment_id = ${paramsAssessmentCandidate.assessment_id} && candidate_id = ${paramsAssessmentCandidate.candidate_id}`,
+          )
+          .execute();
+        await this.assessmentCandidateRepository.save(
+          paramsAssessmentCandidate,
+        );
+      });
+    }
+    return params;
   }
 
   async delete(id): Promise<DeleteResult> {
