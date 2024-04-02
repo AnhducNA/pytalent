@@ -75,8 +75,31 @@ export class AssessmentController extends BaseController {
   }
 
   @Put()
-  update(@Body() assessment: Assessment) {
-    return this.assessmentService.update(assessment);
+  @UseGuards(AuthGuard, RolesGuard)
+  @RolesDecorator(RoleEnum.HR)
+  async update(@Body() assessmentDto: any, @Res() res: Response) {
+    if (!assessmentDto['time_start']) {
+      assessmentDto['time_start'] = currentdate
+        .toJSON()
+        .slice(0, 19)
+        .replace('T', ':');
+    }
+    const result = await this.assessmentService.update(assessmentDto);
+    if (!result) {
+      return this.errorsResponse(
+        {
+          message: 'error',
+        },
+        res,
+      );
+    } else {
+      return this.successResponse(
+        {
+          message: 'success',
+        },
+        res,
+      );
+    }
   }
 
   @Delete(':id')
