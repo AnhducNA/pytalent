@@ -78,7 +78,7 @@ export class AssessmentService {
           .delete()
           .from(AssessmentGame)
           .where(
-            `assessment_id = ${paramsAssessmentGame.assessment_id} && game_id = ${paramsAssessmentGame.game_id}`,
+            `assessment_id = ${paramsAssessmentGame.assessment_id} AND game_id = ${paramsAssessmentGame.game_id}`,
           )
           .execute();
         await this.assessmentGameRepository.save(paramsAssessmentGame);
@@ -99,7 +99,7 @@ export class AssessmentService {
           .delete()
           .from(AssessmentCandidate)
           .where(
-            `assessment_id = ${paramsAssessmentCandidate.assessment_id} && candidate_id = ${paramsAssessmentCandidate.candidate_id}`,
+            `assessment_id = ${paramsAssessmentCandidate.assessment_id} AND candidate_id = ${paramsAssessmentCandidate.candidate_id}`,
           )
           .execute();
         await this.assessmentCandidateRepository.save(
@@ -111,6 +111,25 @@ export class AssessmentService {
   }
 
   async delete(id): Promise<DeleteResult> {
+    // delete assessment_candidate
+    await this.assessmentCandidateRepository
+      .createQueryBuilder()
+      .delete()
+      .from(AssessmentCandidate)
+      .where(
+        `assessment_id = ${id}`,
+      )
+      .execute();
+    // delete assessment_game
+    await this.assessmentGameRepository
+      .createQueryBuilder()
+      .delete()
+      .from(AssessmentGame)
+      .where(
+        `assessment_id = ${id} `,
+      )
+      .execute();
+    // delete assessment
     return await this.assessmentRepository.delete(id);
   }
 }

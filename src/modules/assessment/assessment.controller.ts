@@ -123,7 +123,25 @@ export class AssessmentController extends BaseController {
     }
   }
   @Delete(':id')
-  delete(@Param() params) {
-    return this.assessmentService.delete(params.id);
+  @UseGuards(AuthGuard, RolesGuard)
+  @RolesDecorator(RoleEnum.HR)
+  async delete(@Param() params: { id: ':id' }, @Res() res: Response) {
+    const result = await this.assessmentService.delete(params.id);
+    console.log(result, result.raw);
+    if (!result) {
+      return this.errorsResponse(
+        {
+          message: 'error',
+        },
+        res,
+      );
+    } else {
+      return this.successResponse(
+        {
+          message: 'success',
+        },
+        res,
+      );
+    }
   }
 }
