@@ -127,18 +127,17 @@ export class AssessmentController extends BaseController {
   @RolesDecorator(RoleEnum.HR)
   async delete(@Param() params: { id: ':id' }, @Res() res: Response) {
     const result = await this.assessmentService.delete(params.id);
-    console.log(result, result.raw);
-    if (!result) {
-      return this.errorsResponse(
+    if (result?.affected > 0) {
+      return this.successResponse(
         {
-          message: 'error',
+          message: 'success',
         },
         res,
       );
     } else {
-      return this.successResponse(
+      return this.errorsResponse(
         {
-          message: 'success',
+          message: 'error',
         },
         res,
       );

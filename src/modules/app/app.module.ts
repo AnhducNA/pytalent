@@ -17,6 +17,10 @@ import { GameModule } from '@modules/game/game.module';
 import { HppMiddleware } from '@middleware/hpp.middleware';
 import { User } from '@entities/user.entity';
 import { Game } from '@entities/game.entity';
+import { AssessmentModule } from '@modules/assessment/assessment.module';
+import { Assessment } from '@entities/assessment.entity';
+import { GameResult } from '@entities/gameResult.entity';
+import { GameResultModule } from '@modules/game_result/gameResult.module';
 
 const options = databaseConfig as TypeOrmModuleOptions;
 
@@ -27,7 +31,7 @@ const options = databaseConfig as TypeOrmModuleOptions;
       limit: 10,
     }),
 
-    TypeOrmModule.forFeature([User, Game]),
+    TypeOrmModule.forFeature([User, Game, Assessment, GameResult]),
 
     TypeOrmModule.forRoot({
       ...options,
@@ -46,6 +50,8 @@ const options = databaseConfig as TypeOrmModuleOptions;
     UserModule,
     GameModule,
     AuthModule,
+    AssessmentModule,
+    GameResultModule,
   ],
   controllers: [AppController],
   providers: [AppService],
