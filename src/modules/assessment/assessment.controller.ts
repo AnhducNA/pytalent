@@ -19,9 +19,10 @@ import { RolesDecorator } from '@shared/decorator/roles.decorator';
 import { RoleEnum } from '@enum/role.enum';
 import { AuthGuard } from '@guards/auth.guard';
 
-const currentdate = new Date();
+const currentDate = new Date();
 
 @Controller('api/assessments')
+@UseGuards(AuthGuard)
 export class AssessmentController extends BaseController {
   constructor(private readonly assessmentService: AssessmentService) {
     super();
@@ -29,15 +30,15 @@ export class AssessmentController extends BaseController {
 
   //get all assessments
   @Get()
-  @UseGuards(AuthGuard, RolesGuard)
-  @RolesDecorator(RoleEnum.HR)
+  @UseGuards(RolesGuard)
+  @RolesDecorator(RoleEnum.ADMIN, RoleEnum.HR)
   findAll(): Promise<Assessment[]> {
     return this.assessmentService.findAll();
   }
 
   @Get(':id')
   @UseGuards(AuthGuard, RolesGuard)
-  @RolesDecorator(RoleEnum.HR)
+  @RolesDecorator(RoleEnum.ADMIN, RoleEnum.HR)
   findOne(@Param() params) {
     return this.assessmentService.findOne(params.id);
   }
@@ -51,7 +52,7 @@ export class AssessmentController extends BaseController {
     @Res() res: Response,
   ) {
     if (!assessmentDto['time_start']) {
-      assessmentDto['time_start'] = currentdate
+      assessmentDto['time_start'] = currentDate
         .toJSON()
         .slice(0, 19)
         .replace('T', ':');
@@ -79,7 +80,7 @@ export class AssessmentController extends BaseController {
   @RolesDecorator(RoleEnum.HR)
   async update(@Body() assessmentDto: any, @Res() res: Response) {
     if (!assessmentDto['time_start']) {
-      assessmentDto['time_start'] = currentdate
+      assessmentDto['time_start'] = currentDate
         .toJSON()
         .slice(0, 19)
         .replace('T', ':');

@@ -13,9 +13,6 @@ export class Assessment extends BaseEntity {
   hr_id: number;
 
   @Column()
-  candidate_id: number;
-
-  @Column()
   time_start: Date;
 
   @Column()

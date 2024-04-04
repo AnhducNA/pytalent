@@ -53,12 +53,11 @@ const options = databaseConfig as TypeOrmModuleOptions;
     AuthModule,
     AssessmentModule,
     GameResultModule,
-    GamePlayingModule
+    GamePlayingModule,
   ],
   controllers: [AppController],
   providers: [AppService],
 })
-
 export class AppModule implements NestModule {
   configure(consumer: MiddlewareConsumer) {
     consumer.apply(HppMiddleware).forRoutes('*');
