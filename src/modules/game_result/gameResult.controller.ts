@@ -1,7 +1,7 @@
 import {
   Body,
   Controller,
-  Get,
+  Get, HttpStatus,
   Param,
   Post,
   Request,
@@ -22,10 +22,52 @@ export class GameResultController extends BaseController {
     super();
   }
 
+  private timeStart: any;
+
+  @Post('start')
+  async startPlayGame(
+    @Body() gameResultDto: {
+      candidate_id: number, assessment_id: number, game_id: number,
+      play_time: 0, play_score: 0, is_done: false
+    },
+    @Res() res: Response,
+  ) {
+    try {
+      this.timeStart = Date.now();
+      // await this.gameResultService.create(gameResultDto);
+      return res.status(HttpStatus.OK).json({
+        message: 'Add data success',
+      });
+    } catch (e) {
+      console.log(e.message);
+    }
+  }
+
+  @Post('playing-logical')
+  async playingLogicalGame(@Body() logicalResultDto: object, @Res() res: Response) {
+    if (!this.timeStart) {
+      return res.status(HttpStatus.OK).json({
+        success: false,
+        message: 'You need to start game!',
+      });
+    } else {
+      const time_play = Date.now() - this.timeStart;
+      console.log(time_play);
+      try {
+        // await this.gameResultService.create(gameResultDto);
+        // console.log(logicalResultDto);
+        return res.status(HttpStatus.OK).json({
+          message: 'Add data success',
+        });
+      } catch (e) {
+        console.log(e.message);
+      }
+    }
+  }
+
   //get all game_result
   @Get()
   @UseGuards(AuthGuard)
-  @Get()
   findAll() {
     return this.gameResultService.findAll();
   }

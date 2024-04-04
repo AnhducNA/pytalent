@@ -10,6 +10,9 @@ export class GameResult extends BaseEntity {
   candidate_id: number;
 
   @Column()
+  assessment_id: number;
+
+  @Column()
   game_id: number;
 
   @Column()

@@ -20,12 +20,12 @@ export class GameResultService {
 
   async create(params: object) {
     const payloadGameResult = {
-      id: params['id'],
-      assessment_id: params['assessment_id'],
       candidate_id: params['candidate_id'],
+      assessment_id: params['assessment_id'],
       game_id: params['game_id'],
       play_time: params['play_time'],
       play_score: params['play_score'],
+      is_done: params['is_done'],
     };
     return await this.gameResultRepository.save(payloadGameResult);
   }
