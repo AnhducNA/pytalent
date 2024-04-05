@@ -2,13 +2,17 @@ import { Injectable } from '@nestjs/common';
 import { Repository } from 'typeorm';
 import { Game } from '@entities/game.entity';
 import { InjectRepository } from '@nestjs/typeorm';
+import { LogicalGame } from '@entities/logicalGame.entity';
 
 @Injectable()
 export class GameService {
   constructor(
     @InjectRepository(Game)
     private gameRepository: Repository<Game>,
+    @InjectRepository(LogicalGame)
+    private logicalGameRepository: Repository<LogicalGame>,
   ) {}
+
   async findAll() {
     return await this.gameRepository.find();
   }
@@ -17,6 +21,7 @@ export class GameService {
     const game = await this.gameRepository.findOneBy({ id });
     return game;
   }
+
   async checkOrCreateGame(params: any) {
     let game = await this.gameRepository.findOne({
       where: {
@@ -28,5 +33,9 @@ export class GameService {
       game = await this.gameRepository.save(params);
     }
     return game;
+  }
+
+  async findLogicalGameById(id: number) {
+    return await this.logicalGameRepository.findOneBy({ id });
   }
 }

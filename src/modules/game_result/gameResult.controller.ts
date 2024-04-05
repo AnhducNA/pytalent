@@ -17,10 +17,14 @@ import { RolesGuard } from '@guards/roles.guard';
 import { RolesDecorator } from '@shared/decorator/roles.decorator';
 import { RoleEnum } from '@enum/role.enum';
 import { Response } from 'express';
+import { GameService } from '@modules/game/game.service';
 
 @Controller('api/game-result')
 export class GameResultController extends BaseController {
-  constructor(private readonly gameResultService: GameResultService) {
+  constructor(
+    private readonly gameResultService: GameResultService,
+    private readonly gameService: GameService,
+  ) {
     super();
   }
 
@@ -50,8 +54,8 @@ export class GameResultController extends BaseController {
       gameResultDto.is_done = gameResultDto.is_done
         ? gameResultDto.is_done
         : false;
-      // const dataNew = await this.gameResultService.create(gameResultDto);
-      const dataNew = gameResultDto;
+      const dataNew = await this.gameResultService.create(gameResultDto);
+      // const dataNew = gameResultDto;
       return res.status(HttpStatus.OK).json({
         message: 'Start play game success',
         data: dataNew,
@@ -79,15 +83,33 @@ export class GameResultController extends BaseController {
     } else {
       const play_time = Date.now() - this.timeStart;
       try {
-        await this.gameResultService.updateGameResultPlayTime({
+        const gameResultData = await this.gameResultService.findOne(
+          logicalGameResultDto.game_result_id,
+        );
+        // check answer of user to + score
+        let play_score = gameResultData.play_score;
+        const logicalGameData = await this.gameService.findLogicalGameById(
+          logicalGameResultDto.logical_game_id,
+        );
+        if (logicalGameResultDto.answer === logicalGameData.correct_answer) {
+          play_score += logicalGameData.score;
+        }
+        // updateGameResult
+        await this.gameResultService.updateGameResult({
           id: logicalGameResultDto.game_result_id,
+          candidate_id: gameResultData.candidate_id,
+          assessment_id: gameResultData.assessment_id,
+          game_id: gameResultData.game_id,
           play_time: play_time,
+          play_score: play_score,
+          is_done: gameResultData.is_done,
         });
+        // createLogicalGameResult
         await this.gameResultService.createLogicalGameResult(
           logicalGameResultDto,
         );
         return res.status(HttpStatus.OK).json({
-          message: 'Add data success',
+          message: 'Add logicalGameResult success',
         });
       } catch (e) {
         console.log(e.message);

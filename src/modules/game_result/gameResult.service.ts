@@ -11,8 +11,7 @@ export class GameResultService {
     private gameResultRepository: Repository<GameResult>,
     @InjectRepository(LogicalGameResult)
     private logicalGameResultRepository: Repository<LogicalGameResult>,
-  ) {
-  }
+  ) {}
 
   async findAll() {
     return await this.gameResultRepository.find();
@@ -50,11 +49,15 @@ export class GameResultService {
       .where('id = :id', { id: payload.id })
       .execute();
   }
-  async updateGameResultPlayTime(payload: { id: number; play_time: number }) {
+  async updateGameResultPlayTimeAndScore(payload: {
+    id: number;
+    play_time: number;
+    play_score: number;
+  }) {
     return this.gameResultRepository
       .createQueryBuilder()
       .update(GameResult)
-      .set({ play_time: payload.play_time })
+      .set({ play_time: payload.play_time, play_score: payload.play_score })
       .where('id = :id', { id: payload.id })
       .execute();
   }
