@@ -2,25 +2,16 @@ import { Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
 import { BaseEntity } from '@entities/base.entity';
 
 @Entity()
-export class GameResult extends BaseEntity {
+export class LogicalGameResult extends BaseEntity {
   @PrimaryGeneratedColumn('increment')
   id: number;
 
   @Column()
-  candidate_id: number;
+  game_result_id: number;
 
   @Column()
-  assessment_id: number;
+  logical_game_id: number;
 
   @Column()
-  game_id: number;
-
-  @Column()
-  play_time: number;
-
-  @Column()
-  play_score: number;
-
-  @Column()
-  is_done: boolean;
+  answer: boolean;
 }

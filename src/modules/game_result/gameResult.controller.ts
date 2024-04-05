@@ -1,9 +1,11 @@
 import {
   Body,
   Controller,
-  Get, HttpStatus,
+  Get,
+  HttpStatus,
   Param,
   Post,
+  Put,
   Request,
   Res,
   UseGuards,
@@ -26,17 +28,33 @@ export class GameResultController extends BaseController {
 
   @Post('start')
   async startPlayGame(
-    @Body() gameResultDto: {
-      candidate_id: number, assessment_id: number, game_id: number,
-      play_time: 0, play_score: 0, is_done: false
+    @Body()
+    gameResultDto: {
+      candidate_id: number;
+      assessment_id: number;
+      game_id: number;
+      play_time: 0;
+      play_score: 0;
+      is_done: false;
     },
     @Res() res: Response,
   ) {
     try {
       this.timeStart = Date.now();
-      // await this.gameResultService.create(gameResultDto);
+      gameResultDto.play_time = gameResultDto.play_time
+        ? gameResultDto.play_time
+        : 0;
+      gameResultDto.play_score = gameResultDto.play_score
+        ? gameResultDto.play_score
+        : 0;
+      gameResultDto.is_done = gameResultDto.is_done
+        ? gameResultDto.is_done
+        : false;
+      // const dataNew = await this.gameResultService.create(gameResultDto);
+      const dataNew = gameResultDto;
       return res.status(HttpStatus.OK).json({
-        message: 'Add data success',
+        message: 'Start play game success',
+        data: dataNew,
       });
     } catch (e) {
       console.log(e.message);
@@ -44,24 +62,76 @@ export class GameResultController extends BaseController {
   }
 
   @Post('playing-logical')
-  async playingLogicalGame(@Body() logicalResultDto: object, @Res() res: Response) {
+  async playingLogicalGame(
+    @Body()
+    logicalGameResultDto: {
+      game_result_id: number;
+      logical_game_id: number;
+      answer: boolean;
+    },
+    @Res() res: Response,
+  ) {
     if (!this.timeStart) {
       return res.status(HttpStatus.OK).json({
         success: false,
         message: 'You need to start game!',
       });
     } else {
-      const time_play = Date.now() - this.timeStart;
-      console.log(time_play);
+      const play_time = Date.now() - this.timeStart;
       try {
-        // await this.gameResultService.create(gameResultDto);
-        // console.log(logicalResultDto);
+        await this.gameResultService.updateGameResultPlayTime({
+          id: logicalGameResultDto.game_result_id,
+          play_time: play_time,
+        });
+        await this.gameResultService.createLogicalGameResult(
+          logicalGameResultDto,
+        );
         return res.status(HttpStatus.OK).json({
           message: 'Add data success',
         });
       } catch (e) {
         console.log(e.message);
       }
+    }
+  }
+
+  @Put('end')
+  async endPlayGame(
+    @Body()
+    gameResultDto: {
+      id: number;
+      candidate_id: number;
+      assessment_id: number;
+      game_id: number;
+      play_time: number;
+      play_score: number;
+      is_done: true;
+    },
+    @Res() res: Response,
+  ) {
+    try {
+      if (!this.timeStart) {
+        return res.status(HttpStatus.OK).json({
+          success: false,
+          message: 'You need to start game!',
+        });
+      } else {
+        const play_time = Date.now() - this.timeStart;
+        gameResultDto.play_time = play_time;
+      }
+      gameResultDto.is_done = gameResultDto.is_done
+        ? gameResultDto.is_done
+        : true;
+      const dataNew = await this.gameResultService.updateGameResult(
+        gameResultDto,
+      );
+      // const dataNew = gameResultDto;
+      return res.status(HttpStatus.OK).json({
+        message: 'End play game success',
+        data: dataNew,
+      });
+    } catch (e) {
+      console.log(e.message);
     }
   }
 
