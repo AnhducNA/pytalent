@@ -43,18 +43,18 @@ export class GameService {
   }
 
   async createLogicalGame(params: {
-    question: string,
-    answer: string,
-    correct_answer: string,
-    score: number,
+    question: string;
+    answer: string;
+    correct_answer: string;
+    score: number;
   }) {
     return await this.logicalGameRepository.save(params);
   }
 
   async createMemoryGame(params: {
-    level: number,
-    correct_answer: string,
-    score: number,
+    level: number;
+    correct_answer: string;
+    score: number;
   }) {
     return await this.memoryGameRepository.save(params);
   }

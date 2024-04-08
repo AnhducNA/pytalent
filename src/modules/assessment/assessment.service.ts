@@ -116,18 +116,14 @@ export class AssessmentService {
       .createQueryBuilder()
       .delete()
       .from(AssessmentCandidate)
-      .where(
-        `assessment_id = ${id}`,
-      )
+      .where(`assessment_id = ${id}`)
       .execute();
     // delete assessment_game
     await this.assessmentGameRepository
       .createQueryBuilder()
       .delete()
       .from(AssessmentGame)
-      .where(
-        `assessment_id = ${id} `,
-      )
+      .where(`assessment_id = ${id} `)
       .execute();
     // delete assessment
     return await this.assessmentRepository.delete(id);

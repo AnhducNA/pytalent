@@ -13,4 +13,7 @@ export interface FindAssessmentInterface {
 }
 export interface createAssessmentInterface extends FindAssessmentInterface {}
 
-export type AssessmentGetResponse = Omit<AssessmentModel, 'hr_id' | 'candidate_id' | 'game_id' | 'result_player'>;
+export type AssessmentGetResponse = Omit<
+  AssessmentModel,
+  'hr_id' | 'candidate_id' | 'game_id' | 'result_player'
+>;

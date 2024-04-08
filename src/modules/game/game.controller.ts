@@ -63,12 +63,16 @@ export class GameController extends BaseController {
   }
 
   @Post('create-logical-game')
-  async createLogicalGame(@Body() logicalGameDto: {
-    question: string,
-    answer: any,
-    correct_answer: string,
-    score: number,
-  }, @Res() res: Response) {
+  async createLogicalGame(
+    @Body()
+    logicalGameDto: {
+      question: string;
+      answer: any;
+      correct_answer: string;
+      score: number;
+    },
+    @Res() res: Response,
+  ) {
     // convert object to JSON
     logicalGameDto.answer = JSON.stringify(logicalGameDto.answer);
     const result = await this.gameService.createLogicalGame(logicalGameDto);
@@ -80,11 +84,15 @@ export class GameController extends BaseController {
     );
   }
   @Post('create-memory-game')
-  async createMemoryLogicalGame(@Body() memoryGameDto: {
-    level: number,
-    correct_answer: string,
-    score: number,
-  }, @Res() res: Response) {
+  async createMemoryLogicalGame(
+    @Body()
+    memoryGameDto: {
+      level: number;
+      correct_answer: string;
+      score: number;
+    },
+    @Res() res: Response,
+  ) {
     // convert object to JSON
     memoryGameDto.correct_answer = JSON.stringify(memoryGameDto.correct_answer);
     const result = await this.gameService.createMemoryGame(memoryGameDto);
