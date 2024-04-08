@@ -61,11 +61,11 @@ export class GameResultService {
       .where('id = :id', { id: payload.id })
       .execute();
   }
-
   async createLogicalGameResult(payload: {
     game_result_id: number;
     logical_game_id: number;
-    answer: boolean;
+    answer_play: string;
+    is_correct: boolean;
   }) {
     return await this.logicalGameResultRepository.save(payload);
   }
