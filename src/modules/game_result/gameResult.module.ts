@@ -7,6 +7,7 @@ import { LogicalGameResult } from '@entities/logicalGameResult.entity';
 import { GameService } from '@modules/game/game.service';
 import { Game } from '@entities/game.entity';
 import { LogicalGame } from '@entities/logicalGame.entity';
+import { MemoryGame } from '@entities/memoryGame.entity';
 
 @Module({
   imports: [
@@ -15,6 +16,7 @@ import { LogicalGame } from '@entities/logicalGame.entity';
       LogicalGameResult,
       Game,
       LogicalGame,
+      MemoryGame,
     ]),
   ],
   controllers: [GameResultController],

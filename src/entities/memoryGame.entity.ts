@@ -11,7 +11,7 @@ export class MemoryGame extends BaseEntity {
   level: number;
 
   @Column()
-  data: string;
+  correct_answer: string;
 
   @Column()
   score: number;

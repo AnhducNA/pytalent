@@ -3,6 +3,7 @@ import { Repository } from 'typeorm';
 import { Game } from '@entities/game.entity';
 import { InjectRepository } from '@nestjs/typeorm';
 import { LogicalGame } from '@entities/logicalGame.entity';
+import { MemoryGame } from '@entities/memoryGame.entity';
 
 @Injectable()
 export class GameService {
@@ -11,6 +12,8 @@ export class GameService {
     private gameRepository: Repository<Game>,
     @InjectRepository(LogicalGame)
     private logicalGameRepository: Repository<LogicalGame>,
+    @InjectRepository(MemoryGame)
+    private memoryGameRepository: Repository<MemoryGame>,
   ) {}
 
   async findAll() {
@@ -37,5 +40,22 @@ export class GameService {
 
   async findLogicalGameById(id: number) {
     return await this.logicalGameRepository.findOneBy({ id });
+  }
+
+  async createLogicalGame(params: {
+    question: string,
+    answer: string,
+    correct_answer: string,
+    score: number,
+  }) {
+    return await this.logicalGameRepository.save(params);
+  }
+
+  async createMemoryGame(params: {
+    level: number,
+    correct_answer: string,
+    score: number,
+  }) {
+    return await this.memoryGameRepository.save(params);
   }
 }
