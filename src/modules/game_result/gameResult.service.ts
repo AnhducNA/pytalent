@@ -2,7 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { GameResult } from '@entities/gameResult.entity';
-import { LogicalGameResult } from '@entities/LogicalGameResult.entity';
+import { LogicalGameResult } from '@entities/logicalGameResult.entity';
 
 @Injectable()
 export class GameResultService {
@@ -68,5 +68,12 @@ export class GameResultService {
     answer: boolean;
   }) {
     return await this.logicalGameResultRepository.save(payload);
+  }
+  async createMemoryGameResult(payload: {
+    game_result_id: number;
+    memory_game_id: number;
+    answer: any;
+  }) {
+    // return await this.logicalGameResultRepository.save(payload);
   }
 }
