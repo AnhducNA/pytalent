@@ -42,6 +42,10 @@ export class GameService {
     return await this.logicalGameRepository.findOneBy({ id });
   }
 
+  async findMemoryGameById(id: number) {
+    return await this.memoryGameRepository.findOneBy({ id });
+  }
+
   async createLogicalGame(params: {
     question: string;
     answer: string;

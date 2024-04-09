@@ -3,6 +3,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { GameResult } from '@entities/gameResult.entity';
 import { LogicalGameResult } from '@entities/logicalGameResult.entity';
+import { MemoryGameResult } from '@entities/memoryGameResult.entity';
 
 @Injectable()
 export class GameResultService {
@@ -11,6 +12,8 @@ export class GameResultService {
     private gameResultRepository: Repository<GameResult>,
     @InjectRepository(LogicalGameResult)
     private logicalGameResultRepository: Repository<LogicalGameResult>,
+    @InjectRepository(MemoryGameResult)
+    private memoryGameResultRepository: Repository<MemoryGameResult>,
   ) {}
 
   async findAll() {
@@ -72,8 +75,9 @@ export class GameResultService {
   async createMemoryGameResult(payload: {
     game_result_id: number;
     memory_game_id: number;
-    answer: any;
+    answer_play: string;
+    is_correct: boolean;
   }) {
-    // return await this.logicalGameResultRepository.save(payload);
+    return await this.memoryGameResultRepository.save(payload);
   }
 }

@@ -18,6 +18,7 @@ import { RolesDecorator } from '@shared/decorator/roles.decorator';
 import { RoleEnum } from '@enum/role.enum';
 import { Response } from 'express';
 import { GameService } from '@modules/game/game.service';
+import { arraysEqual } from '@helper/function';
 
 @Controller('api/game-result')
 export class GameResultController extends BaseController {
@@ -55,8 +56,8 @@ export class GameResultController extends BaseController {
       gameResultDto.is_done = gameResultDto.is_done
         ? gameResultDto.is_done
         : false;
-      const dataNew = await this.gameResultService.create(gameResultDto);
-      // const dataNew = gameResultDto;
+      // const dataNew = await this.gameResultService.create(gameResultDto);
+      const dataNew = gameResultDto;
       return res.status(HttpStatus.OK).json({
         message: 'Start play game success',
         data: dataNew,
@@ -130,8 +131,9 @@ export class GameResultController extends BaseController {
     @Body()
     memoryGameResultDto: {
       game_result_id: number;
-      logical_game_id: number;
-      answer: boolean;
+      memory_game_id: number;
+      answer_play: string;
+      is_correct: boolean;
     },
     @Res() res: Response,
   ) {
@@ -142,39 +144,53 @@ export class GameResultController extends BaseController {
       });
     } else {
       const play_time = Date.now() - this.timeStart;
-      console.log(memoryGameResultDto);
-      //   try {
-      //     const gameResultData = await this.gameResultService.findOne(
-      //       logicalGameResultDto.game_result_id,
-      //     );
-      //     // check answer of user to + score
-      //     let play_score = gameResultData.play_score;
-      //     const logicalGameData = await this.gameService.findLogicalGameById(
-      //       logicalGameResultDto.logical_game_id,
-      //     );
-      //     if (logicalGameResultDto.answer === logicalGameData.correct_answer) {
-      //       play_score += logicalGameData.score;
-      //     }
-      //     // updateGameResult
-      //     await this.gameResultService.updateGameResult({
-      //       id: logicalGameResultDto.game_result_id,
-      //       candidate_id: gameResultData.candidate_id,
-      //       assessment_id: gameResultData.assessment_id,
-      //       game_id: gameResultData.game_id,
-      //       play_time: play_time,
-      //       play_score: play_score,
-      //       is_done: gameResultData.is_done,
-      //     });
-      //     // createLogicalGameResult
-      //     await this.gameResultService.createLogicalGameResult(
-      //       logicalGameResultDto,
-      //     );
-      //     return res.status(HttpStatus.OK).json({
-      //       message: 'Add logicalGameResult success',
-      //     });
-      //   } catch (e) {
-      //     console.log(e.message);
-      //   }
+      try {
+        const gameResultData = await this.gameResultService.findOne(
+          memoryGameResultDto.game_result_id,
+        );
+        let play_score = gameResultData.play_score;
+        const memoryGameData = await this.gameService.findMemoryGameById(
+          memoryGameResultDto.memory_game_id,
+        );
+        // parser JSON for correct_answer of memoryGame
+        memoryGameData.correct_answer = memoryGameData
+          ? JSON.parse(memoryGameData.correct_answer)
+          : '';
+        // Check answer_play is true
+        if (
+          arraysEqual(
+            memoryGameResultDto.answer_play,
+            memoryGameData.correct_answer,
+          ) === true
+        ) {
+          memoryGameResultDto.is_correct = true;
+          play_score += memoryGameData.score;
+        } else {
+          memoryGameResultDto.is_correct = false;
+        }
+        // updateGameResult
+        await this.gameResultService.updateGameResult({
+          id: memoryGameResultDto.game_result_id,
+          candidate_id: gameResultData.candidate_id,
+          assessment_id: gameResultData.assessment_id,
+          game_id: gameResultData.game_id,
+          play_time: play_time,
+          play_score: play_score,
+          is_done: gameResultData.is_done,
+        });
+        // createLogicalGameResult
+        await this.gameResultService.createMemoryGameResult({
+          game_result_id: memoryGameResultDto.game_result_id,
+          memory_game_id: memoryGameResultDto.memory_game_id,
+          answer_play: JSON.stringify(memoryGameResultDto.answer_play),
+          is_correct: memoryGameResultDto.is_correct,
+        });
+        return res.status(HttpStatus.OK).json({
+          message: 'Add logicalGameResult success',
+        });
+      } catch (e) {
+        console.log(e.message);
+      }
     }
   }
 
