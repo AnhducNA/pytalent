@@ -1,15 +1,4 @@
-import {
-  Body,
-  Controller,
-  Get,
-  HttpStatus,
-  Param,
-  Post,
-  Put,
-  Request,
-  Res,
-  UseGuards,
-} from '@nestjs/common';
+import { Body, Controller, Get, HttpStatus, Param, Post, Put, Request, Res, UseGuards } from '@nestjs/common';
 import { BaseController } from '@modules/app/base.controller';
 import { GameResultService } from '@modules/game_result/gameResult.service';
 import { AuthGuard } from '@guards/auth.guard';
@@ -46,6 +35,7 @@ export class GameResultController extends BaseController {
     @Res() res: Response,
   ) {
     try {
+      // Default value before start
       this.timeStart = Date.now();
       gameResultDto.play_time = gameResultDto.play_time
         ? gameResultDto.play_time
@@ -58,10 +48,23 @@ export class GameResultController extends BaseController {
         : false;
       // const dataNew = await this.gameResultService.create(gameResultDto);
       const dataNew = gameResultDto;
-      return res.status(HttpStatus.OK).json({
-        message: 'Start play game success',
-        data: dataNew,
-      });
+      // Get Data Question
+      switch (gameResultDto?.game_id) {
+        case 1:
+          const logicalGameRender = await this.gameService.getLogicalGameRender(3);
+          return res.status(HttpStatus.OK).json({
+            message: 'Start play game logical success',
+            data: dataNew,
+            data_logical_game: logicalGameRender,
+          });
+        case 2:
+          return res.status(HttpStatus.OK).json({
+            message: 'Start play game memory success',
+            data: dataNew,
+          });
+        default:
+          break;
+      }
     } catch (e) {
       console.log(e.message);
     }
@@ -215,8 +218,7 @@ export class GameResultController extends BaseController {
           message: 'You need to start game!',
         });
       } else {
-        const play_time = Date.now() - this.timeStart;
-        gameResultDto.play_time = play_time;
+        gameResultDto.play_time = (Date.now() - this.timeStart);
       }
       gameResultDto.is_done = gameResultDto.is_done
         ? gameResultDto.is_done

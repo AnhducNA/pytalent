@@ -52,6 +52,7 @@ export class GameResultService {
       .where('id = :id', { id: payload.id })
       .execute();
   }
+
   async updateGameResultPlayTimeAndScore(payload: {
     id: number;
     play_time: number;
@@ -64,6 +65,7 @@ export class GameResultService {
       .where('id = :id', { id: payload.id })
       .execute();
   }
+
   async createLogicalGameResult(payload: {
     game_result_id: number;
     logical_game_id: number;
@@ -72,6 +74,7 @@ export class GameResultService {
   }) {
     return await this.logicalGameResultRepository.save(payload);
   }
+
   async createMemoryGameResult(payload: {
     game_result_id: number;
     memory_game_id: number;

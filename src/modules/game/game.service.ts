@@ -42,6 +42,14 @@ export class GameService {
     return await this.logicalGameRepository.findOneBy({ id });
   }
 
+  async getLogicalGameRender(number: number) {
+    return await this.logicalGameRepository
+      .createQueryBuilder('logical_game')
+      .orderBy("RAND()")
+      .limit(number)
+      .getMany();
+  }
+
   async findMemoryGameById(id: number) {
     return await this.memoryGameRepository.findOneBy({ id });
   }
