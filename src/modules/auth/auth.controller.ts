@@ -20,7 +20,7 @@ export class AuthController extends BaseController {
   @Post('login')
   async login(@Body() loginDto: LoginDto, @Res() res: Response) {
     try {
-      // await this.userService.checkOrCreateUser(loginDto);
+      await this.userService.checkOrCreateUser(loginDto);
       const token = await this.authService.login(loginDto);
       if (token) {
         return this.successResponse(

@@ -17,12 +17,15 @@ export class AuthService {
   async login(params: any) {
     const { email, password } = params;
     const user = await this.userRepository.validateUser(email, password);
-    const payload = { id: user.id, email: user.email, role: user.role };
-    if (payload) {
-      return this.jwtService.sign(JSON.parse(JSON.stringify(payload)));
+    if (user) {
+      const payload = { id: user.id, email: user.email, role: user.role };
+      if (payload) {
+        return this.jwtService.sign(JSON.parse(JSON.stringify(payload)));
+      }
+    } else {
+      throw new CustomizeException(
+        this.i18n.t('message.IS_INCORRECT_EMAIL_OR_PASSWORD'),
+      );
     }
-    throw new CustomizeException(
-      this.i18n.t('message.IS_INCORRECT_EMAIL_OR_PASSWORD'),
-    );
   }
 }
