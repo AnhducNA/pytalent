@@ -34,7 +34,9 @@ export class GameResultController extends BaseController {
 
   //  Start playing game
   @Post('start')
+  @UseGuards(AuthGuard)
   async startPlayGame(
+    @Req() req,
     @Body()
     gameResultDto: {
       candidate_id: number;
@@ -46,6 +48,8 @@ export class GameResultController extends BaseController {
     },
     @Res() res: Response,
   ) {
+    const userLogin = req['userLogin'];
+    gameResultDto.candidate_id = userLogin.id;
     try {
       // Default value before start
       this.timeStart = Date.now();
@@ -58,8 +62,8 @@ export class GameResultController extends BaseController {
       gameResultDto.is_done = gameResultDto.is_done
         ? gameResultDto.is_done
         : false;
-      const dataNew = await this.gameResultService.create(gameResultDto);
-      // const dataNew = gameResultDto;
+      // const dataNew = await this.gameResultService.create(gameResultDto);
+      const dataNew = gameResultDto;
       // Get Data Question
       switch (gameResultDto?.game_id) {
         case 1:
@@ -257,7 +261,7 @@ export class GameResultController extends BaseController {
     @Body() logicalGameResultDto: any,
     @Res() res: any,
   ) {
-    const userLogin = req['user'];
+    const userLogin = req['userLogin'];
     const gameResultList =
       await this.gameResultService.getGameResultByCandidateId(userLogin.id);
     return res.status(HttpStatus.OK).json({
@@ -276,7 +280,7 @@ export class GameResultController extends BaseController {
     },
     @Res() res: any,
   ) {
-    const userLogin = req['user'];
+    const userLogin = req['userLogin'];
     switch (gameResultDetailDto.game_id) {
       case 1:
         const logicalGameResultList =
