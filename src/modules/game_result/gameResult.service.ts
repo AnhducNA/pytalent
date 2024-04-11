@@ -56,10 +56,19 @@ export class GameResultService {
     return query;
   }
 
-  async getMemoryGameResultByGameResultId(game_result_id: number) {
-    return this.memoryGameResultRepository.find({
-      where: { game_result_id: game_result_id },
-    });
+  async getMemoryGameResultByGameResultIdAndCandidateId(
+    game_result_id: number,
+    candidate_id: number,
+  ) {
+    console.log(candidate_id, game_result_id, 123564);
+    const query = this.memoryGameResultRepository
+      .createQueryBuilder('memory_game_result')
+      .innerJoinAndSelect('memory_game_result.gameResults', 'game_result')
+      .orderBy('memory_game_result.id', 'DESC')
+      .where(`memory_game_result.game_result_id = ${game_result_id}`)
+      .andWhere(`game_result.candidate_id = ${candidate_id}`)
+      .getMany();
+    return query;
   }
 
   async updateGameResult(payload: {

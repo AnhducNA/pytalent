@@ -271,7 +271,7 @@ export class GameResultController extends BaseController {
   }
   @UseGuards(AuthGuard)
   @Post('/game-result-detail/candidate')
-  async getLogicalGameResultByGameResultId(
+  async getGameResultDetailByGameResultIdAndCandidateId(
     @Req() req: any,
     @Body()
     gameResultDetailDto: {
@@ -294,8 +294,9 @@ export class GameResultController extends BaseController {
         });
       case 2:
         const memoryGameResultList =
-          await this.gameResultService.getMemoryGameResultByGameResultId(
+          await this.gameResultService.getMemoryGameResultByGameResultIdAndCandidateId(
             gameResultDetailDto.game_result_id,
+            userLogin.id,
           );
         return res.status(HttpStatus.OK).json({
           success: true,
