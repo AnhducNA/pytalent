@@ -45,7 +45,7 @@ export class GameService {
   async getLogicalGameRender(number: number) {
     return await this.logicalGameRepository
       .createQueryBuilder('logical_game')
-      .orderBy("RAND()")
+      .orderBy('RAND()')
       .limit(number)
       .getMany();
   }

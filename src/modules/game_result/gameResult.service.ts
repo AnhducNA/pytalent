@@ -36,6 +36,32 @@ export class GameResultService {
     return await this.gameResultRepository.save(payloadGameResult);
   }
 
+  async getGameResultByCandidateId(candidateId: number) {
+    return this.gameResultRepository.find({
+      where: { candidate_id: candidateId },
+    });
+  }
+
+  async getLogicalGameResultByGameResultIdAndCandidateId(
+    game_result_id: number,
+    candidate_id: number,
+  ) {
+    const query = this.logicalGameResultRepository
+      .createQueryBuilder('logical_game_result')
+      .innerJoinAndSelect('logical_game_result.gameResults', 'game_result')
+      .orderBy('logical_game_result.id', 'DESC')
+      .where(`logical_game_result.game_result_id = ${game_result_id}`)
+      .andWhere(`game_result.candidate_id = ${candidate_id}`)
+      .getMany();
+    return query;
+  }
+
+  async getMemoryGameResultByGameResultId(game_result_id: number) {
+    return this.memoryGameResultRepository.find({
+      where: { game_result_id: game_result_id },
+    });
+  }
+
   async updateGameResult(payload: {
     id: number;
     candidate_id: number;

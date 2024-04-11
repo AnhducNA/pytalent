@@ -1,4 +1,16 @@
-import { Body, Controller, Get, HttpStatus, Param, Post, Put, Request, Res, UseGuards } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Get,
+  HttpStatus,
+  Param,
+  Post,
+  Put,
+  Req,
+  Request,
+  Res,
+  UseGuards,
+} from '@nestjs/common';
 import { BaseController } from '@modules/app/base.controller';
 import { GameResultService } from '@modules/game_result/gameResult.service';
 import { AuthGuard } from '@guards/auth.guard';
@@ -46,12 +58,14 @@ export class GameResultController extends BaseController {
       gameResultDto.is_done = gameResultDto.is_done
         ? gameResultDto.is_done
         : false;
-      // const dataNew = await this.gameResultService.create(gameResultDto);
-      const dataNew = gameResultDto;
+      const dataNew = await this.gameResultService.create(gameResultDto);
+      // const dataNew = gameResultDto;
       // Get Data Question
       switch (gameResultDto?.game_id) {
         case 1:
-          const logicalGameRender = await this.gameService.getLogicalGameRender(3);
+          const logicalGameRender = await this.gameService.getLogicalGameRender(
+            25,
+          );
           return res.status(HttpStatus.OK).json({
             message: 'Start play game logical success',
             data: dataNew,
@@ -218,7 +232,7 @@ export class GameResultController extends BaseController {
           message: 'You need to start game!',
         });
       } else {
-        gameResultDto.play_time = (Date.now() - this.timeStart);
+        gameResultDto.play_time = Date.now() - this.timeStart;
       }
       gameResultDto.is_done = gameResultDto.is_done
         ? gameResultDto.is_done
@@ -233,6 +247,58 @@ export class GameResultController extends BaseController {
       });
     } catch (e) {
       console.log(e.message);
+    }
+  }
+
+  @UseGuards(AuthGuard)
+  @Get('/by-candidate')
+  async getGameResultByCandidateId(
+    @Req() req: any,
+    @Body() logicalGameResultDto: any,
+    @Res() res: any,
+  ) {
+    const userLogin = req['user'];
+    const gameResultList =
+      await this.gameResultService.getGameResultByCandidateId(userLogin.id);
+    return res.status(HttpStatus.OK).json({
+      success: true,
+      data: gameResultList,
+    });
+  }
+  @UseGuards(AuthGuard)
+  @Post('/game-result-detail/candidate')
+  async getLogicalGameResultByGameResultId(
+    @Req() req: any,
+    @Body()
+    gameResultDetailDto: {
+      game_result_id: number;
+      game_id: number;
+    },
+    @Res() res: any,
+  ) {
+    const userLogin = req['user'];
+    switch (gameResultDetailDto.game_id) {
+      case 1:
+        const logicalGameResultList =
+          await this.gameResultService.getLogicalGameResultByGameResultIdAndCandidateId(
+            gameResultDetailDto.game_result_id,
+            userLogin.id,
+          );
+        return res.status(HttpStatus.OK).json({
+          success: true,
+          data: logicalGameResultList,
+        });
+      case 2:
+        const memoryGameResultList =
+          await this.gameResultService.getMemoryGameResultByGameResultId(
+            gameResultDetailDto.game_result_id,
+          );
+        return res.status(HttpStatus.OK).json({
+          success: true,
+          data: memoryGameResultList,
+        });
+      default:
+        break;
     }
   }
 
