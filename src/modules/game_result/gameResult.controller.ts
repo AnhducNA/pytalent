@@ -106,12 +106,12 @@ export class GameResultController extends BaseController {
       });
     } else {
       const play_time = Date.now() - this.timeStart;
+      let message_res = '';
       try {
         const gameResultData = await this.gameResultService.findOne(
           logicalGameResultDto.game_result_id,
         );
         // check answer of user to + score
-        let play_score = gameResultData.play_score;
         const logicalGameData = await this.gameService.findLogicalGameById(
           logicalGameResultDto.logical_game_id,
         );
@@ -119,10 +119,13 @@ export class GameResultController extends BaseController {
         if (
           logicalGameResultDto.answer_play === logicalGameData.correct_answer
         ) {
+          message_res = 'Your answer is true.';
           logicalGameResultDto.is_correct = true;
-          play_score += logicalGameData.score;
+          gameResultData.play_score += logicalGameData.score;
         } else {
+          message_res = 'Your answer is false. End game';
           logicalGameResultDto.is_correct = false;
+          gameResultData.is_done = true;
         }
         // updateGameResult
         await this.gameResultService.updateGameResult({
@@ -131,7 +134,7 @@ export class GameResultController extends BaseController {
           assessment_id: gameResultData.assessment_id,
           game_id: gameResultData.game_id,
           play_time: play_time,
-          play_score: play_score,
+          play_score: gameResultData.play_score,
           is_done: gameResultData.is_done,
         });
         // createLogicalGameResult
@@ -139,7 +142,8 @@ export class GameResultController extends BaseController {
           logicalGameResultDto,
         );
         return res.status(HttpStatus.OK).json({
-          message: 'Add logicalGameResult success',
+          message: message_res,
+          data: logicalGameResultDto,
         });
       } catch (e) {
         console.log(e.message);
@@ -164,12 +168,12 @@ export class GameResultController extends BaseController {
         message: 'You need to start game!',
       });
     } else {
+      let message_res = '';
       const play_time = Date.now() - this.timeStart;
       try {
         const gameResultData = await this.gameResultService.findOne(
           memoryGameResultDto.game_result_id,
         );
-        let play_score = gameResultData.play_score;
         const memoryGameData = await this.gameService.findMemoryGameById(
           memoryGameResultDto.memory_game_id,
         );
@@ -184,10 +188,13 @@ export class GameResultController extends BaseController {
             memoryGameData.correct_answer,
           ) === true
         ) {
+          message_res = 'Your answer is true.';
           memoryGameResultDto.is_correct = true;
-          play_score += memoryGameData.score;
+          gameResultData.play_score += memoryGameData.score;
         } else {
+          message_res = 'Your answer is false. End game';
           memoryGameResultDto.is_correct = false;
+          gameResultData.is_done = true;
         }
         // updateGameResult
         await this.gameResultService.updateGameResult({
@@ -196,10 +203,10 @@ export class GameResultController extends BaseController {
           assessment_id: gameResultData.assessment_id,
           game_id: gameResultData.game_id,
           play_time: play_time,
-          play_score: play_score,
+          play_score: gameResultData.play_score,
           is_done: gameResultData.is_done,
         });
-        // createLogicalGameResult
+        // createMemoryGameResult
         await this.gameResultService.createMemoryGameResult({
           game_result_id: memoryGameResultDto.game_result_id,
           memory_game_id: memoryGameResultDto.memory_game_id,
@@ -207,7 +214,8 @@ export class GameResultController extends BaseController {
           is_correct: memoryGameResultDto.is_correct,
         });
         return res.status(HttpStatus.OK).json({
-          message: 'Add logicalGameResult success',
+          message: message_res,
+          data: memoryGameResultDto,
         });
       } catch (e) {
         console.log(e.message);
