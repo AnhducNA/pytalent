@@ -98,7 +98,7 @@ export class UserController extends BaseController {
         //   create data
         const hrGameDto = { hr_id: hr_id, game_id: game_id };
         const hrGameResult =
-          await this.userService.getHrApprachGameByHrIdAndGameId(hrGameDto);
+          await this.userService.getHrApproachGameByHrIdAndGameId(hrGameDto);
         if (!hrGameResult) {
           await this.userService.createHrApproachGame(hrGameDto);
         }

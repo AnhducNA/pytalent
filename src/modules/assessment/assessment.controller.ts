@@ -118,28 +118,25 @@ export class AssessmentController extends BaseController {
     }
   }
 
-  @Put('invite-candidate')
+  @Post('invite-candidate')
   @UseGuards(
     JwtAuthGuard,
     new AuthorizationGuard([RoleEnum.ADMIN, RoleEnum.HR]),
   )
-  async inviteCandidate(@Body() assessmentDto: object, @Res() res: Response) {
-    const result = await this.assessmentService.inviteCandidate(assessmentDto);
-    if (!result) {
-      return this.errorsResponse(
-        {
-          message: 'error',
-        },
-        res,
-      );
-    } else {
-      return this.successResponse(
-        {
-          message: 'success',
-        },
-        res,
-      );
-    }
+  async hrInviteCandidate(
+    @Body() paramsDto: {
+      assessment_id: number,
+      candidate_list: any,
+      state: string
+    }, @Res() res: Response) {
+    paramsDto.state = 'waiting';
+    const result = await this.assessmentService.hrInviteCandidate(paramsDto);
+    return this.successResponse(
+      {
+        message: 'success',
+      },
+      res,
+    );
   }
 
   @Delete(':id')
@@ -147,7 +144,10 @@ export class AssessmentController extends BaseController {
     JwtAuthGuard,
     new AuthorizationGuard([RoleEnum.ADMIN, RoleEnum.HR]),
   )
-  async delete(@Req() req: any ,@Param() params: { id: number }, @Res() res: Response) {
+  async delete(
+    @Req() req: any,
+    @Res() res: Response,
+  ) {
     const id = req.params.id;
     await this.gameResultService.deleteGameResultByAssessmentId(id);
     const result = await this.assessmentService.delete(id);

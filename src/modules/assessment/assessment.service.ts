@@ -87,24 +87,19 @@ export class AssessmentService {
     return assessmentResult;
   }
 
-  async inviteCandidate(params: object) {
-    if (params['candidate_id']) {
-      params['candidate_id'].map(async (candidate_id: string) => {
+  async hrInviteCandidate(params: {
+    assessment_id: number,
+    candidate_list: any,
+    state: string
+  }) {
+    if (params.candidate_list) {
+      params.candidate_list.map(async (candidate_email: string) => {
         const paramsAssessmentCandidate = {
-          assessment_id: params['id'],
-          candidate_id: parseInt(candidate_id),
+          assessment_id: params.assessment_id,
+          candidate_email: candidate_email,
+          state: params.state,
         };
-        await this.assessmentCandidateRepository
-          .createQueryBuilder()
-          .delete()
-          .from(AssessmentCandidate)
-          .where(
-            `assessment_id = ${paramsAssessmentCandidate.assessment_id} AND candidate_id = ${paramsAssessmentCandidate.candidate_id}`,
-          )
-          .execute();
-        await this.assessmentCandidateRepository.save(
-          paramsAssessmentCandidate,
-        );
+        await this.assessmentCandidateRepository.save(paramsAssessmentCandidate);
       });
     }
     return params;

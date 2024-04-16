@@ -53,7 +53,7 @@ export class UserService {
       .where('hr_id = :hr_id', { hr_id: hr_id })
       .getMany();
   }
-  async getHrApprachGameByHrIdAndGameId(params: object) {
+  async getHrApproachGameByHrIdAndGameId(params: object) {
     return await this.hrGameRepository.findOneBy({
       hr_id: params['hr_id'],
       game_id: params['game_id'],
