@@ -1,6 +1,5 @@
 import { Module } from '@nestjs/common';
 import { UserService } from './services/user.service';
-import { UsersSellerController } from './controllers/users.seller.controller';
 import { UserHrController } from '@modules/users/controllers/user.hr.controller';
 import { UsersRepository } from '@modules/users/repositories/user.repository';
 import { TypeOrmModule } from '@nestjs/typeorm';
@@ -11,12 +10,7 @@ import { HrGame } from '@entities/hrGame.entity';
 
 @Module({
   imports: [TypeOrmModule.forFeature([UserEntity, HrGame])],
-  controllers: [
-    UserController,
-    UsersSellerController,
-    UserAdminController,
-    UserHrController,
-  ],
+  controllers: [UserController, UserAdminController, UserHrController],
   providers: [UserService, UsersRepository],
   exports: [UserService, UsersRepository],
 })

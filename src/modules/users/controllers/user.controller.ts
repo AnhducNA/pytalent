@@ -1,14 +1,4 @@
-import {
-  Body,
-  Controller,
-  Get,
-  HttpStatus,
-  Post,
-  Req,
-  Request,
-  Res,
-  UseGuards,
-} from '@nestjs/common';
+import { Body, Controller, Get, HttpStatus, Post, Req, Request, Res, UseGuards } from '@nestjs/common';
 import { UserService } from '@modules/users/services/user.service';
 import { BaseController } from '@modules/app/base.controller';
 import { Response } from 'express';
@@ -17,22 +7,43 @@ import { AuthGuard } from '@guards/auth.guard';
 import { RolesGuard } from '@guards/roles.guard';
 import { RolesDecorator } from '@shared/decorator/roles.decorator';
 import { RoleEnum } from '@enum/role.enum';
+import { JwtAuthGuard } from '@guards/jwt-auth.guard';
+import { AuthorizationGuard } from '@guards/authorization.guard';
 
 @Controller('api/users')
 export class UserController extends BaseController {
   constructor(private readonly userService: UserService) {
     super();
   }
-  @Get()
+
+  @Get('/list')
+  @UseGuards(JwtAuthGuard, new AuthorizationGuard([RoleEnum.ADMIN]))
   async findAll(@Res() res: Response) {
     const userList = await this.userService.findAll();
     return this.successResponse(
       {
         message: 'success',
+        data: userList,
       },
       res,
     );
   }
+
+  @UseGuards(JwtAuthGuard)
+  @Get('profile')
+  async profile(@Req() req: any, @Res() res: Response) {
+    const userLogin = req['userLogin'];
+    const dataResult = await this.userService.findOne(userLogin.id);
+    return this.successResponse(
+      {
+        data: dataResult,
+        message: 'success',
+      },
+      res,
+    );
+  }
+
+  @UseGuards(JwtAuthGuard, new AuthorizationGuard([RoleEnum.ADMIN]))
   @Get(':id')
   async findOne(@Req() req: any, @Res() res: Response) {
     const dataResult = await this.userService.findOne(req.params.id);
@@ -44,6 +55,7 @@ export class UserController extends BaseController {
       res,
     );
   }
+
   @Post()
   // @UseGuards(JwtAuthGuard, new AuthorizationGuard([RoleEnum.ADMIN]))
   async create(@Body() createUserDto: CreateUserDto, @Res() res: Response) {
@@ -55,9 +67,12 @@ export class UserController extends BaseController {
       res,
     );
   }
+
   @Get('hr-approach-game/:hrId')
-  @UseGuards(AuthGuard, RolesGuard)
-  @RolesDecorator(RoleEnum.ADMIN)
+  @UseGuards(
+    JwtAuthGuard,
+    new AuthorizationGuard([RoleEnum.ADMIN, RoleEnum.HR]),
+  )
   async getHrApproachGame(@Request() req, @Res() res: Response) {
     const hrId = req.params['hrId'];
     const hrApprachGameList = await this.userService.getHrApproachGameByHrId(
@@ -69,6 +84,7 @@ export class UserController extends BaseController {
       message: 'Get data success!',
     });
   }
+
   @Post('hr-approach-game')
   @UseGuards(AuthGuard, RolesGuard)
   @RolesDecorator(RoleEnum.ADMIN)
@@ -94,7 +110,7 @@ export class UserController extends BaseController {
     } else {
       return res.status(HttpStatus.OK).json({
         success: false,
-        message: "Don't have data!",
+        message: `Don't have data!`,
       });
     }
   }
