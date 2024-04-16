@@ -12,14 +12,21 @@ import { checkLogin } from '@middleware/authentication.middleware';
 import { AssessmentGame } from '@entities/assessmentGame.entity';
 import { AssessmentCandidate } from '@entities/assessmentCandidate.entity';
 import { GameResultService } from '@modules/game_result/gameResult.service';
+import { GameResult } from '@entities/gameResult.entity';
+import { LogicalGameResult } from '@entities/logicalGameResult.entity';
+import { MemoryGameResult } from '@entities/memoryGameResult.entity';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([Assessment, AssessmentGame, AssessmentCandidate]),
+    TypeOrmModule.forFeature(
+      [
+        Assessment, AssessmentGame, AssessmentCandidate,
+        GameResult, LogicalGameResult, MemoryGameResult,
+      ]),
   ],
   controllers: [AssessmentController],
-  providers: [AssessmentService],
-  exports: [AssessmentService],
+  providers: [AssessmentService, GameResultService],
+  exports: [AssessmentService, GameResultService],
 })
 export class AssessmentModule implements NestModule {
   configure(consumer: MiddlewareConsumer): any {

@@ -20,6 +20,7 @@ import { RoleEnum } from '@enum/role.enum';
 import { Response } from 'express';
 import { GameService } from '@modules/game/game.service';
 import { arraysEqual } from '@helper/function';
+import { JwtAuthGuard } from '@guards/jwt-auth.guard';
 
 @Controller('api/game-result')
 export class GameResultController extends BaseController {
@@ -34,7 +35,7 @@ export class GameResultController extends BaseController {
 
   //  Start playing game
   @Post('start')
-  @UseGuards(AuthGuard)
+  @UseGuards(JwtAuthGuard)
   async startPlayGame(
     @Req() req,
     @Body()
@@ -89,6 +90,7 @@ export class GameResultController extends BaseController {
   }
 
   @Post('playing-logical')
+  @UseGuards(JwtAuthGuard)
   async playingLogicalGame(
     @Body()
     logicalGameResultDto: {
@@ -152,6 +154,7 @@ export class GameResultController extends BaseController {
   }
 
   @Post('playing-memory')
+  @UseGuards(JwtAuthGuard)
   async playingMemoryGame(
     @Body()
     memoryGameResultDto: {

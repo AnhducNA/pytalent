@@ -6,6 +6,7 @@ import {
   Param,
   Post,
   Put,
+  Req,
   Request,
   Res,
   UseGuards,
@@ -28,6 +29,7 @@ const currentDate = new Date();
 export class AssessmentController extends BaseController {
   constructor(
     private readonly assessmentService: AssessmentService,
+    private readonly gameResultService: GameResultService,
   ) {
     super();
   }
@@ -145,8 +147,10 @@ export class AssessmentController extends BaseController {
     JwtAuthGuard,
     new AuthorizationGuard([RoleEnum.ADMIN, RoleEnum.HR]),
   )
-  async delete(@Param() params: { id: ':id' }, @Res() res: Response) {
-    const result = await this.assessmentService.delete(params.id);
+  async delete(@Req() req: any ,@Param() params: { id: number }, @Res() res: Response) {
+    const id = req.params.id;
+    await this.gameResultService.deleteGameResultByAssessmentId(id);
+    const result = await this.assessmentService.delete(id);
     if (result?.affected > 0) {
       return this.successResponse(
         {
