@@ -14,38 +14,49 @@ import { Assessment } from '@entities/assessment.entity';
 import { AssessmentService } from './assessment.service';
 import { Response } from 'express';
 import { BaseController } from '@modules/app/base.controller';
-import { RolesGuard } from '@guards/roles.guard';
 import { RolesDecorator } from '@shared/decorator/roles.decorator';
 import { RoleEnum } from '@enum/role.enum';
 import { AuthGuard } from '@guards/auth.guard';
+import { JwtAuthGuard } from '@guards/jwt-auth.guard';
+import { AuthorizationGuard } from '@guards/authorization.guard';
+import { GameResultService } from '@modules/game_result/gameResult.service';
 
 const currentDate = new Date();
 
 @Controller('api/assessments')
 @UseGuards(AuthGuard)
 export class AssessmentController extends BaseController {
-  constructor(private readonly assessmentService: AssessmentService) {
+  constructor(
+    private readonly assessmentService: AssessmentService,
+  ) {
     super();
   }
 
   //get all assessments
-  @Get()
-  @UseGuards(RolesGuard)
-  @RolesDecorator(RoleEnum.ADMIN, RoleEnum.HR)
+  @Get('/list')
+  @UseGuards(
+    JwtAuthGuard,
+    new AuthorizationGuard([RoleEnum.ADMIN, RoleEnum.HR]),
+  )
   findAll(): Promise<Assessment[]> {
     return this.assessmentService.findAll();
   }
 
   @Get(':id')
-  @UseGuards(AuthGuard, RolesGuard)
+  @UseGuards(
+    JwtAuthGuard,
+    new AuthorizationGuard([RoleEnum.ADMIN, RoleEnum.HR]),
+  )
   @RolesDecorator(RoleEnum.ADMIN, RoleEnum.HR)
   findOne(@Param() params) {
     return this.assessmentService.findOne(params.id);
   }
 
   @Post()
-  @UseGuards(AuthGuard, RolesGuard)
-  @RolesDecorator(RoleEnum.HR)
+  @UseGuards(
+    JwtAuthGuard,
+    new AuthorizationGuard([RoleEnum.ADMIN, RoleEnum.HR]),
+  )
   async create(
     @Request() req,
     @Body() assessmentDto: object,
@@ -76,8 +87,10 @@ export class AssessmentController extends BaseController {
   }
 
   @Put()
-  @UseGuards(AuthGuard, RolesGuard)
-  @RolesDecorator(RoleEnum.HR)
+  @UseGuards(
+    JwtAuthGuard,
+    new AuthorizationGuard([RoleEnum.ADMIN, RoleEnum.HR]),
+  )
   async update(@Body() assessmentDto: any, @Res() res: Response) {
     if (!assessmentDto['time_start']) {
       assessmentDto['time_start'] = currentDate
@@ -102,9 +115,12 @@ export class AssessmentController extends BaseController {
       );
     }
   }
+
   @Put('invite-candidate')
-  @UseGuards(AuthGuard, RolesGuard)
-  @RolesDecorator(RoleEnum.HR)
+  @UseGuards(
+    JwtAuthGuard,
+    new AuthorizationGuard([RoleEnum.ADMIN, RoleEnum.HR]),
+  )
   async inviteCandidate(@Body() assessmentDto: object, @Res() res: Response) {
     const result = await this.assessmentService.inviteCandidate(assessmentDto);
     if (!result) {
@@ -123,9 +139,12 @@ export class AssessmentController extends BaseController {
       );
     }
   }
+
   @Delete(':id')
-  @UseGuards(AuthGuard, RolesGuard)
-  @RolesDecorator(RoleEnum.HR)
+  @UseGuards(
+    JwtAuthGuard,
+    new AuthorizationGuard([RoleEnum.ADMIN, RoleEnum.HR]),
+  )
   async delete(@Param() params: { id: ':id' }, @Res() res: Response) {
     const result = await this.assessmentService.delete(params.id);
     if (result?.affected > 0) {

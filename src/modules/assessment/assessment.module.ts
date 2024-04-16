@@ -11,6 +11,7 @@ import { Assessment } from '@entities/assessment.entity';
 import { checkLogin } from '@middleware/authentication.middleware';
 import { AssessmentGame } from '@entities/assessmentGame.entity';
 import { AssessmentCandidate } from '@entities/assessmentCandidate.entity';
+import { GameResultService } from '@modules/game_result/gameResult.service';
 
 @Module({
   imports: [

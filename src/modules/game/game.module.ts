@@ -5,10 +5,11 @@ import { GameService } from '@modules/game/game.service';
 import { GameController } from '@modules/game/game.controller';
 import { LogicalGame } from '@entities/logicalGame.entity';
 import { MemoryGame } from '@entities/memoryGame.entity';
+import { GameLogicalController } from '@modules/game/game.logical.controller';
 
 @Module({
   imports: [TypeOrmModule.forFeature([Game, LogicalGame, MemoryGame])],
-  controllers: [GameController],
+  controllers: [GameController, GameLogicalController],
   providers: [GameService],
   exports: [GameService],
 })

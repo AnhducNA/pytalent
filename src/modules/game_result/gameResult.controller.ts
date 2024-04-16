@@ -94,7 +94,7 @@ export class GameResultController extends BaseController {
     logicalGameResultDto: {
       game_result_id: number;
       logical_game_id: number;
-      answer_play: string;
+      answer_play: boolean;
       is_correct: boolean;
     },
     @Res() res: Response,

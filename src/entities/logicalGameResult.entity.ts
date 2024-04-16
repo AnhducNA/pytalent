@@ -21,7 +21,7 @@ export class LogicalGameResult extends BaseEntity {
   logical_game_id: number;
 
   @Column()
-  answer_play: string;
+  answer_play: boolean;
 
   @Column()
   is_correct: boolean;

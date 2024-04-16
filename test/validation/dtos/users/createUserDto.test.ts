@@ -24,7 +24,7 @@ describe('Create User DTO', () => {
     param = {
       email: 'testdto@gmail.com',
       password: '123456',
-      role: RoleEnum.MEMBER,
+      role: RoleEnum.CANDIDATE,
     };
   });
   afterAll(async () => {

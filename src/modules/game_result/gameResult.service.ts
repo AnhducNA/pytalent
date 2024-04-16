@@ -1,9 +1,11 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { DeleteResult, Repository } from 'typeorm';
 import { GameResult } from '@entities/gameResult.entity';
 import { LogicalGameResult } from '@entities/logicalGameResult.entity';
 import { MemoryGameResult } from '@entities/memoryGameResult.entity';
+import { AssessmentCandidate } from '@entities/assessmentCandidate.entity';
+import { AssessmentGame } from '@entities/assessmentGame.entity';
 
 @Injectable()
 export class GameResultService {
@@ -34,6 +36,18 @@ export class GameResultService {
       is_done: params['is_done'],
     };
     return await this.gameResultRepository.save(payloadGameResult);
+  }
+
+  async deleteGameResultByAssessmentId(
+    assessment_id: number,
+  ): Promise<DeleteResult> {
+    // delete assessment_candidate
+    return await this.gameResultRepository
+      .createQueryBuilder()
+      .delete()
+      .from(GameResult)
+      .where(`assessment_id = ${assessment_id}`)
+      .execute();
   }
 
   async getGameResultByCandidateId(candidateId: number) {
@@ -104,7 +118,7 @@ export class GameResultService {
   async createLogicalGameResult(payload: {
     game_result_id: number;
     logical_game_id: number;
-    answer_play: string;
+    answer_play: boolean;
     is_correct: boolean;
   }) {
     return await this.logicalGameResultRepository.save(payload);

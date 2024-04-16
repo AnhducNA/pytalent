@@ -62,27 +62,6 @@ export class GameController extends BaseController {
     );
   }
 
-  @Post('create-logical-game')
-  async createLogicalGame(
-    @Body()
-    logicalGameDto: {
-      question: string;
-      answer: any;
-      correct_answer: string;
-      score: number;
-    },
-    @Res() res: Response,
-  ) {
-    // convert object to JSON
-    logicalGameDto.answer = JSON.stringify(logicalGameDto.answer);
-    const result = await this.gameService.createLogicalGame(logicalGameDto);
-    return this.successResponse(
-      {
-        message: 'success',
-      },
-      res,
-    );
-  }
   @Post('create-memory-game')
   async createMemoryLogicalGame(
     @Body()

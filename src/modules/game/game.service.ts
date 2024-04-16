@@ -38,6 +38,9 @@ export class GameService {
     return game;
   }
 
+  async getLogicalGame() {
+    return await this.logicalGameRepository.find();
+  }
   async findLogicalGameById(id: number) {
     return await this.logicalGameRepository.findOneBy({ id });
   }
@@ -55,9 +58,10 @@ export class GameService {
   }
 
   async createLogicalGame(params: {
-    question: string;
-    answer: string;
-    correct_answer: string;
+    statement1: string;
+    statement2: string;
+    conclusion: string;
+    correct_answer: boolean;
     score: number;
   }) {
     return await this.logicalGameRepository.save(params);

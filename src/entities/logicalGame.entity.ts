@@ -8,13 +8,16 @@ export class LogicalGame extends BaseEntity {
   id: number;
 
   @Column()
-  question: string;
+  statement1: string;
 
   @Column()
-  answer: string;
+  statement2: string;
 
   @Column()
-  correct_answer: string;
+  conclusion: string;
+
+  @Column()
+  correct_answer: boolean;
 
   @Column()
   score: number;
