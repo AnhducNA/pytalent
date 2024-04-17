@@ -34,10 +34,10 @@ export class GameLogicalController extends BaseController {
     @Res() res: Response,
   ) {
     const result = await this.gameService.createLogicalGame(logicalGameDto);
-    console.log(result);
     return this.successResponse(
       {
         message: 'success',
+        data: result,
       },
       res,
     );

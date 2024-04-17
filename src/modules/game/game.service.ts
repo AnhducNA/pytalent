@@ -41,6 +41,11 @@ export class GameService {
   async getLogicalGame() {
     return await this.logicalGameRepository.find();
   }
+
+  async getMemoryGame() {
+    return await this.memoryGameRepository.find();
+  }
+
   async findLogicalGameById(id: number) {
     return await this.logicalGameRepository.findOneBy({ id });
   }
@@ -67,11 +72,41 @@ export class GameService {
     return await this.logicalGameRepository.save(params);
   }
 
-  async createMemoryGame(params: {
+  validateMemoryGame(paramsMemoryGame: {
     level: number;
-    correct_answer: string;
+    correct_answer: any;
     score: number;
   }) {
-    return await this.memoryGameRepository.save(params);
+    if (
+      paramsMemoryGame.correct_answer.length.toString() !==
+      paramsMemoryGame.level.toString()
+    ) {
+      return {
+        status: false,
+        message: `Length of corrects answer must equal level`,
+      };
+    }
+    const memoryGameData = this.memoryGameRepository
+      .createQueryBuilder()
+      .where('level = :level', { level: paramsMemoryGame.level })
+      .getOne();
+    if (memoryGameData) {
+      return {
+        status: false,
+        message: `memory_game exited with level ${paramsMemoryGame.level}`,
+      };
+    }
+    return {
+      status: true,
+      message: 'success',
+    };
+  }
+
+  async createMemoryGame(paramsMemoryGame: {
+    level: number;
+    correct_answer: any;
+    score: number;
+  }) {
+    return await this.memoryGameRepository.save(paramsMemoryGame);
   }
 }
