@@ -34,7 +34,9 @@ export class GameMemoryController extends BaseController {
     },
     @Res() res: Response,
   ) {
-    const validateResult = this.gameService.validateMemoryGame(memoryGameDto);
+    const validateResult = await this.gameService.validateMemoryGame(
+      memoryGameDto,
+    );
     if (validateResult.status === false) {
       return this.errorsResponse(
         {

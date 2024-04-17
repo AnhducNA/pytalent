@@ -72,7 +72,7 @@ export class GameService {
     return await this.logicalGameRepository.save(params);
   }
 
-  validateMemoryGame(paramsMemoryGame: {
+  async validateMemoryGame(paramsMemoryGame: {
     level: number;
     correct_answer: any;
     score: number;
@@ -86,14 +86,14 @@ export class GameService {
         message: `Length of corrects answer must equal level`,
       };
     }
-    const memoryGameData = this.memoryGameRepository
+    const memoryGameData = await this.memoryGameRepository
       .createQueryBuilder()
       .where('level = :level', { level: paramsMemoryGame.level })
       .getOne();
     if (memoryGameData) {
       return {
         status: false,
-        message: `memory_game exited with level ${paramsMemoryGame.level}`,
+        message: `memory_game already exits on the system with level ${paramsMemoryGame.level}`,
       };
     }
     return {
