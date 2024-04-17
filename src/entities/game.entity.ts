@@ -22,9 +22,6 @@ export class Game extends BaseEntity {
   total_question: string;
 
   @Column()
-  detail: string;
-
-  @Column()
   response_rate: string;
 
   @Column()

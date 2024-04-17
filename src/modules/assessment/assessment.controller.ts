@@ -88,12 +88,20 @@ export class AssessmentController extends BaseController {
     }
   }
 
-  @Put()
+  @Patch('update')
   @UseGuards(
     JwtAuthGuard,
     new AuthorizationGuard([RoleEnum.ADMIN, RoleEnum.HR]),
   )
-  async update(@Body() assessmentDto: any, @Res() res: Response) {
+  async update(@Body() assessmentDto: {
+    id: number,
+    name: string,
+    hr_id: number,
+    time_start: string,
+    time_end: string,
+    game_id_list: any,
+    candidate_email_list: any,
+  }, @Res() res: Response) {
     if (!assessmentDto['time_start']) {
       assessmentDto['time_start'] = currentDate
         .toJSON()

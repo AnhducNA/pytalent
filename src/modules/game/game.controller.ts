@@ -53,7 +53,6 @@ export class GameController extends BaseController {
   @Post('create')
   async create(@Request() req, @Body() game: object, @Res() res: Response) {
     const result = await this.gameService.checkOrCreateGame(game);
-    console.log(result);
     return this.successResponse(
       {
         message: 'success',
