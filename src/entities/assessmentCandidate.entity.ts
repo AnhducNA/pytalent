@@ -14,7 +14,4 @@ export class AssessmentCandidate extends BaseEntity {
 
   @Column()
   candidate_email: string;
-
-  @Column()
-  state: string;
 }
