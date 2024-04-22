@@ -20,7 +20,7 @@ export class AuthController extends BaseController {
   @Post('login')
   async login(@Body() loginDto: LoginDto, @Res() res: Response) {
     try {
-      await this.userService.checkOrCreateUser(loginDto);
+    const userCheck = await this.userService.checkOrCreateUser(loginDto);
       const token = await this.authService.login(loginDto);
       if (token) {
         return this.successResponse(
@@ -29,7 +29,50 @@ export class AuthController extends BaseController {
               success: true,
               message: 'Login success',
               token: token,
-              data: loginDto,
+              data: userCheck,
+            },
+          },
+          res,
+        );
+      } else {
+        return this.errorsResponse(
+          {
+            data: {
+              success: false,
+              message: 'Login fail',
+            },
+          },
+          res,
+        );
+      }
+    } catch (e) {
+      logger.error('login errors: ' + e.message);
+      throw new CustomizeException(
+        e.message.toString(),
+        HttpStatus.BAD_REQUEST,
+      );
+    }
+  }
+
+  @Post('login-candidate')
+  async loginCandidate(
+    @Body() loginCandidateDto: { email: string; password: string },
+    @Res() res: Response,
+  ) {
+    try {
+      loginCandidateDto.password = '123456';
+      const userCheck = await this.userService.checkOrCreateUser(
+        loginCandidateDto,
+      );
+      const token = await this.authService.login(loginCandidateDto);
+      if (token) {
+        return this.successResponse(
+          {
+            data: {
+              success: true,
+              message: 'Login success',
+              token: token,
+              data: userCheck,
             },
           },
           res,

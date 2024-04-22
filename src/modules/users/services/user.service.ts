@@ -47,6 +47,9 @@ export class UserService {
     return user;
   }
 
+  async checkOrCreateCandidateUser(params: FindUserInterface) {
+
+  }
   async getHrApproachGameByHrId(hr_id: string) {
     return await this.hrGameRepository
       .createQueryBuilder()
