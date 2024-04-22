@@ -20,14 +20,13 @@ export class AuthController extends BaseController {
   @Post('login')
   async login(@Body() loginDto: LoginDto, @Res() res: Response) {
     try {
-    const userCheck = await this.userService.checkOrCreateUser(loginDto);
+      const userCheck = await this.userService.checkOrCreateUser(loginDto);
       const token = await this.authService.login(loginDto);
       if (token) {
         return this.successResponse(
           {
+            message: 'Login success',
             data: {
-              success: true,
-              message: 'Login success',
               token: token,
               data: userCheck,
             },
@@ -68,9 +67,8 @@ export class AuthController extends BaseController {
       if (token) {
         return this.successResponse(
           {
+            message: 'Login success',
             data: {
-              success: true,
-              message: 'Login success',
               token: token,
               data: userCheck,
             },
@@ -80,9 +78,9 @@ export class AuthController extends BaseController {
       } else {
         return this.errorsResponse(
           {
+            message: 'Login fail',
             data: {
               success: false,
-              message: 'Login fail',
             },
           },
           res,

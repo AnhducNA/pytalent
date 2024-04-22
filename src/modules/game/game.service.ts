@@ -32,7 +32,7 @@ export class GameService {
       },
     });
     if (!game) {
-      // Don't have user in DB => create game
+      // Don't have game in DB => create game
       game = await this.gameRepository.save(params);
     }
     return game;
