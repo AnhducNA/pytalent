@@ -63,8 +63,8 @@ export class AssessmentService {
     hr_id: number;
     game_list: any;
     candidate_list: any;
-    time_start: string;
-    time_end: string;
+    time_start: Date;
+    time_end: Date;
   }) {
     const payloadAssessment: CreateAssessmentInterface = {
       name: params.name,

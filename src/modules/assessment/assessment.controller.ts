@@ -94,14 +94,17 @@ export class AssessmentController extends BaseController {
       hr_id: number;
       game_list: any;
       candidate_list: any;
-      time_start: string;
-      time_end: string;
+      time_start: Date;
+      time_end: Date;
     },
     @Res() res: Response,
   ) {
     assessmentDto.hr_id = req['userLogin'].id;
     if (!assessmentDto.time_start) {
-      assessmentDto.time_start = currentDate.toLocaleString('vi');
+      assessmentDto.time_start = currentDate;
+    }
+    if (assessmentDto.time_end) {
+      assessmentDto.time_end = new Date(assessmentDto.time_end);
     }
     const result = await this.assessmentService.create(assessmentDto);
     return this.successResponse(

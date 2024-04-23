@@ -14,8 +14,8 @@ export interface FindAssessmentInterface {
 export interface CreateAssessmentInterface {
   hr_id: number;
   name: string;
-  time_start: string;
-  time_end: string;
+  time_start: Date;
+  time_end: Date;
 }
 
 export type AssessmentGetResponse = Omit<
