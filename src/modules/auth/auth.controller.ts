@@ -7,12 +7,14 @@ import { CustomizeException } from '@exception/customize.exception';
 import { UserService } from '@modules/users/services/user.service';
 import { logger } from '@logs/app.log';
 import { HttpStatus } from '@nestjs/common/enums/http-status.enum';
+import { AssessmentService } from '@modules/assessment/assessment.service';
 
 @Controller('api/auth')
 export class AuthController extends BaseController {
   constructor(
     private authService: AuthService,
     private userService: UserService,
+    private assessmentService: AssessmentService,
   ) {
     super();
   }
@@ -55,26 +57,53 @@ export class AuthController extends BaseController {
 
   @Post('login-candidate')
   async loginCandidate(
-    @Body() loginCandidateDto: { email: string; password: string },
+    @Body()
+      loginCandidateDto: { email_candidate: string; assessment_id: number },
     @Res() res: Response,
   ) {
     try {
-      loginCandidateDto.password = '123456';
-      const userCheck = await this.userService.checkOrCreateUser(
-        loginCandidateDto,
-      );
-      const token = await this.authService.login(loginCandidateDto);
+      const userCheck = await this.userService.checkOrCreateUser({
+        email: loginCandidateDto.email_candidate,
+        password: '123456',
+      });
+      // validate, sign token
+      const token = await this.authService.login({
+        email: loginCandidateDto.email_candidate,
+        password: '123456',
+      });
       if (token) {
-        return this.successResponse(
-          {
-            message: 'Login success',
-            data: {
-              token: token,
-              data: userCheck,
-            },
-          },
-          res,
+        // Check expire time assessment
+        const assessmentDetail = await this.assessmentService.findOne(
+          loginCandidateDto.assessment_id,
         );
+        // validate assessment exit
+        if (!assessmentDetail) {
+          return this.errorsResponse({
+            message: 'Assessment does not exit.',
+          }, res);
+        }
+        const expire_time = Date.parse(assessmentDetail.time_end.toString()) - Date.now();
+        // validate expire_time
+        if (expire_time < 0) {
+          return this.errorsResponse({
+            message: 'Time expired',
+          }, res);
+        } else {
+          return this.successResponse(
+            {
+              message: 'Login success',
+              data: {
+                token: token,
+                data: {
+                  email_candidate: userCheck.email,
+                  assessment_detail: assessmentDetail,
+                },
+              },
+            },
+            res,
+          );
+
+        }
       } else {
         return this.errorsResponse(
           {
