@@ -61,13 +61,18 @@ export class AssessmentController extends BaseController {
     const assessment_game_list =
       await this.assessmentService.getAssessmentGameByAssessmentId(id);
     const assessment_candidate_list =
-      await this.assessmentService.getAssessmentCandidateByAssessmentId(id);
+      await this.assessmentService.get_assessment_candidate_and_game_result_by_assessment_id(
+        id,
+      );
+    const game_result =
+      await this.assessmentService.getGameResultByAssessmentId(id);
     return this.successResponse(
       {
         data: {
           assessment: assessment_result,
           assessment_game_list: assessment_game_list,
           assessment_candidate_list: assessment_candidate_list,
+          game_result: game_result,
         },
       },
       res,

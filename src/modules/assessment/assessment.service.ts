@@ -5,6 +5,7 @@ import { DeleteResult, Repository } from 'typeorm';
 import { AssessmentGame } from '@entities/assessmentGame.entity';
 import { AssessmentCandidate } from '@entities/assessmentCandidate.entity';
 import { CreateAssessmentInterface } from '@interfaces/assessment.interface';
+import { GameResult } from '@entities/gameResult.entity';
 
 @Injectable()
 export class AssessmentService {
@@ -15,6 +16,8 @@ export class AssessmentService {
     private readonly assessmentGameRepository: Repository<AssessmentGame>,
     @InjectRepository(AssessmentCandidate)
     private readonly assessmentCandidateRepository: Repository<AssessmentCandidate>,
+    @InjectRepository(GameResult)
+    private readonly gameResultRepository: Repository<GameResult>,
   ) {}
 
   async findAll(): Promise<Assessment[]> {
@@ -31,18 +34,28 @@ export class AssessmentService {
   async getAssessmentGameByAssessmentId(assessment_id: number) {
     return this.assessmentGameRepository
       .createQueryBuilder('assessment_game')
+      .select('assessment_game.game_id')
       .where('assessment_id = :assessment_id', { assessment_id: assessment_id })
       .getMany();
   }
-  async getAssessmentCandidateByAssessmentId(assessment_id: number) {
+  async get_assessment_candidate_and_game_result_by_assessment_id(
+    assessment_id: number,
+  ) {
     return this.assessmentCandidateRepository
       .createQueryBuilder('assessment_candidate')
+      .select('assessment_candidate.candidate_id')
       .where('assessment_id = :assessment_id', { assessment_id: assessment_id })
       .getMany();
   }
 
   async findOne(id: number) {
     return await this.assessmentRepository.findOneBy({ id: id });
+  }
+
+  async getGameResultByAssessmentId(assessment_id: number) {
+    return this.gameResultRepository.find({
+      where: { assessment_id: assessment_id },
+    });
   }
 
   async create(params: {
