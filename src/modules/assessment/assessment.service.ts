@@ -4,6 +4,10 @@ import { Assessment } from '@entities/assessment.entity';
 import { DeleteResult, Repository } from 'typeorm';
 import { AssessmentGame } from '@entities/assessmentGame.entity';
 import { AssessmentCandidate } from '@entities/assessmentCandidate.entity';
+import {
+  AssessmentInterface,
+  CreateAssessmentInterface,
+} from '@interfaces/assessment.interface';
 
 @Injectable()
 export class AssessmentService {
@@ -21,7 +25,8 @@ export class AssessmentService {
   }
 
   async getAssessmentByHrId(hr_id: number) {
-    return this.assessmentRepository.createQueryBuilder("assessment")
+    return this.assessmentRepository
+      .createQueryBuilder('assessment')
       .where('hr_id = :hr_id', { hr_id: hr_id })
       .getMany();
   }
@@ -30,45 +35,54 @@ export class AssessmentService {
     return await this.assessmentRepository.findOneBy({ id: id });
   }
 
-  async create(params: object) {
-    const payloadAssessment = {
-      id: params['id'],
-      name: params['name'],
-      hr_id: params['hr_id'],
-      candidate_id: params['candidate_id'],
-      time_start: params['time_start'],
+  async create(params: {
+    name: string;
+    hr_id: number;
+    game_list: any;
+    candidate_list: any;
+    time_start: string;
+    time_end: string;
+  }) {
+    const payloadAssessment: CreateAssessmentInterface = {
+      name: params.name,
+      hr_id: params.hr_id,
+      time_start: params.time_start,
+      time_end: params.time_end,
     };
     const assessmentResult = await this.assessmentRepository.save(
       payloadAssessment,
     );
-    if (params['game_id']) {
-      params['game_id'].map(async (game_id: string) => {
-        const paramsAssessmentGame = {
+    if (params.game_list) {
+      params.game_list.map(async (game_id: number) => {
+        const payloadAssessmentGame = {
           assessment_id: assessmentResult.id,
-          game_id: parseInt(game_id),
+          game_id: game_id,
         };
-        await this.assessmentGameRepository
-          .createQueryBuilder()
-          .delete()
-          .from(AssessmentGame)
-          .where(
-            `assessment_id = ${paramsAssessmentGame.assessment_id} && game_id = ${paramsAssessmentGame.game_id}`,
-          )
-          .execute();
-        await this.assessmentGameRepository.save(paramsAssessmentGame);
+        await this.assessmentGameRepository.save(payloadAssessmentGame);
+      });
+    }
+    if (params.candidate_list) {
+      params.candidate_list.map(async (candidate_id: number) => {
+        const payloadAssessmentCandidate = {
+          assessment_id: assessmentResult.id,
+          candidate_id: candidate_id,
+        };
+        await this.assessmentCandidateRepository.save(
+          payloadAssessmentCandidate,
+        );
       });
     }
     return assessmentResult;
   }
 
   async update(params: {
-    id: number,
-    name: string,
-    hr_id: number,
-    time_start: string,
-    time_end: string,
-    game_id_list: any,
-    candidate_email_list: any,
+    id: number;
+    name: string;
+    hr_id: number;
+    time_start: string;
+    time_end: string;
+    game_id_list: any;
+    candidate_email_list: any;
   }) {
     if (params.game_id_list) {
       await this.assessmentGameRepository
@@ -87,7 +101,10 @@ export class AssessmentService {
           .insert()
           .into(AssessmentGame)
           .values([
-            { assessment_id: payloadAssessmentGame.assessment_id, game_id: payloadAssessmentGame.game_id },
+            {
+              assessment_id: payloadAssessmentGame.assessment_id,
+              game_id: payloadAssessmentGame.game_id,
+            },
           ])
           .execute();
       }

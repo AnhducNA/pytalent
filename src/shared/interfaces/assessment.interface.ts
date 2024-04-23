@@ -1,9 +1,9 @@
-export interface AssessmentModel {
+export interface AssessmentInterface {
   id: number;
   hr_id: number;
-  candidate_id: number;
-  game_id: number;
-  result_player: string;
+  name: string;
+  time_start: string;
+  time_end: string;
 }
 
 export interface FindAssessmentInterface {
@@ -11,9 +11,14 @@ export interface FindAssessmentInterface {
   candidate_id: number;
   game_id: number;
 }
-export interface createAssessmentInterface extends FindAssessmentInterface {}
+export interface CreateAssessmentInterface {
+  hr_id: number;
+  name: string;
+  time_start: string;
+  time_end: string;
+}
 
 export type AssessmentGetResponse = Omit<
-  AssessmentModel,
-  'hr_id' | 'candidate_id' | 'game_id' | 'result_player'
+  AssessmentInterface,
+  'hr_id' | 'name' | 'time_start' | 'time_end'
 >;
