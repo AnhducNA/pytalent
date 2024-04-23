@@ -55,8 +55,23 @@ export class AssessmentController extends BaseController {
     JwtAuthGuard,
     new AuthorizationGuard([RoleEnum.ADMIN, RoleEnum.HR]),
   )
-  findOne(@Param() params: any) {
-    return this.assessmentService.findOne(params.id);
+  async findOne(@Req() req: any, @Res() res: any) {
+    const id = req.params.id;
+    const assessment_result = await this.assessmentService.findOne(id);
+    const assessment_game_list =
+      await this.assessmentService.getAssessmentGameByAssessmentId(id);
+    const assessment_candidate_list =
+      await this.assessmentService.getAssessmentCandidateByAssessmentId(id);
+    return this.successResponse(
+      {
+        data: {
+          assessment: assessment_result,
+          assessment_game_list: assessment_game_list,
+          assessment_candidate_list: assessment_candidate_list,
+        },
+      },
+      res,
+    );
   }
 
   @Post()
@@ -66,17 +81,18 @@ export class AssessmentController extends BaseController {
   )
   async create(
     @Request() req: any,
-    @Body() assessmentDto: {
-      name: string,
-      hr_id: number,
-      game_list: any,
-      candidate_list: any,
-      time_start: string,
-      time_end: string,
+    @Body()
+    assessmentDto: {
+      name: string;
+      hr_id: number;
+      game_list: any;
+      candidate_list: any;
+      time_start: string;
+      time_end: string;
     },
     @Res() res: Response,
   ) {
-    assessmentDto.hr_id = req['userLogin'].id
+    assessmentDto.hr_id = req['userLogin'].id;
     if (!assessmentDto.time_start) {
       assessmentDto.time_start = currentDate.toLocaleString('vi');
     }
@@ -101,7 +117,7 @@ export class AssessmentController extends BaseController {
   )
   async update(
     @Body()
-      assessmentDto: {
+    assessmentDto: {
       id: number;
       name: string;
       hr_id: number;
@@ -143,7 +159,7 @@ export class AssessmentController extends BaseController {
   )
   async hrInviteCandidate(
     @Body()
-      paramsDto: {
+    paramsDto: {
       assessment_id: number;
       candidate_list: any;
     },

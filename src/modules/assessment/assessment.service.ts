@@ -4,10 +4,7 @@ import { Assessment } from '@entities/assessment.entity';
 import { DeleteResult, Repository } from 'typeorm';
 import { AssessmentGame } from '@entities/assessmentGame.entity';
 import { AssessmentCandidate } from '@entities/assessmentCandidate.entity';
-import {
-  AssessmentInterface,
-  CreateAssessmentInterface,
-} from '@interfaces/assessment.interface';
+import { CreateAssessmentInterface } from '@interfaces/assessment.interface';
 
 @Injectable()
 export class AssessmentService {
@@ -31,7 +28,20 @@ export class AssessmentService {
       .getMany();
   }
 
-  async findOne(id: number): Promise<Assessment> {
+  async getAssessmentGameByAssessmentId(assessment_id: number) {
+    return this.assessmentGameRepository
+      .createQueryBuilder('assessment_game')
+      .where('assessment_id = :assessment_id', { assessment_id: assessment_id })
+      .getMany();
+  }
+  async getAssessmentCandidateByAssessmentId(assessment_id: number) {
+    return this.assessmentCandidateRepository
+      .createQueryBuilder('assessment_candidate')
+      .where('assessment_id = :assessment_id', { assessment_id: assessment_id })
+      .getMany();
+  }
+
+  async findOne(id: number) {
     return await this.assessmentRepository.findOneBy({ id: id });
   }
 
