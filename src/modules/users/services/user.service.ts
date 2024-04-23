@@ -47,20 +47,19 @@ export class UserService {
     return user;
   }
 
-  async checkOrCreateCandidateUser(params: FindUserInterface) {
-
-  }
   async getHrApproachGameByHrId(hr_id: string) {
     return await this.hrGameRepository
       .createQueryBuilder()
       .where('hr_id = :hr_id', { hr_id: hr_id })
       .getMany();
   }
-  async getHrApproachGameByHrIdAndGameId(params: object) {
-    return await this.hrGameRepository.findOneBy({
-      hr_id: params['hr_id'],
-      game_id: params['game_id'],
-    });
+  async deleteHrGameByHrId(hr_id: number) {
+    return await this.hrGameRepository
+      .createQueryBuilder()
+      .delete()
+      .from(HrGame)
+      .where('hr_id= :hr_id', { hr_id: hr_id })
+      .execute();
   }
   async createHrApproachGame(params: object) {
     return await this.hrGameRepository.save(params);
