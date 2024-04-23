@@ -1,17 +1,21 @@
-import { Body, Controller, Get, Post, Res } from '@nestjs/common';
+import { Body, Controller, Get, Post, Res, UseGuards } from '@nestjs/common';
 import { BaseController } from '@modules/app/base.controller';
 import { GameService } from '@modules/game/game.service';
 import { Response } from 'express';
+import { JwtAuthGuard } from '@guards/jwt-auth.guard';
+import { RoleEnum } from '@enum/role.enum';
+import { AuthorizationGuard } from '@guards/authorization.guard';
 
-@Controller('api/logical-game')
+@Controller('api/logical-question')
 export class GameLogicalController extends BaseController {
   constructor(private readonly gameService: GameService) {
     super();
   }
 
-  @Get('/list')
+  @Get('list')
+  @UseGuards(JwtAuthGuard, new AuthorizationGuard([RoleEnum.ADMIN]))
   async findAll(@Res() res: Response) {
-    const dataList = await this.gameService.getLogicalGame();
+    const dataList = await this.gameService.getLogicalQuestion();
     return this.successResponse(
       {
         data: dataList,

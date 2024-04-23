@@ -3,7 +3,7 @@ import { Entity, PrimaryGeneratedColumn, Column } from 'typeorm';
 import { BaseEntity } from '@entities/base.entity';
 
 @Entity()
-export class LogicalGame extends BaseEntity {
+export class LogicalQuestion extends BaseEntity {
   @PrimaryGeneratedColumn()
   id: number;
 

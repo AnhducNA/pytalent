@@ -17,7 +17,9 @@ export class GamePlayingController extends BaseController {
     // newLogicalGameListResult
     for (const logicalGameDto of logicalGameListDto) {
       const logicalGameResult =
-        await this.gamePlayingService.findLogicalGameById(logicalGameDto.id);
+        await this.gamePlayingService.findLogicalQuestionById(
+          logicalGameDto.id,
+        );
       logicalGameDto.correct_answer = logicalGameResult.correct_answer;
       if (logicalGameResult.correct_answer === logicalGameDto.answer) {
         // answer is true

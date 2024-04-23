@@ -2,7 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { Repository } from 'typeorm';
 import { Game } from '@entities/game.entity';
 import { InjectRepository } from '@nestjs/typeorm';
-import { LogicalGame } from '@entities/logicalGame.entity';
+import { LogicalQuestion } from '@entities/logicalQuestion.entity';
 import { MemoryGame } from '@entities/memoryGame.entity';
 
 @Injectable()
@@ -10,8 +10,8 @@ export class GameService {
   constructor(
     @InjectRepository(Game)
     private gameRepository: Repository<Game>,
-    @InjectRepository(LogicalGame)
-    private logicalGameRepository: Repository<LogicalGame>,
+    @InjectRepository(LogicalQuestion)
+    private logicalQuestionRepository: Repository<LogicalQuestion>,
     @InjectRepository(MemoryGame)
     private memoryGameRepository: Repository<MemoryGame>,
   ) {}
@@ -38,8 +38,8 @@ export class GameService {
     return game;
   }
 
-  async getLogicalGame() {
-    return await this.logicalGameRepository.find();
+  async getLogicalQuestion() {
+    return await this.logicalQuestionRepository.find();
   }
 
   async getMemoryGame() {
@@ -47,11 +47,11 @@ export class GameService {
   }
 
   async findLogicalGameById(id: number) {
-    return await this.logicalGameRepository.findOneBy({ id });
+    return await this.logicalQuestionRepository.findOneBy({ id });
   }
 
   async getLogicalGameRender(number: number) {
-    return await this.logicalGameRepository
+    return await this.logicalQuestionRepository
       .createQueryBuilder('logical_game')
       .orderBy('RAND()')
       .limit(number)
@@ -69,7 +69,7 @@ export class GameService {
     correct_answer: boolean;
     score: number;
   }) {
-    return await this.logicalGameRepository.save(params);
+    return await this.logicalQuestionRepository.save(params);
   }
 
   async validateMemoryGame(paramsMemoryGame: {

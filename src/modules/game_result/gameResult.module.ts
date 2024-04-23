@@ -6,7 +6,7 @@ import { GameResultController } from '@modules/game_result/gameResult.controller
 import { LogicalGameResult } from '@entities/logicalGameResult.entity';
 import { GameService } from '@modules/game/game.service';
 import { Game } from '@entities/game.entity';
-import { LogicalGame } from '@entities/logicalGame.entity';
+import { LogicalQuestion } from '@entities/logicalQuestion.entity';
 import { MemoryGame } from '@entities/memoryGame.entity';
 import { MemoryGameResult } from '@entities/memoryGameResult.entity';
 
@@ -17,7 +17,7 @@ import { MemoryGameResult } from '@entities/memoryGameResult.entity';
       LogicalGameResult,
       MemoryGameResult,
       Game,
-      LogicalGame,
+      LogicalQuestion,
       MemoryGame,
     ]),
   ],
