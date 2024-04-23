@@ -5,7 +5,6 @@ import {
   Get,
   Param, Patch,
   Post,
-  Put,
   Req,
   Request,
   Res,
@@ -38,12 +37,23 @@ export class AssessmentController extends BaseController {
   @Get('/list')
   @UseGuards(
     JwtAuthGuard,
-    new AuthorizationGuard([RoleEnum.ADMIN, RoleEnum.HR]),
+    new AuthorizationGuard([RoleEnum.ADMIN]),
   )
   findAll(): Promise<Assessment[]> {
     return this.assessmentService.findAll();
   }
 
+  @Get('assessment-by-hr/:hr_id')
+  @UseGuards(
+    JwtAuthGuard,
+    new AuthorizationGuard([RoleEnum.ADMIN, RoleEnum.HR]),
+  )
+  getAssessmentByHrId(
+    @Request() req: any
+  ) {
+    const hr_id = req.params.hr_id;
+    return this.assessmentService.getAssessmentByHrId(hr_id);
+  }
   @Get(':id')
   @UseGuards(
     JwtAuthGuard,

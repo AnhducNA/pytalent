@@ -20,6 +20,12 @@ export class AssessmentService {
     return this.assessmentRepository.find();
   }
 
+  async getAssessmentByHrId(hr_id: number) {
+    return this.assessmentRepository.createQueryBuilder("assessment")
+      .where('hr_id = :hr_id', { hr_id: hr_id })
+      .getMany();
+  }
+
   async findOne(id: number): Promise<Assessment> {
     return await this.assessmentRepository.findOneBy({ id: id });
   }

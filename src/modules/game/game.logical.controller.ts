@@ -25,8 +25,8 @@ export class GameLogicalController extends BaseController {
     );
   }
 
-  @Post('new')
-  async createLogicalGame(
+  @Post()
+  async createLogicalQuestion(
     @Body()
     logicalGameDto: {
       statement1: string;
