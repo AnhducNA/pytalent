@@ -20,6 +20,7 @@ import { AuthGuard } from '@guards/auth.guard';
 import { JwtAuthGuard } from '@guards/jwt-auth.guard';
 import { AuthorizationGuard } from '@guards/authorization.guard';
 import { GameResultService } from '@modules/game_result/gameResult.service';
+import { UserService } from '@modules/users/services/user.service';
 
 const currentDate = new Date();
 
@@ -29,6 +30,7 @@ export class AssessmentController extends BaseController {
   constructor(
     private readonly assessmentService: AssessmentService,
     private readonly gameResultService: GameResultService,
+    private readonly userService: UserService,
   ) {
     super();
   }
@@ -170,13 +172,60 @@ export class AssessmentController extends BaseController {
     },
     @Res() res: Response,
   ) {
-    await this.assessmentService.hrInviteCandidate(paramsDto);
-    return this.successResponse(
-      {
-        message: 'success',
-      },
-      res,
-    );
+    if (!paramsDto.candidate_list) {
+      return this.errorsResponse(
+        {
+          message: `candidate_list don't have data`,
+        },
+        res,
+      );
+    } else {
+      // validate assessment
+      const checkAssessment = await this.assessmentService.findOne(
+        paramsDto.assessment_id,
+      );
+      if (checkAssessment) {
+        await this.assessmentService.delete_assessment_candidate_by_assessment_id(
+          paramsDto.assessment_id,
+        );
+        let assessmentCandidateListResult = [];
+        for (const candidate_email of paramsDto.candidate_list) {
+          const payloadUser = {
+            email: candidate_email,
+            password: '123456',
+          };
+          const userResult = await this.userService.checkOrCreateUser(
+            payloadUser,
+          );
+          const payloadAssessmentCandidate = {
+            assessment_id: paramsDto.assessment_id,
+            candidate_id: userResult.id,
+          };
+          const assessmentCandidateResult =
+            await this.assessmentService.create_assessment_candidate(
+              payloadAssessmentCandidate,
+            );
+          assessmentCandidateListResult = [
+            ...assessmentCandidateListResult,
+            assessmentCandidateResult,
+          ];
+        }
+        return this.successResponse(
+          {
+            message: 'success',
+            data: assessmentCandidateListResult,
+          },
+          res,
+        );
+      } else {
+        return this.errorsResponse(
+          {
+            message: 'assessment does not exit.',
+          },
+          res,
+        );
+      }
+    }
   }
 
   @Delete(':id')

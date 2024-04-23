@@ -1,4 +1,4 @@
-import { Injectable, UseGuards } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { UsersRepository } from '@modules/users/repositories/user.repository';
 import * as bcrypt from 'bcrypt';
 import { User } from '@entities/user.entity';
@@ -15,6 +15,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 @Injectable()
 export class UserService {
   constructor(
+    @InjectRepository(User)
     private usersRepository: UsersRepository,
     @InjectRepository(HrGame)
     private hrGameRepository: Repository<HrGame>,
@@ -38,13 +39,13 @@ export class UserService {
     if (!user) {
       // Don't have user in DB => create user
       const paramCreate: {
-        email: string,
-        password: string,
-        role: RoleEnum,
+        email: string;
+        password: string;
+        role: RoleEnum;
       } = plainToClass(User, {
         email: params.email,
         password: await bcrypt.hash(params.password, 10),
-        role: params.role
+        role: params.role,
       });
       user = await this.usersRepository.save(paramCreate);
     }

@@ -160,35 +160,29 @@ export class AssessmentService {
     );
   }
 
-  async hrInviteCandidate(params: {
+  async delete_assessment_candidate_by_assessment_id(assessment_id: number) {
+    return await this.assessmentCandidateRepository
+      .createQueryBuilder('assessment_candidate')
+      .delete()
+      .where('assessment_id = :assessment_id', { assessment_id: assessment_id })
+      .execute();
+  }
+
+  async create_assessment_candidate(assessment_candidate: {
     assessment_id: number;
-    candidate_list: any;
+    candidate_id: number;
   }) {
-    if (params.candidate_list) {
-      params.candidate_list.map(async (candidate_email: string) => {
-        const paramsAssessmentCandidate = {
-          assessment_id: params.assessment_id,
-          candidate_email: candidate_email,
-        };
-        const assessment_candidate = await this.assessmentCandidateRepository
-          .createQueryBuilder('assessment_candidate')
-          .where('assessment_candidate.assessment_id = :assessment_id', {
-            assessment_id: params.assessment_id,
-          })
-          .andWhere('assessment_candidate.candidate_email = :candidate_email', {
-            candidate_email: candidate_email,
-          })
-          .getMany();
-        if (assessment_candidate && assessment_candidate.length > 0) {
-          return null;
-        } else {
-          return await this.assessmentCandidateRepository.save(
-            paramsAssessmentCandidate,
-          );
-        }
-      });
-    }
-    return params;
+    return await this.assessmentCandidateRepository
+      .createQueryBuilder('assessment_candidate')
+      .insert()
+      .into(AssessmentCandidate)
+      .values([
+        {
+          assessment_id: assessment_candidate.assessment_id,
+          candidate_id: assessment_candidate.candidate_id,
+        },
+      ])
+      .execute();
   }
 
   async delete(id: number): Promise<DeleteResult> {

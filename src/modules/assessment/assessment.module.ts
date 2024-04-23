@@ -15,18 +15,26 @@ import { GameResultService } from '@modules/game_result/gameResult.service';
 import { GameResult } from '@entities/gameResult.entity';
 import { LogicalGameResult } from '@entities/logicalGameResult.entity';
 import { MemoryGameResult } from '@entities/memoryGameResult.entity';
+import { UserService } from '@modules/users/services/user.service';
+import { User } from '@entities/user.entity';
+import { HrGame } from '@entities/hrGame.entity';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature(
-      [
-        Assessment, AssessmentGame, AssessmentCandidate,
-        GameResult, LogicalGameResult, MemoryGameResult,
-      ]),
+    TypeOrmModule.forFeature([
+      Assessment,
+      AssessmentGame,
+      AssessmentCandidate,
+      GameResult,
+      LogicalGameResult,
+      MemoryGameResult,
+      HrGame,
+      User,
+    ]),
   ],
   controllers: [AssessmentController],
-  providers: [AssessmentService, GameResultService],
-  exports: [AssessmentService, GameResultService],
+  providers: [AssessmentService, GameResultService, UserService],
+  exports: [AssessmentService, GameResultService, UserService],
 })
 export class AssessmentModule implements NestModule {
   configure(consumer: MiddlewareConsumer): any {

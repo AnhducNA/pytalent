@@ -24,11 +24,15 @@ export class UserAdminController extends BaseController {
 
   @Post('create-hr-account')
   @UseGuards(JwtAuthGuard, new AuthorizationGuard([RoleEnum.ADMIN]))
-  async createHrAccount(@Body() createUserDto: {
-    email: string,
-    password: string,
-    role: RoleEnum,
-  }, @Res() res: Response) {
+  async createHrAccount(
+    @Body()
+    createUserDto: {
+      email: string;
+      password: string;
+      role: RoleEnum;
+    },
+    @Res() res: Response,
+  ) {
     createUserDto.role = RoleEnum.HR;
     const result = await this.userService.createUser(createUserDto);
     return this.successResponse(
