@@ -22,6 +22,24 @@ export class UserAdminController extends BaseController {
     super();
   }
 
+  @Post('create-hr-account')
+  @UseGuards(JwtAuthGuard, new AuthorizationGuard([RoleEnum.ADMIN]))
+  async createHrAccount(@Body() createUserDto: {
+    email: string,
+    password: string,
+    role: RoleEnum,
+  }, @Res() res: Response) {
+    createUserDto.role = RoleEnum.HR;
+    const result = await this.userService.createUser(createUserDto);
+    return this.successResponse(
+      {
+        message: 'success',
+        data: result,
+      },
+      res,
+    );
+  }
+
   @Post('')
   @UseGuards(JwtAuthGuard, new AuthorizationGuard([RoleEnum.ADMIN]))
   async create(
@@ -45,12 +63,12 @@ export class UserAdminController extends BaseController {
   )
   async getHrApproachGame(@Request() req: any, @Res() res: Response) {
     const hrId = req.params['hrId'];
-    const hrApprachGameList = await this.userService.getHrApproachGameByHrId(
+    const hrApproachGameList = await this.userService.getHrApproachGameByHrId(
       hrId,
     );
     return res.status(HttpStatus.OK).json({
       success: true,
-      data: hrApprachGameList,
+      data: hrApproachGameList,
       message: 'Get data success!',
     });
   }

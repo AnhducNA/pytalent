@@ -10,7 +10,6 @@ import {
 import { UserService } from '@modules/users/services/user.service';
 import { BaseController } from '@modules/app/base.controller';
 import { Response } from 'express';
-import { CreateUserDto } from '@modules/users/dto/create-user.dto';
 import { RoleEnum } from '@enum/role.enum';
 import { JwtAuthGuard } from '@guards/jwt-auth.guard';
 import { AuthorizationGuard } from '@guards/authorization.guard';
@@ -55,18 +54,6 @@ export class UserController extends BaseController {
     return this.successResponse(
       {
         data: dataResult,
-        message: 'success',
-      },
-      res,
-    );
-  }
-
-  @Post()
-  // @UseGuards(JwtAuthGuard, new AuthorizationGuard([RoleEnum.ADMIN]))
-  async create(@Body() createUserDto: CreateUserDto, @Res() res: Response) {
-    const result = await this.userService.checkOrCreateUser(createUserDto);
-    return this.successResponse(
-      {
         message: 'success',
       },
       res,

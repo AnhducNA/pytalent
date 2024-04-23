@@ -29,6 +29,27 @@ export class UserService {
     return await this.usersRepository.findOneBy({ id });
   }
 
+  async createUser(params: createUserInterface) {
+    let user: User = await this.usersRepository.findOne({
+      where: {
+        email: params.email,
+      },
+    });
+    if (!user) {
+      // Don't have user in DB => create user
+      const paramCreate: {
+        email: string,
+        password: string,
+        role: RoleEnum,
+      } = plainToClass(User, {
+        email: params.email,
+        password: await bcrypt.hash(params.password, 10),
+        role: params.role
+      });
+      user = await this.usersRepository.save(paramCreate);
+    }
+    return user;
+  }
   async checkOrCreateUser(params: FindUserInterface) {
     let user: User = await this.usersRepository.findOne({
       where: {
