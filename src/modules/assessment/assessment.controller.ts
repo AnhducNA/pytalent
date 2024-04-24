@@ -81,6 +81,20 @@ export class AssessmentController extends BaseController {
     );
   }
 
+  @Get('get-game-by-assessment/:assessment_id')
+  async getGameByAssessmentId(@Req() req: any, @Res() res: any) {
+    const assessment_id = req.params.assessment_id;
+    const dataResult = await this.assessmentService.getGameByAssessmentId(
+      assessment_id,
+    );
+    return this.successResponse(
+      {
+        data: dataResult,
+        message: 'success',
+      },
+      res,
+    );
+  }
   @Post()
   @UseGuards(
     JwtAuthGuard,

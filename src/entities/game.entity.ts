@@ -1,5 +1,11 @@
-import { Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
+import {
+  Column,
+  Entity,
+  OneToMany,
+  PrimaryGeneratedColumn,
+} from 'typeorm';
 import { BaseEntity } from '@entities/base.entity';
+import { AssessmentGame } from '@entities/assessmentGame.entity';
 
 @Entity()
 export class Game extends BaseEntity {
@@ -29,4 +35,10 @@ export class Game extends BaseEntity {
 
   @Column()
   scoring: string;
+
+  @OneToMany(
+    (type) => AssessmentGame,
+    (assessment_game) => assessment_game.game_id,
+  )
+  assessment_games: AssessmentGame[];
 }
