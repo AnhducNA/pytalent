@@ -7,9 +7,10 @@ import { LogicalQuestion } from '@entities/logicalQuestion.entity';
 import { MemoryGame } from '@entities/memoryGame.entity';
 import { GameLogicalController } from '@modules/game/game.logical.controller';
 import { GameMemoryController } from '@modules/game/game.memory.controller';
+import { MemoryData } from '@entities/memoryData.entity';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([Game, LogicalQuestion, MemoryGame])],
+  imports: [TypeOrmModule.forFeature([Game, LogicalQuestion, MemoryGame, MemoryData])],
   controllers: [GameController, GameLogicalController, GameMemoryController],
   providers: [GameService],
   exports: [GameService],

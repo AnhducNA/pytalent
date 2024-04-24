@@ -37,7 +37,7 @@ export class GameResultController extends BaseController {
   @Post('start')
   @UseGuards(JwtAuthGuard)
   async startPlayGame(
-    @Req() req,
+    @Req() req: any,
     @Body()
     gameResultDto: {
       candidate_id: number;
@@ -49,9 +49,21 @@ export class GameResultController extends BaseController {
     },
     @Res() res: Response,
   ) {
+    // set candidate_id for gameResultDto
     const userLogin = req['userLogin'];
     gameResultDto.candidate_id = userLogin.id;
-    try {
+    // validate check assessment exit?
+    const assessmentCheck = await this.gameResultService.findOneAssessment(
+      gameResultDto.assessment_id,
+    );
+    if (!assessmentCheck) {
+      return this.errorsResponse(
+        {
+          message: 'Assessment does not exit.',
+        },
+        res,
+      );
+    } else {
       // Default value before start
       this.timeStart = Date.now();
       gameResultDto.play_time = gameResultDto.play_time
@@ -63,29 +75,53 @@ export class GameResultController extends BaseController {
       gameResultDto.is_done = gameResultDto.is_done
         ? gameResultDto.is_done
         : false;
-      // const dataNew = await this.gameResultService.create(gameResultDto);
-      const dataNew = gameResultDto;
-      // Get Data Question
-      switch (gameResultDto?.game_id) {
-        case 1:
-          const logicalGameRender = await this.gameService.getLogicalGameRender(
-            25,
-          );
-          return res.status(HttpStatus.OK).json({
-            message: 'Start play game logical success',
-            data: dataNew,
-            data_logical_game: logicalGameRender,
-          });
-        case 2:
-          return res.status(HttpStatus.OK).json({
-            message: 'Start play game memory success',
-            data: dataNew,
-          });
-        default:
-          break;
+      try {
+        // const dataNew = await this.gameResultService.create(gameResultDto);
+        const gameResultNew = gameResultDto;
+        // Get Data game
+        switch (gameResultDto?.game_id) {
+          case 1:
+            // Candidate play logicalQuestion
+            const logicalQuestionRender =
+              await this.gameService.getLogicalQuestionRender(20);
+            return this.successResponse(
+              {
+                message: 'Start play game logical success',
+                data: {
+                  game_result: gameResultNew,
+                  data_logical_question: logicalQuestionRender,
+                },
+              },
+              res,
+            );
+          case 2:
+            // Candidate play memoryGame
+            const memoryDataRender: any[] =
+              await this.gameService.getMemoryDataRender();
+            memoryDataRender.map((memoryDetail) => {
+              let correct_answer: any[] = [];
+              for (let i = 0; i < memoryDetail.level; i++) {
+                correct_answer = [...correct_answer, Math.random() >= 0.5];
+              }
+              memoryDetail.correct_answer = correct_answer;
+            });
+
+            return this.successResponse(
+              {
+                message: 'Start play game memory success',
+                data: {
+                  game_result: gameResultNew,
+                  memory_data: memoryDataRender,
+                },
+              },
+              res,
+            );
+          default:
+            break;
+        }
+      } catch (e) {
+        console.log(e.message);
       }
-    } catch (e) {
-      console.log(e.message);
     }
   }
 
@@ -280,6 +316,7 @@ export class GameResultController extends BaseController {
       data: gameResultList,
     });
   }
+
   @UseGuards(AuthGuard)
   @Post('/game-result-detail/candidate')
   async getGameResultDetailByGameResultIdAndCandidateId(

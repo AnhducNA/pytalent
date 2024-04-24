@@ -9,6 +9,8 @@ import { Game } from '@entities/game.entity';
 import { LogicalQuestion } from '@entities/logicalQuestion.entity';
 import { MemoryGame } from '@entities/memoryGame.entity';
 import { MemoryGameResult } from '@entities/memoryGameResult.entity';
+import { Assessment } from '@entities/assessment.entity';
+import { MemoryData } from '@entities/memoryData.entity';
 
 @Module({
   imports: [
@@ -19,6 +21,8 @@ import { MemoryGameResult } from '@entities/memoryGameResult.entity';
       Game,
       LogicalQuestion,
       MemoryGame,
+      MemoryData,
+      Assessment,
     ]),
   ],
   controllers: [GameResultController],

@@ -61,11 +61,11 @@ export class AssessmentService {
   async getGameByAssessmentId(assessment_id: number): Promise<any> {
     return await this.assessmentGameRepository
       .createQueryBuilder('assessment_game')
+      .select('assessment_game.assessment_id')
       .leftJoinAndSelect('assessment_game.game', 'game')
       .where('assessment_game.assessment_id = :assessment_id', {
         assessment_id: assessment_id,
       })
-      .orderBy('assessment_game.id', 'DESC')
       .getMany();
   }
 

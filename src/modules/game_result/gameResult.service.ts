@@ -4,8 +4,7 @@ import { DeleteResult, Repository } from 'typeorm';
 import { GameResult } from '@entities/gameResult.entity';
 import { LogicalGameResult } from '@entities/logicalGameResult.entity';
 import { MemoryGameResult } from '@entities/memoryGameResult.entity';
-import { AssessmentCandidate } from '@entities/assessmentCandidate.entity';
-import { AssessmentGame } from '@entities/assessmentGame.entity';
+import { Assessment } from '@entities/assessment.entity';
 
 @Injectable()
 export class GameResultService {
@@ -16,6 +15,8 @@ export class GameResultService {
     private logicalGameResultRepository: Repository<LogicalGameResult>,
     @InjectRepository(MemoryGameResult)
     private memoryGameResultRepository: Repository<MemoryGameResult>,
+    @InjectRepository(Assessment)
+    private assessmentRepository: Repository<Assessment>,
   ) {}
 
   async findAll() {
@@ -24,6 +25,10 @@ export class GameResultService {
 
   async findOne(id: number): Promise<GameResult> {
     return await this.gameResultRepository.findOneBy({ id: id });
+  }
+
+  async findOneAssessment(assessment_id: number) {
+    return await this.assessmentRepository.findOneBy({id: assessment_id});
   }
 
   async create(params: object) {

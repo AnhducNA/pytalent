@@ -4,6 +4,7 @@ import { Game } from '@entities/game.entity';
 import { InjectRepository } from '@nestjs/typeorm';
 import { LogicalQuestion } from '@entities/logicalQuestion.entity';
 import { MemoryGame } from '@entities/memoryGame.entity';
+import { MemoryData } from '@entities/memoryData.entity';
 
 @Injectable()
 export class GameService {
@@ -14,6 +15,8 @@ export class GameService {
     private logicalQuestionRepository: Repository<LogicalQuestion>,
     @InjectRepository(MemoryGame)
     private memoryGameRepository: Repository<MemoryGame>,
+    @InjectRepository(MemoryData)
+    private memoryDataRepository: Repository<MemoryData>,
   ) {}
 
   async findAll() {
@@ -50,11 +53,25 @@ export class GameService {
     return await this.logicalQuestionRepository.findOneBy({ id });
   }
 
-  async getLogicalGameRender(number: number) {
+  async getLogicalQuestionRender(number: number) {
     return await this.logicalQuestionRepository
-      .createQueryBuilder('logical_game')
+      .createQueryBuilder('logical_question')
+      .select('logical_question.statement1')
+      .addSelect('logical_question.statement2')
+      .addSelect('logical_question.conclusion')
+      .addSelect('logical_question.score')
       .orderBy('RAND()')
       .limit(number)
+      .getMany();
+  }
+
+  async getMemoryDataRender() {
+    return await this.memoryDataRepository
+      .createQueryBuilder('memory_data')
+      .select('memory_data.level')
+      .addSelect('memory_data.time_limit')
+      .addSelect('memory_data.score')
+      .orderBy('RAND()')
       .getMany();
   }
 
