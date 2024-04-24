@@ -21,7 +21,6 @@ import { AssessmentModule } from '@modules/assessment/assessment.module';
 import { Assessment } from '@entities/assessment.entity';
 import { GameResult } from '@entities/gameResult.entity';
 import { GameResultModule } from '@modules/game_result/gameResult.module';
-import { GamePlayingModule } from '@modules/game_playing/gamePlaying.module';
 
 const options = databaseConfig as TypeOrmModuleOptions;
 
@@ -53,7 +52,6 @@ const options = databaseConfig as TypeOrmModuleOptions;
     AuthModule,
     AssessmentModule,
     GameResultModule,
-    GamePlayingModule,
   ],
   controllers: [AppController],
   providers: [AppService],
