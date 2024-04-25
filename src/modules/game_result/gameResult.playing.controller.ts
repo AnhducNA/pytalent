@@ -28,13 +28,21 @@ export class GameResultPlayingController extends BaseController {
     play_score: number;
     is_done: boolean;
   };
+  private _logicalQuestionRenderCurrent: {
+    id: number;
+    statement1: string;
+    statement2: string;
+    conclusion: string;
+    score: number;
+    correct_answer: boolean;
+  };
   private _memoryDataRenderCurrent: {
-    id: number,
+    id: number;
     level: number;
     time_limit: number;
     score: number;
     correct_answer: any[];
-  } ;
+  };
 
   constructor(
     private readonly gameResultService: GameResultService,
@@ -83,8 +91,30 @@ export class GameResultPlayingController extends BaseController {
     this._gameResultPlaying = value;
   }
 
+  get logicalQuestionRenderCurrent(): {
+    id: number;
+    statement1: string;
+    statement2: string;
+    conclusion: string;
+    score: number;
+    correct_answer: boolean;
+  } {
+    return this._logicalQuestionRenderCurrent;
+  }
+
+  set logicalQuestionRenderCurrent(value: {
+    id: number;
+    statement1: string;
+    statement2: string;
+    conclusion: string;
+    score: number;
+    correct_answer: boolean;
+  }) {
+    this._logicalQuestionRenderCurrent = value;
+  }
+
   get memoryDataRenderCurrent(): {
-    id: number,
+    id: number;
     level: number;
     time_limit: number;
     score: number;
@@ -94,7 +124,7 @@ export class GameResultPlayingController extends BaseController {
   }
 
   set memoryDataRenderCurrent(value: {
-    id: number,
+    id: number;
     level: number;
     time_limit: number;
     score: number;
@@ -159,14 +189,20 @@ export class GameResultPlayingController extends BaseController {
         switch (gameResultDto?.game_id) {
           case 1:
             // Candidate play logicalQuestion
-            const logicalQuestionRender =
-              await this.gameService.getLogicalQuestionRender(20);
+            this.logicalQuestionRenderCurrent =
+              await this.gameService.getLogicalQuestionRender([]);
             return this.successResponse(
               {
                 message: 'Start play game logical success',
                 data: {
                   game_result: this.gameResultPlaying,
-                  data_logical_question: logicalQuestionRender,
+                  logical_question_render_next: {
+                    id: this.logicalQuestionRenderCurrent.id,
+                    statement1: this.logicalQuestionRenderCurrent.statement1,
+                    statement2: this.logicalQuestionRenderCurrent.statement2,
+                    conclusion: this.logicalQuestionRenderCurrent.conclusion,
+                    score: this.logicalQuestionRenderCurrent.score,
+                  },
                 },
               },
               res,
@@ -359,7 +395,7 @@ export class GameResultPlayingController extends BaseController {
         if (!!memoryGameResultDto.is_correct) {
           this.timeNextMemoryItem = Date.now();
           // new memoryDataRenderCurrent: next level
-          let correct_answer = [];
+          const correct_answer = [];
           for (let i = 1; i <= this.memoryDataRenderCurrent.level + 1; i++) {
             correct_answer.push(
               ['left', 'right'][
@@ -383,7 +419,9 @@ export class GameResultPlayingController extends BaseController {
               message: message_res,
               data: {
                 game_result: this.gameResultPlaying,
-                correct_answer: JSON.stringify(this.memoryDataRenderCurrent.correct_answer),
+                correct_answer: JSON.stringify(
+                  this.memoryDataRenderCurrent.correct_answer,
+                ),
                 memory_data_next: this.memoryDataRenderCurrent,
               },
             },

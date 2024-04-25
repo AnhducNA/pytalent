@@ -78,7 +78,7 @@ export class AuthController extends BaseController {
             data: {
               token: token,
               data: {
-                email_candidate: userCheck.email,
+                candidate_login: userCheck,
               },
             },
           },

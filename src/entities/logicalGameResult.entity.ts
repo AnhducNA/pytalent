@@ -23,7 +23,7 @@ export class LogicalGameResult extends BaseEntity {
   @Column()
   answer_play: boolean;
 
-  @Column()
+  @Column({ nullable: true })
   is_correct: boolean;
 
   @ManyToOne(() => GameResult, (gameResult) => gameResult.id, {

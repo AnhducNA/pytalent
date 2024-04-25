@@ -53,16 +53,37 @@ export class GameService {
     return await this.logicalQuestionRepository.findOneBy({ id });
   }
 
-  async getLogicalQuestionRender(number: number) {
-    return await this.logicalQuestionRepository
-      .createQueryBuilder('logical_question')
-      .select('logical_question.statement1')
-      .addSelect('logical_question.statement2')
-      .addSelect('logical_question.conclusion')
-      .addSelect('logical_question.score')
-      .orderBy('RAND()')
-      .limit(number)
-      .getMany();
+  async getLogicalQuestionRender(id_except: any[]) {
+    // const id_except = [
+    //   1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17,
+    // ];
+    if (id_except && id_except.length > 0) {
+      return await this.logicalQuestionRepository
+        .createQueryBuilder('logical_question')
+        .select('logical_question.id')
+        .addSelect('logical_question.statement1')
+        .addSelect('logical_question.statement2')
+        .addSelect('logical_question.conclusion')
+        .addSelect('logical_question.score')
+        .addSelect('logical_question.correct_answer')
+        .where(`id NOT IN (${id_except.toString()})`)
+        .orderBy('RAND()')
+        .limit(1)
+        .getOne();
+    } else {
+      // get the first logical question
+      return await this.logicalQuestionRepository
+        .createQueryBuilder('logical_question')
+        .select('logical_question.id')
+        .addSelect('logical_question.statement1')
+        .addSelect('logical_question.statement2')
+        .addSelect('logical_question.conclusion')
+        .addSelect('logical_question.score')
+        .addSelect('logical_question.correct_answer')
+        .orderBy('RAND()')
+        .limit(1)
+        .getOne();
+    }
   }
 
   async getMemoryDataRender() {
