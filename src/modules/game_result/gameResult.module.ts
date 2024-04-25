@@ -11,6 +11,7 @@ import { MemoryGame } from '@entities/memoryGame.entity';
 import { MemoryGameResult } from '@entities/memoryGameResult.entity';
 import { Assessment } from '@entities/assessment.entity';
 import { MemoryData } from '@entities/memoryData.entity';
+import { GameResultPlayingController } from '@modules/game_result/gameResult.playing.controller';
 
 @Module({
   imports: [
@@ -25,7 +26,7 @@ import { MemoryData } from '@entities/memoryData.entity';
       Assessment,
     ]),
   ],
-  controllers: [GameResultController],
+  controllers: [GameResultController, GameResultPlayingController],
   providers: [GameResultService, GameService],
   exports: [GameResultService],
 })

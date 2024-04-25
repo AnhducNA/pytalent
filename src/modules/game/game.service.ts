@@ -71,12 +71,21 @@ export class GameService {
       .select('memory_data.level')
       .addSelect('memory_data.time_limit')
       .addSelect('memory_data.score')
-      .orderBy('RAND()')
       .getMany();
   }
 
-  async findMemoryGameById(id: number) {
-    return await this.memoryGameRepository.findOneBy({ id });
+  async getMemoryDataByLevel(level: number) {
+    return await this.memoryDataRepository
+      .createQueryBuilder('memory_data')
+      .select('memory_data.level')
+      .addSelect('memory_data.time_limit')
+      .addSelect('memory_data.score')
+      .where('level = :level', { level: level })
+      .getOne();
+  }
+
+  async findMemoryDataById(id: number) {
+    return await this.memoryDataRepository.findOneBy({ id });
   }
 
   async createLogicalGame(params: {
