@@ -72,43 +72,6 @@ export class AuthController extends BaseController {
         password: '123456',
       });
       if (token) {
-        // Check expire time assessment
-        const assessmentDetail = await this.assessmentService.findOne(
-          loginCandidateDto.assessment_id,
-        );
-        // validate assessment exit
-        if (!assessmentDetail) {
-          return this.errorsResponse(
-            {
-              message: 'Assessment does not exit.',
-            },
-            res,
-          );
-        }
-        // validate expire_assessment_time
-        const expire_time =
-          Date.parse(assessmentDetail.time_end.toString()) - Date.now();
-        if (expire_time < 0) {
-          return this.errorsResponse(
-            {
-              message: `Time of assessment ${assessmentDetail?.id} expired`,
-            },
-            res,
-          );
-        }
-        const assessmentCandidate =
-          await this.assessmentService.get_assessment_candidate_by_all(
-            loginCandidateDto.assessment_id,
-            userCheck.id,
-          );
-        if (!assessmentCandidate) {
-          return this.errorsResponse(
-            {
-              message: `Candidate ${userCheck.email} (id = ${userCheck.id}) does not invite to assessment ${assessmentDetail?.id}`,
-            },
-            res,
-          );
-        }
         return this.successResponse(
           {
             message: 'Login success',
@@ -116,7 +79,6 @@ export class AuthController extends BaseController {
               token: token,
               data: {
                 email_candidate: userCheck.email,
-                assessment_detail: assessmentDetail,
               },
             },
           },
