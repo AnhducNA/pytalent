@@ -17,7 +17,8 @@ import { arraysEqualWithoutLength } from '@helper/function';
 
 @Controller('api/game-result-playing')
 export class GameResultPlayingController extends BaseController {
-  private _timeStart: any;
+  private _timeStart: number;
+  private _timeNextMemoryItem: number;
   private _gameResultPlaying: {
     id: number;
     candidate_id: number;
@@ -28,22 +29,34 @@ export class GameResultPlayingController extends BaseController {
     is_done: boolean;
   };
   private _memoryDataRenderCurrent: {
+    id: number,
     level: number;
     time_limit: number;
     score: number;
     correct_answer: any[];
-  } = {
-    level: 0,
-    time_limit: 0,
-    score: 0,
-    correct_answer: [],
-  };
+  } ;
 
   constructor(
     private readonly gameResultService: GameResultService,
     private readonly gameService: GameService,
   ) {
     super();
+  }
+
+  get timeStart(): number {
+    return this._timeStart;
+  }
+
+  set timeStart(value: number) {
+    this._timeStart = value;
+  }
+
+  get timeNextMemoryItem(): number {
+    return this._timeNextMemoryItem;
+  }
+
+  set timeNextMemoryItem(value: number) {
+    this._timeNextMemoryItem = value;
   }
 
   get gameResultPlaying(): {
@@ -71,6 +84,7 @@ export class GameResultPlayingController extends BaseController {
   }
 
   get memoryDataRenderCurrent(): {
+    id: number,
     level: number;
     time_limit: number;
     score: number;
@@ -80,6 +94,7 @@ export class GameResultPlayingController extends BaseController {
   }
 
   set memoryDataRenderCurrent(value: {
+    id: number,
     level: number;
     time_limit: number;
     score: number;
@@ -87,8 +102,6 @@ export class GameResultPlayingController extends BaseController {
   }) {
     this._memoryDataRenderCurrent = value;
   }
-
-  private timeStart: any;
 
   //  Start playing game
   @Post('start')
@@ -160,6 +173,7 @@ export class GameResultPlayingController extends BaseController {
             );
           case 2:
             // Candidate play memoryGame
+            this.timeNextMemoryItem = Date.now();
             const memoryDataRender =
               await this.gameService.getMemoryDataByLevel(1);
             const correct_answer = [
@@ -168,6 +182,7 @@ export class GameResultPlayingController extends BaseController {
               ],
             ];
             this.memoryDataRenderCurrent = {
+              id: memoryDataRender.id,
               level: memoryDataRender.level,
               score: memoryDataRender.score,
               time_limit: memoryDataRender.time_limit,
@@ -175,10 +190,10 @@ export class GameResultPlayingController extends BaseController {
             };
             return this.successResponse(
               {
-                message: 'Start play game memory success',
+                message: 'Start play game memory success.',
                 data: {
                   game_result: this.gameResultPlaying,
-                  memory_data: this.memoryDataRenderCurrent,
+                  memory_data_next: this.memoryDataRenderCurrent,
                 },
               },
               res,
@@ -263,8 +278,6 @@ export class GameResultPlayingController extends BaseController {
   async playingMemoryGame(
     @Body()
     memoryGameResultDto: {
-      game_result_id: number;
-      memory_game_id: number;
       answer_play: string;
       is_correct: boolean;
     },
@@ -280,81 +293,119 @@ export class GameResultPlayingController extends BaseController {
       );
     } else {
       let message_res = '';
-      const play_time = Date.now() - this.timeStart;
       // validate check play_time end time_limit's level
-      if (play_time > this.memoryDataRenderCurrent['time_limit']) {
+      const play_time_item = Date.now() - this.timeNextMemoryItem;
+      if (play_time_item > this.memoryDataRenderCurrent.time_limit) {
+        this.gameResultPlaying.is_done = true;
+        await this.gameResultService.updateIsDoneGameResult(
+          this.gameResultPlaying.id,
+        );
         return this.successResponse(
           {
-            message: `Time play level ${this.memoryDataRenderCurrent['level']} expired.`,
+            message: `Time play level ${this.memoryDataRenderCurrent['level']} expired. End game.`,
             data: {
               game_result: this.gameResultPlaying,
+              memory_data_history:
+                await this.gameResultService.get_memory_game_result_by_game_result_id(
+                  this.gameResultPlaying.id,
+                ),
             },
           },
           res,
         );
-      } else {
-        try {
-          const gameResultData = this.gameResultPlaying;
-          // Check answer_play is true or false?
-          if (
-            arraysEqualWithoutLength(
-              memoryGameResultDto.answer_play,
-              this.memoryDataRenderCurrent['correct_answer'],
-            ) === true
-          ) {
-            console.log(gameResultData, 456);
-            message_res = 'Your answer is true.';
-            memoryGameResultDto.is_correct = true;
-            // gameResultData.is_done = false;
-            if (!gameResultData?.play_score) {
-              gameResultData.play_score = this.memoryDataRenderCurrent['score'];
-            } else {
-              gameResultData.play_score +=
-                this.memoryDataRenderCurrent['score'];
-            }
-            gameResultData.is_done = false;
+      }
+      try {
+        // Check answer_play is true or false?
+        if (
+          arraysEqualWithoutLength(
+            memoryGameResultDto.answer_play,
+            this.memoryDataRenderCurrent.correct_answer,
+          ) === true
+        ) {
+          message_res = 'Your answer is true.';
+          memoryGameResultDto.is_correct = true;
+          this.gameResultPlaying.is_done = false;
+          if (!this.gameResultPlaying?.play_score) {
+            this.gameResultPlaying.play_score =
+              this.memoryDataRenderCurrent['score'];
           } else {
-            message_res = 'Your answer is false. End game';
-            memoryGameResultDto.is_correct = false;
-            gameResultData.is_done = true;
+            this.gameResultPlaying.play_score +=
+              this.memoryDataRenderCurrent['score'];
           }
-          console.log(memoryGameResultDto, 456879);
-          // updateGameResult
-          await this.gameResultService.updateGameResult({
-            id: memoryGameResultDto.game_result_id,
-            candidate_id: gameResultData.candidate_id,
-            assessment_id: gameResultData.assessment_id,
-            game_id: gameResultData.game_id,
-            play_time: play_time,
-            play_score: gameResultData.play_score,
-            is_done: gameResultData.is_done,
-          });
-          // createMemoryGameResult
-          // await this.gameResultService.createMemoryGameResult({
-          //   game_result_id: memoryGameResultDto.game_result_id,
-          //   memory_game_id: memoryGameResultDto.memory_game_id,
-          //   correct_answer: this.memoryDataRenderCurrent['correct_answer'],
-          //   answer_play: JSON.stringify(memoryGameResultDto.answer_play),
-          //   is_correct: memoryGameResultDto.is_correct,
-          // });
-          if (!!memoryGameResultDto.is_correct) {
-            return this.successResponse(
-              {
-                message: message_res,
-                data: {
-                  memory_data_next: this.memoryDataRenderCurrent,
-                },
-              },
-              res,
+          this.gameResultPlaying.is_done = false;
+        } else {
+          message_res = 'Your answer is false. End game';
+          memoryGameResultDto.is_correct = false;
+          this.gameResultPlaying.is_done = true;
+        }
+        // End check done
+        // updateGameResult
+        await this.gameResultService.updateGameResultPlayTimeAndScore({
+          id: this.gameResultPlaying.id,
+          play_time: Date.now() - this.timeStart,
+          play_score: this.gameResultPlaying.play_score,
+        });
+        // createMemoryGameResult
+        await this.gameResultService.createMemoryGameResult({
+          game_result_id: this.gameResultPlaying.id,
+          memory_game_id: this.memoryDataRenderCurrent.id,
+          correct_answer: JSON.stringify(
+            this.memoryDataRenderCurrent.correct_answer,
+          ),
+          answer_play: JSON.stringify(memoryGameResultDto.answer_play),
+          is_correct: memoryGameResultDto.is_correct,
+        });
+        // Return if player answer true/false?
+        if (!!memoryGameResultDto.is_correct) {
+          this.timeNextMemoryItem = Date.now();
+          // new memoryDataRenderCurrent: next level
+          let correct_answer = [];
+          for (let i = 1; i <= this.memoryDataRenderCurrent.level + 1; i++) {
+            correct_answer.push(
+              ['left', 'right'][
+                Math.floor(Math.random() * ['left', 'right'].length)
+              ],
             );
           }
-          return res.status(HttpStatus.OK).json({
-            message: message_res,
-            data: memoryGameResultDto,
-          });
-        } catch (e) {
-          console.log(e.message);
+          const memoryDataRender = await this.gameService.getMemoryDataByLevel(
+            this.memoryDataRenderCurrent.level + 1,
+          );
+          this.memoryDataRenderCurrent = {
+            id: memoryDataRender.id,
+            level: memoryDataRender.level,
+            score: memoryDataRender.score,
+            time_limit: memoryDataRender.time_limit,
+            correct_answer: correct_answer,
+          };
+          // END: new memoryDataRenderCurrent: next level.
+          return this.successResponse(
+            {
+              message: message_res,
+              data: {
+                game_result: this.gameResultPlaying,
+                correct_answer: JSON.stringify(this.memoryDataRenderCurrent.correct_answer),
+                memory_data_next: this.memoryDataRenderCurrent,
+              },
+            },
+            res,
+          );
+        } else {
+          return this.errorsResponse(
+            {
+              message: message_res,
+              data: {
+                game_result: this.gameResultPlaying,
+                memory_data_history:
+                  await this.gameResultService.get_memory_game_result_by_game_result_id(
+                    this.gameResultPlaying.id,
+                  ),
+              },
+            },
+            res,
+          );
         }
+      } catch (e) {
+        console.log(e.message);
       }
     }
   }

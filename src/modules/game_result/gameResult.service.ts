@@ -85,13 +85,27 @@ export class GameResultService {
     game_result_id: number,
     candidate_id: number,
   ) {
-    console.log(candidate_id, game_result_id, 123564);
     const query = this.memoryGameResultRepository
       .createQueryBuilder('memory_game_result')
       .innerJoinAndSelect('memory_game_result.gameResults', 'game_result')
       .orderBy('memory_game_result.id', 'DESC')
       .where(`memory_game_result.game_result_id = ${game_result_id}`)
       .andWhere(`game_result.candidate_id = ${candidate_id}`)
+      .getMany();
+    return query;
+  }
+
+  async get_memory_game_result_by_game_result_id(
+    game_result_id: number
+  ) {
+    const query = this.memoryGameResultRepository
+      .createQueryBuilder('memory_game_result')
+      .select('memory_game_result.id')
+      .addSelect('memory_game_result.memory_game_id')
+      .addSelect('memory_game_result.correct_answer')
+      .addSelect('memory_game_result.answer_play')
+      .addSelect('memory_game_result.is_correct')
+      .where(`memory_game_result.game_result_id = ${game_result_id}`)
       .getMany();
     return query;
   }
@@ -110,6 +124,17 @@ export class GameResultService {
       .update(GameResult)
       .set(payload)
       .where('id = :id', { id: payload.id })
+      .execute();
+  }
+
+  async updateIsDoneGameResult(id: number) {
+    return this.gameResultRepository
+      .createQueryBuilder()
+      .update(GameResult)
+      .set({
+        is_done: true,
+      })
+      .where('id = :id', { id: id })
       .execute();
   }
 
