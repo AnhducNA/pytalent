@@ -58,7 +58,7 @@ export class AuthController extends BaseController {
   @Post('login-candidate')
   async loginCandidate(
     @Body()
-      loginCandidateDto: { email_candidate: string; assessment_id: number },
+    loginCandidateDto: { email_candidate: string; assessment_id: number },
     @Res() res: Response,
   ) {
     try {
@@ -78,32 +78,51 @@ export class AuthController extends BaseController {
         );
         // validate assessment exit
         if (!assessmentDetail) {
-          return this.errorsResponse({
-            message: 'Assessment does not exit.',
-          }, res);
-        }
-        const expire_time = Date.parse(assessmentDetail.time_end.toString()) - Date.now();
-        // validate expire_time
-        if (expire_time < 0) {
-          return this.errorsResponse({
-            message: 'Time expired',
-          }, res);
-        } else {
-          return this.successResponse(
+          return this.errorsResponse(
             {
-              message: 'Login success',
-              data: {
-                token: token,
-                data: {
-                  email_candidate: userCheck.email,
-                  assessment_detail: assessmentDetail,
-                },
-              },
+              message: 'Assessment does not exit.',
             },
             res,
           );
-
         }
+        // validate expire_assessment_time
+        const expire_time =
+          Date.parse(assessmentDetail.time_end.toString()) - Date.now();
+        if (expire_time < 0) {
+          return this.errorsResponse(
+            {
+              message: `Time of assessment ${assessmentDetail?.id} expired`,
+            },
+            res,
+          );
+        }
+        const assessmentCandidate =
+          await this.assessmentService.get_assessment_candidate_by_all(
+            loginCandidateDto.assessment_id,
+            userCheck.id,
+          );
+        console.log(assessmentCandidate, 123654);
+        if (!assessmentCandidate) {
+          return this.errorsResponse(
+            {
+              message: `Candidate ${userCheck.email} (id = ${userCheck.id}) does not invite to assessment ${assessmentDetail?.id}`,
+            },
+            res,
+          );
+        }
+        return this.successResponse(
+          {
+            message: 'Login success',
+            data: {
+              token: token,
+              data: {
+                email_candidate: userCheck.email,
+                assessment_detail: assessmentDetail,
+              },
+            },
+          },
+          res,
+        );
       } else {
         return this.errorsResponse(
           {

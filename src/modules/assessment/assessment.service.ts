@@ -38,6 +38,19 @@ export class AssessmentService {
       .where('assessment_id = :assessment_id', { assessment_id: assessment_id })
       .getMany();
   }
+
+  async get_assessment_candidate_by_all(
+    assessment_id: number,
+    candidate_id: number,
+  ) {
+    return this.assessmentCandidateRepository
+      .createQueryBuilder('assessment_candidate')
+      .select('assessment_candidate.id')
+      .where('assessment_id = :assessment_id', { assessment_id: assessment_id })
+      .andWhere('candidate_id = :candidate_id', { candidate_id: candidate_id })
+      .getOne();
+  }
+
   async get_assessment_candidate_and_game_result_by_assessment_id(
     assessment_id: number,
   ) {
