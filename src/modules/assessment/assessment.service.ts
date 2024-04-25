@@ -31,6 +31,15 @@ export class AssessmentService {
       .getMany();
   }
 
+  async getAssessmentByCandidateId(candidate_id: number) {
+    return this.assessmentCandidateRepository
+      .createQueryBuilder('assessment_candidate')
+      .select('assessment_candidate.id')
+      .addSelect('assessment_candidate.assessment_id')
+      .where('candidate_id = :candidate_id', { candidate_id: candidate_id })
+      .getMany();
+  }
+
   async getAssessmentGameByAssessmentId(assessment_id: number) {
     return this.assessmentGameRepository
       .createQueryBuilder('assessment_game')

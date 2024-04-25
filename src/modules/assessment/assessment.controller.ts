@@ -52,6 +52,24 @@ export class AssessmentController extends BaseController {
     return this.assessmentService.getAssessmentByHrId(hr_id);
   }
 
+  @Get('assessment-by-candidate_login')
+  @UseGuards(JwtAuthGuard)
+  async getAssessmentByCandidateId(@Req() req: any, @Res() res: any) {
+    const candidate_login = req['userLogin'];
+    return this.successResponse(
+      {
+        data: {
+          candidate_login: candidate_login,
+          assessment_candidate:
+            await this.assessmentService.getAssessmentByCandidateId(
+              candidate_login.id,
+            ),
+        },
+      },
+      res,
+    );
+  }
+
   @Get(':id')
   @UseGuards(
     JwtAuthGuard,
@@ -95,6 +113,7 @@ export class AssessmentController extends BaseController {
       res,
     );
   }
+
   @Post()
   @UseGuards(
     JwtAuthGuard,
