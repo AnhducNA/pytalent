@@ -9,9 +9,9 @@ import { Game } from '@entities/game.entity';
 import { LogicalQuestion } from '@entities/logicalQuestion.entity';
 import { MemoryGame } from '@entities/memoryGame.entity';
 import { MemoryGameResult } from '@entities/memoryGameResult.entity';
-import { Assessment } from '@entities/assessment.entity';
 import { MemoryData } from '@entities/memoryData.entity';
 import { GameResultPlayingController } from '@modules/game_result/gameResult.playing.controller';
+import { AssessmentCandidate } from '@entities/assessmentCandidate.entity';
 
 @Module({
   imports: [
@@ -23,7 +23,7 @@ import { GameResultPlayingController } from '@modules/game_result/gameResult.pla
       LogicalQuestion,
       MemoryGame,
       MemoryData,
-      Assessment,
+      AssessmentCandidate,
     ]),
   ],
   controllers: [GameResultController, GameResultPlayingController],

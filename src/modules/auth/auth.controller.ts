@@ -101,7 +101,6 @@ export class AuthController extends BaseController {
             loginCandidateDto.assessment_id,
             userCheck.id,
           );
-        console.log(assessmentCandidate, 123654);
         if (!assessmentCandidate) {
           return this.errorsResponse(
             {

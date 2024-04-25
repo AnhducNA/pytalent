@@ -1,4 +1,11 @@
-import { Column, Entity, JoinColumn, ManyToOne, PrimaryColumn, PrimaryGeneratedColumn } from 'typeorm';
+import {
+  Column,
+  Entity,
+  JoinColumn,
+  ManyToOne,
+  PrimaryColumn,
+  PrimaryGeneratedColumn,
+} from 'typeorm';
 import { BaseEntity } from '@entities/base.entity';
 import { GameResult } from '@entities/gameResult.entity';
 
@@ -12,6 +19,9 @@ export class MemoryGameResult extends BaseEntity {
 
   @Column()
   memory_game_id: number;
+
+  @Column({ nullable: true })
+  correct_answer: string;
 
   @Column()
   answer_play: string;

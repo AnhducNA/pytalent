@@ -4,7 +4,7 @@ import { DeleteResult, Repository } from 'typeorm';
 import { GameResult } from '@entities/gameResult.entity';
 import { LogicalGameResult } from '@entities/logicalGameResult.entity';
 import { MemoryGameResult } from '@entities/memoryGameResult.entity';
-import { Assessment } from '@entities/assessment.entity';
+import { AssessmentCandidate } from '@entities/assessmentCandidate.entity';
 
 @Injectable()
 export class GameResultService {
@@ -15,8 +15,8 @@ export class GameResultService {
     private logicalGameResultRepository: Repository<LogicalGameResult>,
     @InjectRepository(MemoryGameResult)
     private memoryGameResultRepository: Repository<MemoryGameResult>,
-    @InjectRepository(Assessment)
-    private assessmentRepository: Repository<Assessment>,
+    @InjectRepository(AssessmentCandidate)
+    private assessmentCandidateRepository: Repository<AssessmentCandidate>,
   ) {}
 
   async findAll() {
@@ -27,8 +27,14 @@ export class GameResultService {
     return await this.gameResultRepository.findOneBy({ id: id });
   }
 
-  async findOneAssessment(assessment_id: number) {
-    return await this.assessmentRepository.findOneBy({id: assessment_id});
+  async findOneAssessmentCandidate(
+    assessment_id: number,
+    candidate_id: number,
+  ) {
+    return await this.assessmentCandidateRepository.findOneBy({
+      assessment_id: assessment_id,
+      candidate_id: candidate_id,
+    });
   }
 
   async create(params: object) {
@@ -133,6 +139,7 @@ export class GameResultService {
     game_result_id: number;
     memory_game_id: number;
     answer_play: string;
+    correct_answer: string;
     is_correct: boolean;
   }) {
     return await this.memoryGameResultRepository.save(payload);

@@ -15,12 +15,12 @@ export class GameResult extends BaseEntity {
   @Column()
   game_id: number;
 
-  @Column()
+  @Column({ nullable: true })
   play_time: number;
 
-  @Column()
+  @Column({ nullable: true })
   play_score: number;
 
-  @Column()
+  @Column({ nullable: true })
   is_done: boolean;
 }
