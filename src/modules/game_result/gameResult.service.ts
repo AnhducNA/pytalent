@@ -95,9 +95,7 @@ export class GameResultService {
     return query;
   }
 
-  async get_memory_game_result_by_game_result_id(
-    game_result_id: number
-  ) {
+  async get_memory_game_result_by_game_result_id(game_result_id: number) {
     const query = this.memoryGameResultRepository
       .createQueryBuilder('memory_game_result')
       .select('memory_game_result.id')

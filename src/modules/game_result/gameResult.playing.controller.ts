@@ -28,8 +28,10 @@ export class GameResultPlayingController extends BaseController {
     play_score: number;
     is_done: boolean;
   };
+  private _id_logical_list_except: any[];
   private _logicalQuestionRenderCurrent: {
     id: number;
+    number: number;
     statement1: string;
     statement2: string;
     conclusion: string;
@@ -91,8 +93,17 @@ export class GameResultPlayingController extends BaseController {
     this._gameResultPlaying = value;
   }
 
+  get id_logical_list_except(): any[] {
+    return this._id_logical_list_except;
+  }
+
+  set id_logical_list_except(value: any[]) {
+    this._id_logical_list_except = value;
+  }
+
   get logicalQuestionRenderCurrent(): {
     id: number;
+    number: number;
     statement1: string;
     statement2: string;
     conclusion: string;
@@ -104,6 +115,7 @@ export class GameResultPlayingController extends BaseController {
 
   set logicalQuestionRenderCurrent(value: {
     id: number;
+    number: number;
     statement1: string;
     statement2: string;
     conclusion: string;
@@ -178,19 +190,19 @@ export class GameResultPlayingController extends BaseController {
         ? gameResultDto.is_done
         : false;
       try {
-        // const gameResultNew = await this.gameResultService.create(
+        // this.gameResultPlaying = await this.gameResultService.create(
         //   gameResultDto,
         // );
-        const gameResultNew = gameResultDto;
-        const objectId = { id: 20 };
-        this.gameResultPlaying = { ...objectId, ...gameResultNew };
-        // this.gameResultPlaying = gameResultNew;
+        this.gameResultPlaying = { ...{ id: 22 }, ...gameResultDto };
         // Get Data game
         switch (gameResultDto?.game_id) {
           case 1:
             // Candidate play logicalQuestion
-            this.logicalQuestionRenderCurrent =
-              await this.gameService.getLogicalQuestionRender([]);
+            this.logicalQuestionRenderCurrent = {
+              ...{ number: 1 },
+              ...(await this.gameService.getLogicalQuestionRender([])),
+            };
+            this.logicalQuestionRenderCurrent.number = 1;
             return this.successResponse(
               {
                 message: 'Start play game logical success',
@@ -198,6 +210,7 @@ export class GameResultPlayingController extends BaseController {
                   game_result: this.gameResultPlaying,
                   logical_question_render_next: {
                     id: this.logicalQuestionRenderCurrent.id,
+                    number: this.logicalQuestionRenderCurrent.number,
                     statement1: this.logicalQuestionRenderCurrent.statement1,
                     statement2: this.logicalQuestionRenderCurrent.statement2,
                     conclusion: this.logicalQuestionRenderCurrent.conclusion,
@@ -247,11 +260,9 @@ export class GameResultPlayingController extends BaseController {
   @UseGuards(JwtAuthGuard)
   async playingLogicalGame(
     @Body()
-    logicalGameResultDto: {
-      game_result_id: number;
-      logical_game_id: number;
+    logicalGameAnswerDto: {
       answer_play: boolean;
-      is_correct: boolean;
+      is_correct: boolean | null;
     },
     @Res() res: Response,
   ) {
@@ -260,52 +271,64 @@ export class GameResultPlayingController extends BaseController {
         success: false,
         message: 'You need to start game!',
       });
-    } else {
-      const play_time = Date.now() - this.timeStart;
-      let message_res = '';
-      try {
-        const gameResultData = await this.gameResultService.findOne(
-          logicalGameResultDto.game_result_id,
-        );
-        // check answer of user to + score
-        const logicalGameData = await this.gameService.findLogicalGameById(
-          logicalGameResultDto.logical_game_id,
-        );
-        // Check answer_play is true
-        if (
-          logicalGameResultDto.answer_play === logicalGameData.correct_answer
-        ) {
-          message_res = 'Your answer is true.';
-          logicalGameResultDto.is_correct = true;
-          gameResultData.play_score += logicalGameData.score;
-          console.log(gameResultData, 1245);
-        } else {
-          console.log(gameResultData, 1245);
-          message_res = 'Your answer is false. End game';
-          logicalGameResultDto.is_correct = false;
-          gameResultData.is_done = true;
-        }
-        // updateGameResult
-        await this.gameResultService.updateGameResult({
-          id: logicalGameResultDto.game_result_id,
-          candidate_id: gameResultData.candidate_id,
-          assessment_id: gameResultData.assessment_id,
-          game_id: gameResultData.game_id,
-          play_time: play_time,
-          play_score: gameResultData.play_score,
-          is_done: gameResultData.is_done,
-        });
-        // createLogicalGameResult
-        await this.gameResultService.createLogicalGameResult(
-          logicalGameResultDto,
-        );
-        return res.status(HttpStatus.OK).json({
-          message: message_res,
-          data: logicalGameResultDto,
-        });
-      } catch (e) {
-        console.log(e.message);
+    }
+    this.gameResultPlaying.play_time = Date.now() - this.timeStart;
+    let message_res = '';
+    try {
+      // Check answer_play is true
+      if (
+        logicalGameAnswerDto.answer_play ===
+        this.logicalQuestionRenderCurrent.correct_answer
+      ) {
+        message_res = 'Your answer is true.';
+        logicalGameAnswerDto.is_correct = true;
+        this.gameResultPlaying.play_score +=
+          this.logicalQuestionRenderCurrent.score;
+      } else {
+        message_res = 'Your answer is false. End game';
+        logicalGameAnswerDto.is_correct = false;
+        this.gameResultPlaying.is_done = true;
       }
+      // updateGameResult
+      await this.gameResultService.updateGameResult(this.gameResultPlaying);
+      // createLogicalGameResult
+      const newLogicalGameResult =
+        await this.gameResultService.createLogicalGameResult({
+          game_result_id: this.gameResultPlaying.id,
+          logical_game_id: this.logicalQuestionRenderCurrent.id,
+          answer_play: logicalGameAnswerDto.answer_play,
+          is_correct: logicalGameAnswerDto.is_correct,
+        });
+      if (!this.id_logical_list_except) {
+        this.id_logical_list_except = [this.logicalQuestionRenderCurrent.id];
+      } else {
+        this.id_logical_list_except = [
+          ...this.id_logical_list_except,
+          this.logicalQuestionRenderCurrent.id,
+        ];
+      }
+      this.logicalQuestionRenderCurrent = {
+        ...{ number: this.logicalQuestionRenderCurrent.number + 1 },
+        ...(await this.gameService.getLogicalQuestionRender(
+          this.id_logical_list_except,
+        )),
+      };
+      return res.status(HttpStatus.OK).json({
+        message: message_res,
+        data: {
+          logical_game_result: newLogicalGameResult,
+          logical_question_render_next: {
+            id: this.logicalQuestionRenderCurrent.id,
+            number: this.logicalQuestionRenderCurrent.number,
+            statement1: this.logicalQuestionRenderCurrent.statement1,
+            statement2: this.logicalQuestionRenderCurrent.statement2,
+            conclusion: this.logicalQuestionRenderCurrent.conclusion,
+            score: this.logicalQuestionRenderCurrent.score,
+          },
+        },
+      });
+    } catch (e) {
+      console.log(e.message);
     }
   }
 
