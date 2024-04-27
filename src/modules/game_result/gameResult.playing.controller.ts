@@ -182,13 +182,27 @@ export class GameResultPlayingController extends BaseController {
     // set candidate_id for gameResultDto
     const userLogin = req['userLogin'];
     gameResultDto.candidate_id = userLogin.id;
+    // validate check assessment time_end
+    const assessment_time_end = (
+      await this.gameResultService.get_assessment_by_id(
+        gameResultDto.assessment_id,
+      )
+    ).time_end;
+    if (Date.now() - assessment_time_end.getTime() > 0) {
+      return this.errorsResponse(
+        {
+          message: `Assessment has expired: ${userLogin.email}.`,
+        },
+        res,
+      );
+    }
     // validate check assessment exit?
-    const assessmentCheck =
+    const assessmentCheckCandidate =
       await this.gameResultService.findOneAssessmentCandidate(
         gameResultDto.assessment_id,
         userLogin.id,
       );
-    if (!assessmentCheck) {
+    if (!assessmentCheckCandidate) {
       return this.errorsResponse(
         {
           message: `Assessment does not have candidate: ${userLogin.email}.`,
