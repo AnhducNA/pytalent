@@ -220,7 +220,6 @@ export class GameResultPlayingController extends BaseController {
               ...{ number: 1 },
               ...(await this.gameService.getLogicalQuestionRender([], [])),
             };
-            this.logicalQuestionRenderCurrent.number = 1;
             return this.successResponse(
               {
                 message: 'Start play game logical success',
@@ -291,12 +290,40 @@ export class GameResultPlayingController extends BaseController {
       });
     }
     this.gameResultPlaying.play_time = Date.now() - this.timeStart;
-    if (this.gameResultPlaying.play_time > 90000) {
+    const total_game_time = parseInt(
+      (
+        await this.gameResultService.get_game_info_by_game_result(
+          this.gameResultPlaying.id,
+        )
+      ).game.total_time,
+    );
+    if (this.gameResultPlaying.play_time > total_game_time) {
       // when the game time is up
       this.gameResultPlaying.is_done = true;
       return this.successResponse(
         {
           message: ' You have run out of game time. End game.',
+          data: {
+            game_result: this.gameResultPlaying,
+            history_play_logical_game: this.logical_game_result_history,
+          },
+        },
+        res,
+      );
+    }
+    const total_question_game_logical = parseInt(
+      (
+        await this.gameResultService.get_game_info_by_game_result(
+          this.gameResultPlaying.id,
+        )
+      ).game.total_question,
+    );
+    if (
+      this.logicalQuestionRenderCurrent.number > total_question_game_logical
+    ) {
+      return this.successResponse(
+        {
+          message: 'You have completed the game. End game.',
           data: {
             game_result: this.gameResultPlaying,
             history_play_logical_game: this.logical_game_result_history,
@@ -329,6 +356,15 @@ export class GameResultPlayingController extends BaseController {
             is_correct: logicalGameAnswerDto.is_correct,
           },
         ];
+      } else {
+        this.logical_game_result_history = [
+          ...this.logical_game_result_history,
+          {
+            id: this.logicalQuestionRenderCurrent.id,
+            answer_play: logicalGameAnswerDto.answer_play,
+            is_correct: logicalGameAnswerDto.is_correct,
+          },
+        ];
       }
       // updateGameResult
       await this.gameResultService.updateGameResult(this.gameResultPlaying);
@@ -340,6 +376,7 @@ export class GameResultPlayingController extends BaseController {
           answer_play: logicalGameAnswerDto.answer_play,
           is_correct: logicalGameAnswerDto.is_correct,
         });
+      // validate except logical played and avoid 3 identical answer
       if (!this.logical_except_and_check_identical_answer) {
         this.logical_except_and_check_identical_answer = {
           id_logical_list_except: [this.logicalQuestionRenderCurrent.id],

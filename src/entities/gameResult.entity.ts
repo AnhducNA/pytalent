@@ -1,5 +1,12 @@
-import { Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
+import {
+  Column,
+  Entity,
+  JoinColumn,
+  ManyToOne,
+  PrimaryGeneratedColumn,
+} from 'typeorm';
 import { BaseEntity } from '@entities/base.entity';
+import { Game } from '@entities/game.entity';
 
 @Entity()
 export class GameResult extends BaseEntity {
@@ -23,4 +30,8 @@ export class GameResult extends BaseEntity {
 
   @Column({ nullable: true })
   is_done: boolean;
+
+  @ManyToOne(() => Game)
+  @JoinColumn({ name: 'game_id', referencedColumnName: 'id' })
+  game: Game;
 }

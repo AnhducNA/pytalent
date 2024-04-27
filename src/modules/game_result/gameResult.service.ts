@@ -67,6 +67,15 @@ export class GameResultService {
     });
   }
 
+  async get_game_info_by_game_result(game_result_id: number) {
+    return this.gameResultRepository
+      .createQueryBuilder('game_result')
+      .select('game_result.id', 'game_result_id')
+      .leftJoinAndSelect('game_result.game', 'game')
+      .where('game_result.id = :id', { id: game_result_id })
+      .getOne();
+  }
+
   async getLogicalGameResultByGameResultIdAndCandidateId(
     game_result_id: number,
     candidate_id: number,
