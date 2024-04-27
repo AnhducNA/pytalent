@@ -1,6 +1,7 @@
 import {
   Body,
   Controller,
+  Get,
   HttpStatus,
   Post,
   Put,
@@ -314,9 +315,12 @@ export class GameResultPlayingController extends BaseController {
     if (this.gameResultPlaying.play_time > total_game_time) {
       // when the game time is up
       this.gameResultPlaying.is_done = true;
+      await this.gameResultService.updateIsDoneGameResult(
+        this.gameResultPlaying.id,
+      );
       return this.successResponse(
         {
-          message: ' You have run out of game time. End game.',
+          message: 'Gaming time is over. End game.',
           data: {
             game_result: this.gameResultPlaying,
             history_play_logical_game: this.logical_game_result_history,
@@ -614,6 +618,143 @@ export class GameResultPlayingController extends BaseController {
       });
     } catch (e) {
       console.log(e.message);
+    }
+  }
+
+  //  Continue playing game
+  @Get('continue_playing_game_result/:game_result_id')
+  @UseGuards(JwtAuthGuard)
+  async continuePlayingGameResult(@Req() req: any, @Res() res: Response) {
+    // set candidate_id for gameResultDto
+    const userLogin = req['userLogin'];
+    this.gameResultPlaying = await this.gameResultService.findOne(
+      req.params.game_result_id,
+    );
+    if (!this.gameResultPlaying) {
+      return this.errorsResponse(
+        {
+          message: `Game_result, id = ${req.params.game_result_id} does not exit.`,
+        },
+        res,
+      );
+    }
+    // validate check assessment time_end
+    const assessment_time_end = (
+      await this.gameResultService.get_assessment_by_id(
+        this.gameResultPlaying.assessment_id,
+      )
+    ).time_end;
+    if (Date.now() - assessment_time_end.getTime() > 0) {
+      return this.errorsResponse(
+        {
+          message: `Assessment has expired: ${userLogin.email}.`,
+        },
+        res,
+      );
+    }
+    // validate check assessment exit?
+    const assessmentCheckCandidate =
+      await this.gameResultService.findOneAssessmentCandidate(
+        this.gameResultPlaying.assessment_id,
+        userLogin.id,
+      );
+    if (!assessmentCheckCandidate) {
+      return this.errorsResponse(
+        {
+          message: `Assessment does not have candidate: ${userLogin.email}.`,
+        },
+        res,
+      );
+    } else {
+      // Default value before continue
+      this.timeStart = Date.now() - this.gameResultPlaying.play_time;
+      try {
+        this.gameResultPlaying = this.gameResultPlaying;
+        // Get Data game
+        switch (this.gameResultPlaying?.game_id) {
+          case 1:
+            // Candidate play logicalQuestion
+            const logical_game_result_list =
+              await this.gameResultService.get_logical_game_result_by_game_result(
+                this.gameResultPlaying.id,
+              );
+            this.logical_except_and_check_identical_answer = {
+              id_logical_list_except: Object.values(
+                logical_game_result_list,
+              ).map((obj) => obj.logical_game_id),
+              check_identical_answer: Object.values(
+                logical_game_result_list,
+              ).map((obj) => obj.correct_answer),
+            };
+            this.logicalQuestionRenderCurrent = {
+              ...{ number: logical_game_result_list.length },
+              ...(await this.gameService.getLogicalQuestionRender(
+                this.logical_except_and_check_identical_answer
+                  .id_logical_list_except,
+                this.logical_except_and_check_identical_answer
+                  .check_identical_answer,
+              )),
+            };
+            return this.successResponse(
+              {
+                message: 'Continue play game logical success',
+                data: {
+                  game_result: this.gameResultPlaying,
+                  logical_question_render_next: {
+                    id: this.logicalQuestionRenderCurrent.id,
+                    number: this.logicalQuestionRenderCurrent.number,
+                    statement1: this.logicalQuestionRenderCurrent.statement1,
+                    statement2: this.logicalQuestionRenderCurrent.statement2,
+                    conclusion: this.logicalQuestionRenderCurrent.conclusion,
+                    score: this.logicalQuestionRenderCurrent.score,
+                  },
+                },
+              },
+              res,
+            );
+          case 2:
+            // Candidate play memoryGame
+            const count_memory_game_result_list =
+              await this.gameResultService.get_count_memory_game_result_by_game_result(
+                this.gameResultPlaying.id,
+              );
+            this.timeNextMemoryItem = Date.now();
+            const memoryDataRender =
+              await this.gameService.getMemoryDataByLevel(
+                count_memory_game_result_list + 1,
+              );
+            let correct_answer = [];
+            for (let i = 1; i <= count_memory_game_result_list + 1; i++) {
+              correct_answer = [
+                ...correct_answer,
+                ['left', 'right'][
+                  Math.floor(Math.random() * ['left', 'right'].length)
+                ],
+              ];
+            }
+            this.memoryDataRenderCurrent = {
+              id: memoryDataRender.id,
+              level: memoryDataRender.level,
+              score: memoryDataRender.score,
+              time_limit: memoryDataRender.time_limit,
+              correct_answer: correct_answer,
+            };
+            return this.successResponse(
+              {
+                message: 'Start play game memory success.',
+                data: {
+                  game_result: this.gameResultPlaying,
+                  memory_data_next: this.memoryDataRenderCurrent,
+                },
+              },
+              res,
+            );
+          default:
+            break;
+        }
+      } catch (e) {
+        console.log(e.message);
+      }
     }
   }
 }

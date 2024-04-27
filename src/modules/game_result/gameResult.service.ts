@@ -102,6 +102,16 @@ export class GameResultService {
     return query;
   }
 
+  async get_logical_game_result_by_game_result(game_result_id: number) {
+    const query = this.logicalGameResultRepository
+      .createQueryBuilder('logical_game_result')
+      .select('logical_game_result.logical_game_id')
+      .addSelect('logical_game_result.correct_answer')
+      .where(`logical_game_result.game_result_id = ${game_result_id}`)
+      .getMany();
+    return query;
+  }
+
   async getMemoryGameResultByGameResultIdAndCandidateId(
     game_result_id: number,
     candidate_id: number,
@@ -126,6 +136,14 @@ export class GameResultService {
       .addSelect('memory_game_result.is_correct')
       .where(`memory_game_result.game_result_id = ${game_result_id}`)
       .getMany();
+    return query;
+  }
+
+  async get_count_memory_game_result_by_game_result(game_result_id: number) {
+    const query = this.memoryGameResultRepository
+      .createQueryBuilder('memory_game_result')
+      .where(`memory_game_result.game_result_id = ${game_result_id}`)
+      .getCount();
     return query;
   }
 
