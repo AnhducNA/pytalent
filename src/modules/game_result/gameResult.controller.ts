@@ -32,11 +32,7 @@ export class GameResultController extends BaseController {
 
   @UseGuards(JwtAuthGuard)
   @Get('/by-candidate')
-  async getGameResultByCandidateId(
-    @Req() req: any,
-    @Body() logicalGameResultDto: any,
-    @Res() res: any,
-  ) {
+  async getGameResultByCandidateId(@Req() req: any, @Res() res: any) {
     const userLogin = req['userLogin'];
     const gameResultList =
       await this.gameResultService.getGameResultByCandidateId(userLogin.id);
@@ -58,7 +54,19 @@ export class GameResultController extends BaseController {
     @Res() res: any,
   ) {
     const userLogin = req['userLogin'];
-    switch (gameResultDetailDto.game_id) {
+    const game_result = await this.gameResultService.findOne(
+      gameResultDetailDto.game_result_id,
+    );
+    // validate check game_result?.candidate_id
+    if (!game_result || game_result.candidate_id !== userLogin.id) {
+      return this.errorsResponse(
+        {
+          message: `You cannot view the game_result.`,
+        },
+        res,
+      );
+    }
+    switch (game_result.game_id) {
       case 1:
         const logicalGameResultList =
           await this.gameResultService.getLogicalGameResultByGameResultIdAndCandidateId(

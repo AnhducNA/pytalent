@@ -21,6 +21,9 @@ export class LogicalGameResult extends BaseEntity {
   logical_game_id: number;
 
   @Column()
+  correct_answer: boolean;
+
+  @Column()
   answer_play: boolean;
 
   @Column({ nullable: true })
@@ -31,5 +34,5 @@ export class LogicalGameResult extends BaseEntity {
     onUpdate: 'NO ACTION',
   })
   @JoinColumn([{ name: 'game_result_id', referencedColumnName: 'id' }])
-  gameResults: GameResult[];
+  gameResult: GameResult;
 }

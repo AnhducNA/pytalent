@@ -94,7 +94,7 @@ export class GameResultService {
   ) {
     const query = this.logicalGameResultRepository
       .createQueryBuilder('logical_game_result')
-      .innerJoinAndSelect('logical_game_result.gameResults', 'game_result')
+      .innerJoin('logical_game_result.gameResult', 'game_result')
       .orderBy('logical_game_result.id', 'DESC')
       .where(`logical_game_result.game_result_id = ${game_result_id}`)
       .andWhere(`game_result.candidate_id = ${candidate_id}`)
@@ -173,6 +173,7 @@ export class GameResultService {
   async createLogicalGameResult(payload: {
     game_result_id: number;
     logical_game_id: number;
+    correct_answer: boolean;
     answer_play: boolean;
     is_correct: boolean;
   }) {

@@ -387,6 +387,7 @@ export class GameResultPlayingController extends BaseController {
         await this.gameResultService.createLogicalGameResult({
           game_result_id: this.gameResultPlaying.id,
           logical_game_id: this.logicalQuestionRenderCurrent.id,
+          correct_answer: this.logicalQuestionRenderCurrent.correct_answer,
           answer_play: logicalGameAnswerDto.answer_play,
           is_correct: logicalGameAnswerDto.is_correct,
         });
