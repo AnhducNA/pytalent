@@ -108,7 +108,7 @@ export class GameResultService {
   ) {
     const query = this.memoryGameResultRepository
       .createQueryBuilder('memory_game_result')
-      .innerJoinAndSelect('memory_game_result.gameResults', 'game_result')
+      .innerJoin('memory_game_result.gameResults', 'game_result')
       .orderBy('memory_game_result.id', 'DESC')
       .where(`memory_game_result.game_result_id = ${game_result_id}`)
       .andWhere(`game_result.candidate_id = ${candidate_id}`)

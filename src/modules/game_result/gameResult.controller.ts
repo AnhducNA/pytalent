@@ -49,7 +49,6 @@ export class GameResultController extends BaseController {
     @Body()
     gameResultDetailDto: {
       game_result_id: number;
-      game_id: number;
     },
     @Res() res: any,
   ) {
@@ -75,7 +74,10 @@ export class GameResultController extends BaseController {
           );
         return res.status(HttpStatus.OK).json({
           success: true,
-          data: logicalGameResultList,
+          data: {
+            game_result: game_result,
+            logical_game_result_history: logicalGameResultList,
+          },
         });
       case 2:
         const memoryGameResultList =
@@ -85,7 +87,10 @@ export class GameResultController extends BaseController {
           );
         return res.status(HttpStatus.OK).json({
           success: true,
-          data: memoryGameResultList,
+          data: {
+            game_result: game_result,
+            memory_game_result_history: memoryGameResultList,
+          },
         });
       default:
         break;
