@@ -53,23 +53,54 @@ export class GameService {
     return await this.logicalQuestionRepository.findOneBy({ id });
   }
 
-  async getLogicalQuestionRender(id_except: any[]) {
+  async getLogicalQuestionRender(id_except: any[], check_identical: any[]) {
     // const id_except = [
     //   1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17,
     // ];
+    const is_consecutive_identical = !!(
+      check_identical &&
+      check_identical.length > 3 &&
+      check_identical[check_identical.length - 1] ===
+        check_identical[check_identical.length - 2] &&
+      check_identical[check_identical.length - 2] ===
+        check_identical[check_identical.length - 3]
+    );
     if (id_except && id_except.length > 0) {
-      return await this.logicalQuestionRepository
-        .createQueryBuilder('logical_question')
-        .select('logical_question.id')
-        .addSelect('logical_question.statement1')
-        .addSelect('logical_question.statement2')
-        .addSelect('logical_question.conclusion')
-        .addSelect('logical_question.score')
-        .addSelect('logical_question.correct_answer')
-        .where(`id NOT IN (${id_except.toString()})`)
-        .orderBy('RAND()')
-        .limit(1)
-        .getOne();
+      if (
+        !check_identical ||
+        check_identical.length <= 3 ||
+        is_consecutive_identical === false
+      ) {
+        return await this.logicalQuestionRepository
+          .createQueryBuilder('logical_question')
+          .select('logical_question.id')
+          .addSelect('logical_question.statement1')
+          .addSelect('logical_question.statement2')
+          .addSelect('logical_question.conclusion')
+          .addSelect('logical_question.score')
+          .addSelect('logical_question.correct_answer')
+          .where(`id NOT IN (${id_except.toString()})`)
+          .orderBy('RAND()')
+          .limit(1)
+          .getOne();
+      } else {
+        // 3 consecutive identical
+        return await this.logicalQuestionRepository
+          .createQueryBuilder('logical_question')
+          .select('logical_question.id')
+          .addSelect('logical_question.statement1')
+          .addSelect('logical_question.statement2')
+          .addSelect('logical_question.conclusion')
+          .addSelect('logical_question.score')
+          .addSelect('logical_question.correct_answer')
+          .where(`id NOT IN (${id_except.toString()})`)
+          .andWhere(
+            `correct_answer <> ${check_identical[check_identical.length - 1]}`,
+          )
+          .orderBy('RAND()')
+          .limit(1)
+          .getOne();
+      }
     } else {
       // get the first logical question
       return await this.logicalQuestionRepository

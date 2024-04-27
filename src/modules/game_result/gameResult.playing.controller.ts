@@ -28,7 +28,10 @@ export class GameResultPlayingController extends BaseController {
     play_score: number;
     is_done: boolean;
   };
-  private _id_logical_list_except: any[];
+  private _logical_except_and_check_identical_answer: {
+    id_logical_list_except: any[];
+    check_identical_answer: any[];
+  };
   private _logicalQuestionRenderCurrent: {
     id: number;
     number: number;
@@ -38,6 +41,7 @@ export class GameResultPlayingController extends BaseController {
     score: number;
     correct_answer: boolean;
   };
+  private _logical_game_result_history: any[];
   private _memoryDataRenderCurrent: {
     id: number;
     level: number;
@@ -93,12 +97,18 @@ export class GameResultPlayingController extends BaseController {
     this._gameResultPlaying = value;
   }
 
-  get id_logical_list_except(): any[] {
-    return this._id_logical_list_except;
+  get logical_except_and_check_identical_answer(): {
+    id_logical_list_except: any[];
+    check_identical_answer: any[];
+  } {
+    return this._logical_except_and_check_identical_answer;
   }
 
-  set id_logical_list_except(value: any[]) {
-    this._id_logical_list_except = value;
+  set logical_except_and_check_identical_answer(value: {
+    id_logical_list_except: any[];
+    check_identical_answer: any[];
+  }) {
+    this._logical_except_and_check_identical_answer = value;
   }
 
   get logicalQuestionRenderCurrent(): {
@@ -123,6 +133,14 @@ export class GameResultPlayingController extends BaseController {
     correct_answer: boolean;
   }) {
     this._logicalQuestionRenderCurrent = value;
+  }
+
+  get logical_game_result_history(): any[] {
+    return this._logical_game_result_history;
+  }
+
+  set logical_game_result_history(value: any[]) {
+    this._logical_game_result_history = value;
   }
 
   get memoryDataRenderCurrent(): {
@@ -200,7 +218,7 @@ export class GameResultPlayingController extends BaseController {
             // Candidate play logicalQuestion
             this.logicalQuestionRenderCurrent = {
               ...{ number: 1 },
-              ...(await this.gameService.getLogicalQuestionRender([])),
+              ...(await this.gameService.getLogicalQuestionRender([], [])),
             };
             this.logicalQuestionRenderCurrent.number = 1;
             return this.successResponse(
@@ -273,6 +291,20 @@ export class GameResultPlayingController extends BaseController {
       });
     }
     this.gameResultPlaying.play_time = Date.now() - this.timeStart;
+    if (this.gameResultPlaying.play_time > 90000) {
+      // when the game time is up
+      this.gameResultPlaying.is_done = true;
+      return this.successResponse(
+        {
+          message: ' You have run out of game time. End game.',
+          data: {
+            game_result: this.gameResultPlaying,
+            history_play_logical_game: this.logical_game_result_history,
+          },
+        },
+        res,
+      );
+    }
     let message_res = '';
     try {
       // Check answer_play is true
@@ -285,13 +317,22 @@ export class GameResultPlayingController extends BaseController {
         this.gameResultPlaying.play_score +=
           this.logicalQuestionRenderCurrent.score;
       } else {
-        message_res = 'Your answer is false. End game';
+        message_res = 'Your answer is false';
         logicalGameAnswerDto.is_correct = false;
-        this.gameResultPlaying.is_done = true;
+      }
+      // save history play game
+      if (!this.logical_game_result_history) {
+        this.logical_game_result_history = [
+          {
+            id: this.logicalQuestionRenderCurrent.id,
+            answer_play: logicalGameAnswerDto.answer_play,
+            is_correct: logicalGameAnswerDto.is_correct,
+          },
+        ];
       }
       // updateGameResult
       await this.gameResultService.updateGameResult(this.gameResultPlaying);
-      // createLogicalGameResult
+      // create new LogicalGameResult
       const newLogicalGameResult =
         await this.gameResultService.createLogicalGameResult({
           game_result_id: this.gameResultPlaying.id,
@@ -299,18 +340,32 @@ export class GameResultPlayingController extends BaseController {
           answer_play: logicalGameAnswerDto.answer_play,
           is_correct: logicalGameAnswerDto.is_correct,
         });
-      if (!this.id_logical_list_except) {
-        this.id_logical_list_except = [this.logicalQuestionRenderCurrent.id];
+      if (!this.logical_except_and_check_identical_answer) {
+        this.logical_except_and_check_identical_answer = {
+          id_logical_list_except: [this.logicalQuestionRenderCurrent.id],
+          check_identical_answer: [
+            this.logicalQuestionRenderCurrent.correct_answer,
+          ],
+        };
       } else {
-        this.id_logical_list_except = [
-          ...this.id_logical_list_except,
-          this.logicalQuestionRenderCurrent.id,
-        ];
+        this.logical_except_and_check_identical_answer = {
+          id_logical_list_except: [
+            ...this.logical_except_and_check_identical_answer
+              .id_logical_list_except,
+            this.logicalQuestionRenderCurrent.id,
+          ],
+          check_identical_answer: [
+            ...this.logical_except_and_check_identical_answer
+              .check_identical_answer,
+            this.logicalQuestionRenderCurrent.correct_answer,
+          ],
+        };
       }
       this.logicalQuestionRenderCurrent = {
         ...{ number: this.logicalQuestionRenderCurrent.number + 1 },
         ...(await this.gameService.getLogicalQuestionRender(
-          this.id_logical_list_except,
+          this.logical_except_and_check_identical_answer.id_logical_list_except,
+          this.logical_except_and_check_identical_answer.check_identical_answer,
         )),
       };
       return res.status(HttpStatus.OK).json({
