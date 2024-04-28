@@ -223,10 +223,10 @@ export class GameResultPlayingController extends BaseController {
         ? gameResultDto.is_done
         : false;
       try {
-        // this.gameResultPlaying = await this.gameResultService.create(
-        //   gameResultDto,
-        // );
-        this.gameResultPlaying = { ...{ id: 22 }, ...gameResultDto };
+        this.gameResultPlaying = await this.gameResultService.create(
+          gameResultDto,
+        );
+        // this.gameResultPlaying = { ...{ id: 22 }, ...gameResultDto };
         // Get Data game
         switch (gameResultDto?.game_id) {
           case 1:

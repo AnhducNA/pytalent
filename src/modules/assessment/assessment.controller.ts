@@ -3,7 +3,6 @@ import {
   Controller,
   Delete,
   Get,
-  Param,
   Patch,
   Post,
   Req,
@@ -139,12 +138,12 @@ export class AssessmentController extends BaseController {
     if (assessmentDto.time_end) {
       assessmentDto.time_end = new Date(assessmentDto.time_end);
     }
-    const result = await this.assessmentService.create(assessmentDto);
+    const new_assessment = await this.assessmentService.create(assessmentDto);
     return this.successResponse(
       {
         message: 'success',
         data: {
-          assessment: result,
+          assessment: new_assessment,
           game_list: assessmentDto.game_list,
           candidate_list: assessmentDto.candidate_list,
         },
@@ -167,32 +166,18 @@ export class AssessmentController extends BaseController {
       time_start: string;
       time_end: string;
       game_id_list: any;
-      candidate_email_list: any;
+      candidate_id_list: any;
     },
     @Res() res: Response,
   ) {
-    if (!assessmentDto['time_start']) {
-      assessmentDto['time_start'] = currentDate
-        .toJSON()
-        .slice(0, 19)
-        .replace('T', ':');
-    }
-    const result = await this.assessmentService.update(assessmentDto);
-    if (!result) {
-      return this.errorsResponse(
-        {
-          message: 'error',
-        },
-        res,
-      );
-    } else {
-      return this.successResponse(
-        {
-          message: 'success',
-        },
-        res,
-      );
-    }
+    await this.assessmentService.update(assessmentDto);
+    return this.successResponse(
+      {
+        message: 'success',
+        data: assessmentDto,
+      },
+      res,
+    );
   }
 
   @Post('hr-invite-candidate')

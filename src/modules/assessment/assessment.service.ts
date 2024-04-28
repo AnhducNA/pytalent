@@ -138,14 +138,14 @@ export class AssessmentService {
     time_start: string;
     time_end: string;
     game_id_list: any;
-    candidate_email_list: any;
+    candidate_id_list: any;
   }) {
-    if (params.game_id_list) {
+    if (params.game_id_list && params.game_id_list.length > 0) {
       await this.assessmentGameRepository
         .createQueryBuilder()
         .delete()
         .from(AssessmentGame)
-        .where(`assessment_id = ${params.id} `)
+        .where(`assessment_id = :assessment_id`, { assessment_id: params.id })
         .execute();
       for (const game_id of params.game_id_list) {
         const payloadAssessmentGame = {
@@ -165,27 +165,30 @@ export class AssessmentService {
           .execute();
       }
     }
-    if (params.candidate_email_list) {
+    if (params.candidate_id_list && params.candidate_id_list.length > 0) {
       await this.assessmentCandidateRepository
         .createQueryBuilder()
         .delete()
         .from(AssessmentCandidate)
         .where(`assessment_id = ${params.id} `)
         .execute();
-      for (const candidate_email of params.candidate_email_list) {
+      for (const candidate_id of params.candidate_id_list) {
         const payloadAssessmentCandidate = {
           assessment_id: params.id,
-          candidate_email: candidate_email,
+          candidate_id: candidate_id,
         };
         await this.assessmentGameRepository.save(payloadAssessmentCandidate);
       }
     }
+    const assessment_initial = await this.findOne(params.id);
     const payloadAssessment = {
       id: params.id,
-      name: params.name,
-      hr_id: params.hr_id,
-      time_start: params.time_start,
-      time_end: params.time_end,
+      name: params?.name ? params.name : assessment_initial.name,
+      hr_id: params.hr_id ? params.hr_id : assessment_initial.hr_id,
+      time_start: params.time_start
+        ? params.time_start
+        : assessment_initial.time_start,
+      time_end: params.time_end ? params.time_end : assessment_initial.time_end,
     };
     return await this.assessmentRepository.update(
       payloadAssessment.id,
