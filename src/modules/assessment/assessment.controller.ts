@@ -41,13 +41,13 @@ export class AssessmentController extends BaseController {
     return this.assessmentService.findAll();
   }
 
-  @Get('assessment-by-hr/:hr_id')
+  @Get('assessment-by-hr')
   @UseGuards(
     JwtAuthGuard,
     new AuthorizationGuard([RoleEnum.ADMIN, RoleEnum.HR]),
   )
   getAssessmentByHrId(@Request() req: any) {
-    const hr_id = req.params.hr_id;
+    const hr_id = req['userLogin'].id;
     return this.assessmentService.getAssessmentByHrId(hr_id);
   }
 
@@ -200,53 +200,49 @@ export class AssessmentController extends BaseController {
         },
         res,
       );
-    } else {
-      // validate assessment
-      const checkAssessment = await this.assessmentService.findOne(
-        paramsDto.assessment_id,
-      );
-      if (checkAssessment) {
-        await this.assessmentService.delete_assessment_candidate_by_assessment_id(
-          paramsDto.assessment_id,
-        );
-        let assessmentCandidateListResult = [];
-        for (const candidate_email of paramsDto.candidate_list) {
-          const payloadUser = {
-            email: candidate_email,
-            password: '123456',
-          };
-          const userResult = await this.userService.checkOrCreateUser(
-            payloadUser,
-          );
-          const payloadAssessmentCandidate = {
-            assessment_id: paramsDto.assessment_id,
-            candidate_id: userResult.id,
-          };
-          const assessmentCandidateResult =
-            await this.assessmentService.create_assessment_candidate(
-              payloadAssessmentCandidate,
-            );
-          assessmentCandidateListResult = [
-            ...assessmentCandidateListResult,
-            assessmentCandidateResult,
-          ];
-        }
-        return this.successResponse(
-          {
-            message: 'success',
-            data: assessmentCandidateListResult,
-          },
-          res,
-        );
-      } else {
-        return this.errorsResponse(
-          {
-            message: 'assessment does not exit.',
-          },
-          res,
-        );
-      }
     }
+    // validate assessment
+    const assessment = await this.assessmentService.findOne(
+      paramsDto.assessment_id,
+    );
+    if (!assessment) {
+      return this.errorsResponse(
+        {
+          message: 'assessment does not exit.',
+        },
+        res,
+      );
+    }
+    await this.assessmentService.delete_assessment_candidate_by_assessment_id(
+      paramsDto.assessment_id,
+    );
+    let assessmentCandidateListResult = [];
+    for (const candidate_email of paramsDto.candidate_list) {
+      const payloadUser = {
+        email: candidate_email,
+        password: '123456',
+      };
+      const userResult = await this.userService.checkOrCreateUser(payloadUser);
+      const payloadAssessmentCandidate = {
+        assessment_id: paramsDto.assessment_id,
+        candidate_id: userResult.id,
+      };
+      const assessmentCandidateResult =
+        await this.assessmentService.create_assessment_candidate(
+          payloadAssessmentCandidate,
+        );
+      assessmentCandidateListResult = [
+        ...assessmentCandidateListResult,
+        assessmentCandidateResult,
+      ];
+    }
+    return this.successResponse(
+      {
+        message: 'success',
+        data: assessmentCandidateListResult,
+      },
+      res,
+    );
   }
 
   @Delete(':id')
