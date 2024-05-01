@@ -3,7 +3,6 @@ import { Repository } from 'typeorm';
 import { Game } from '@entities/game.entity';
 import { InjectRepository } from '@nestjs/typeorm';
 import { LogicalQuestion } from '@entities/logicalQuestion.entity';
-import { MemoryGame } from '@entities/memoryGame.entity';
 import { MemoryData } from '@entities/memoryData.entity';
 
 @Injectable()
@@ -13,8 +12,6 @@ export class GameService {
     private gameRepository: Repository<Game>,
     @InjectRepository(LogicalQuestion)
     private logicalQuestionRepository: Repository<LogicalQuestion>,
-    @InjectRepository(MemoryGame)
-    private memoryGameRepository: Repository<MemoryGame>,
     @InjectRepository(MemoryData)
     private memoryDataRepository: Repository<MemoryData>,
   ) {}
@@ -46,7 +43,7 @@ export class GameService {
   }
 
   async getMemoryGame() {
-    return await this.memoryGameRepository.find();
+    return await this.memoryDataRepository.find();
   }
 
   async findLogicalGameById(id: number) {
@@ -164,7 +161,7 @@ export class GameService {
         message: `Length of corrects answer must equal level`,
       };
     }
-    const memoryGameData = await this.memoryGameRepository
+    const memoryGameData = await this.memoryDataRepository
       .createQueryBuilder()
       .where('level = :level', { level: paramsMemoryGame.level })
       .getOne();
@@ -185,6 +182,6 @@ export class GameService {
     correct_answer: any;
     score: number;
   }) {
-    return await this.memoryGameRepository.save(paramsMemoryGame);
+    return await this.memoryDataRepository.save(paramsMemoryGame);
   }
 }

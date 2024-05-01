@@ -242,8 +242,7 @@ export class AssessmentController extends BaseController {
     await this.mailServerService.sendMail(paramsDto.candidate_list);
     return this.successResponse(
       {
-        message: 'success',
-        data: assessmentCandidateListResult,
+        message: `Success. Email sent to ${paramsDto.candidate_list.toString()}`,
       },
       res,
     );

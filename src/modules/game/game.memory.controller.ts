@@ -10,14 +10,14 @@ export class GameMemoryController extends BaseController {
     super();
   }
 
-  @Get('/list')
+  @Get('')
   @UseGuards(JwtAuthGuard)
   async findAll(@Res() res: Response) {
     const dataList = await this.gameService.getMemoryGame();
     return this.successResponse(
       {
-        data: dataList,
         message: 'success',
+        data: dataList,
       },
       res,
     );
