@@ -20,6 +20,7 @@ import { JwtAuthGuard } from '@guards/jwt-auth.guard';
 import { AuthorizationGuard } from '@guards/authorization.guard';
 import { GameResultService } from '@modules/game_result/gameResult.service';
 import { UserService } from '@modules/users/services/user.service';
+import { MailServerService } from '@modules/mail_server/mail_server.service';
 
 const currentDate = new Date();
 
@@ -30,6 +31,7 @@ export class AssessmentController extends BaseController {
     private readonly assessmentService: AssessmentService,
     private readonly gameResultService: GameResultService,
     private readonly userService: UserService,
+    private readonly mailServerService: MailServerService,
   ) {
     super();
   }
@@ -236,6 +238,8 @@ export class AssessmentController extends BaseController {
         assessmentCandidateResult,
       ];
     }
+    // Send email to candidate
+    await this.mailServerService.sendMail(paramsDto.candidate_list);
     return this.successResponse(
       {
         message: 'success',

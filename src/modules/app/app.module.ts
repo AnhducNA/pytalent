@@ -21,6 +21,8 @@ import { AssessmentModule } from '@modules/assessment/assessment.module';
 import { Assessment } from '@entities/assessment.entity';
 import { GameResult } from '@entities/gameResult.entity';
 import { GameResultModule } from '@modules/game_result/gameResult.module';
+import { MailServerModule } from '@modules/mail_server/mail_server.module';
+import { ConfigModule } from '@nestjs/config';
 
 const options = databaseConfig as TypeOrmModuleOptions;
 
@@ -46,12 +48,17 @@ const options = databaseConfig as TypeOrmModuleOptions;
       resolvers: [new CookieResolver(), AcceptLanguageResolver],
     }),
 
+    ConfigModule.forRoot({
+      envFilePath: '.env',
+      isGlobal: true, // no need to import into other modules
+    }),
     //other module
     UserModule,
     GameModule,
     AuthModule,
     AssessmentModule,
     GameResultModule,
+    MailServerModule,
   ],
   controllers: [AppController],
   providers: [AppService],

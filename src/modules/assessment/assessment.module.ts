@@ -18,6 +18,7 @@ import { MemoryGameResult } from '@entities/memoryGameResult.entity';
 import { UserService } from '@modules/users/services/user.service';
 import { User } from '@entities/user.entity';
 import { HrGame } from '@entities/hrGame.entity';
+import { MailServerService } from '@modules/mail_server/mail_server.service';
 
 @Module({
   imports: [
@@ -33,8 +34,18 @@ import { HrGame } from '@entities/hrGame.entity';
     ]),
   ],
   controllers: [AssessmentController],
-  providers: [AssessmentService, GameResultService, UserService],
-  exports: [AssessmentService, GameResultService, UserService],
+  providers: [
+    AssessmentService,
+    GameResultService,
+    UserService,
+    MailServerService,
+  ],
+  exports: [
+    AssessmentService,
+    GameResultService,
+    UserService,
+    MailServerService,
+  ],
 })
 export class AssessmentModule implements NestModule {
   configure(consumer: MiddlewareConsumer): any {
