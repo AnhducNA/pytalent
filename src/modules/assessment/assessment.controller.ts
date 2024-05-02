@@ -15,7 +15,6 @@ import { AssessmentService } from './assessment.service';
 import { Response } from 'express';
 import { BaseController } from '@modules/app/base.controller';
 import { RoleEnum } from '@enum/role.enum';
-import { AuthGuard } from '@guards/auth.guard';
 import { JwtAuthGuard } from '@guards/jwt-auth.guard';
 import { AuthorizationGuard } from '@guards/authorization.guard';
 import { GameResultService } from '@modules/game_result/gameResult.service';
@@ -25,7 +24,6 @@ import { MailServerService } from '@modules/mail_server/mail_server.service';
 const currentDate = new Date();
 
 @Controller('api/assessments')
-@UseGuards(AuthGuard)
 export class AssessmentController extends BaseController {
   constructor(
     private readonly assessmentService: AssessmentService,
@@ -36,9 +34,12 @@ export class AssessmentController extends BaseController {
     super();
   }
 
-  //get all assessments
+  // get all assessments
   @Get('/list')
-  @UseGuards(JwtAuthGuard, new AuthorizationGuard([RoleEnum.ADMIN]))
+  @UseGuards(
+    JwtAuthGuard,
+    new AuthorizationGuard([RoleEnum.ADMIN, RoleEnum.HR]),
+  )
   findAll(): Promise<Assessment[]> {
     return this.assessmentService.findAll();
   }
@@ -141,9 +142,11 @@ export class AssessmentController extends BaseController {
       assessmentDto.time_end = new Date(assessmentDto.time_end);
     }
     const new_assessment = await this.assessmentService.create(assessmentDto);
+    // Sent email
+    await this.mailServerService.sendMail(assessmentDto.candidate_list);
     return this.successResponse(
       {
-        message: 'success',
+        message: `Success. Email sent to ${assessmentDto.candidate_list.toString()}`,
         data: {
           assessment: new_assessment,
           game_list: assessmentDto.game_list,
@@ -242,7 +245,7 @@ export class AssessmentController extends BaseController {
     await this.mailServerService.sendMail(paramsDto.candidate_list);
     return this.successResponse(
       {
-        message: `Success. Email sent to ${paramsDto.candidate_list.toString()}`,
+        message: `Success. Email sent to: ${paramsDto.candidate_list.toString()}`,
       },
       res,
     );

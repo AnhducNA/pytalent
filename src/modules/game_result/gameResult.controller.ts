@@ -5,9 +5,7 @@ import {
   HttpStatus,
   Param,
   Post,
-  Put,
   Req,
-  Request,
   Res,
   UseGuards,
 } from '@nestjs/common';
@@ -17,7 +15,6 @@ import { AuthGuard } from '@guards/auth.guard';
 import { RolesGuard } from '@guards/roles.guard';
 import { RolesDecorator } from '@shared/decorator/roles.decorator';
 import { RoleEnum } from '@enum/role.enum';
-import { Response } from 'express';
 import { GameService } from '@modules/game/game.service';
 import { JwtAuthGuard } from '@guards/jwt-auth.guard';
 
@@ -38,7 +35,10 @@ export class GameResultController extends BaseController {
       await this.gameResultService.getGameResultByCandidateId(userLogin.id);
     return res.status(HttpStatus.OK).json({
       success: true,
-      data: gameResultList,
+      data: {
+        user_login: userLogin,
+        game_result_list: gameResultList,
+      },
     });
   }
 
