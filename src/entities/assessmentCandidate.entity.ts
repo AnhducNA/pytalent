@@ -1,5 +1,6 @@
-import { Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
+import { Column, Entity, JoinColumn, ManyToOne, PrimaryGeneratedColumn } from 'typeorm';
 import { BaseEntity } from '@entities/base.entity';
+import { User } from '@entities/user.entity';
 
 @Entity()
 export class AssessmentCandidate extends BaseEntity {
@@ -12,4 +13,10 @@ export class AssessmentCandidate extends BaseEntity {
   @Column()
   candidate_id: number;
 
+  @ManyToOne(() => User, {
+    onDelete: 'CASCADE',
+    onUpdate: 'CASCADE',
+  })
+  @JoinColumn([{ name: 'candidate_id', referencedColumnName: 'id' }])
+  candidate: User;
 }

@@ -80,6 +80,17 @@ export class AssessmentService {
     });
   }
 
+  async getCandidateByAssessmentId(assessment_id: number): Promise<any> {
+    return await this.assessmentCandidateRepository
+      .createQueryBuilder('assessment_candidate')
+      .select('assessment_candidate.assessment_id')
+      .leftJoinAndSelect('assessment_candidate.candidate', 'user')
+      .where('assessment_candidate.assessment_id = :assessment_id', {
+        assessment_id: assessment_id,
+      })
+      .getMany();
+  }
+
   async getGameByAssessmentId(assessment_id: number): Promise<any> {
     return await this.assessmentGameRepository
       .createQueryBuilder('assessment_game')
