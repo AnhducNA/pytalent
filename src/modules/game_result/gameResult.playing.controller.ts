@@ -197,7 +197,7 @@ export class GameResultPlayingController extends BaseController {
         res,
       );
     }
-    // validate check assessment exit?
+    // validate check assessment exit Candidate?
     const assessmentCheckCandidate =
       await this.gameResultService.findOneAssessmentCandidate(
         gameResultDto.assessment_id,
@@ -210,81 +210,89 @@ export class GameResultPlayingController extends BaseController {
         },
         res,
       );
-    } else {
-      // Default value before start
-      this.timeStart = Date.now();
-      gameResultDto.play_time = gameResultDto.play_time
-        ? gameResultDto.play_time
-        : 0;
-      gameResultDto.play_score = gameResultDto.play_score
-        ? gameResultDto.play_score
-        : 0;
-      gameResultDto.is_done = gameResultDto.is_done
-        ? gameResultDto.is_done
-        : false;
-      try {
-        this.gameResultPlaying = await this.gameResultService.create(
-          gameResultDto,
-        );
-        // this.gameResultPlaying = { ...{ id: 22 }, ...gameResultDto };
-        // Get Data game
-        switch (gameResultDto?.game_id) {
-          case 1:
-            // Candidate play logicalQuestion
-            this.logicalQuestionRenderCurrent = {
-              ...{ number: 1 },
-              ...(await this.gameService.getLogicalQuestionRender([], [])),
-            };
-            return this.successResponse(
-              {
-                message: 'Start play game logical success',
-                data: {
-                  game_result: this.gameResultPlaying,
-                  logical_question_render_next: {
-                    id: this.logicalQuestionRenderCurrent.id,
-                    number: this.logicalQuestionRenderCurrent.number,
-                    statement1: this.logicalQuestionRenderCurrent.statement1,
-                    statement2: this.logicalQuestionRenderCurrent.statement2,
-                    conclusion: this.logicalQuestionRenderCurrent.conclusion,
-                    score: this.logicalQuestionRenderCurrent.score,
-                  },
+    }
+    // Default value before start
+    this.timeStart = Date.now();
+    gameResultDto.play_time = gameResultDto.play_time
+      ? gameResultDto.play_time
+      : 0;
+    gameResultDto.play_score = gameResultDto.play_score
+      ? gameResultDto.play_score
+      : 0;
+    gameResultDto.is_done = gameResultDto.is_done
+      ? gameResultDto.is_done
+      : false;
+    try {
+      this.gameResultPlaying = await this.gameResultService.create(
+        gameResultDto,
+      );
+      // this.gameResultPlaying = { ...{ id: 22 }, ...gameResultDto };
+      // Get Data game
+      switch (gameResultDto?.game_id) {
+        case 1:
+          // Candidate play logicalQuestion
+          this.logicalQuestionRenderCurrent = {
+            ...{ number: 1 },
+            ...(await this.gameService.getLogicalQuestionRender([], [])),
+          };
+          return this.successResponse(
+            {
+              message: 'Start play game logical success',
+              data: {
+                game_result: this.gameResultPlaying,
+                logical_question_render_next: {
+                  id: this.logicalQuestionRenderCurrent.id,
+                  number: this.logicalQuestionRenderCurrent.number,
+                  statement1: this.logicalQuestionRenderCurrent.statement1,
+                  statement2: this.logicalQuestionRenderCurrent.statement2,
+                  conclusion: this.logicalQuestionRenderCurrent.conclusion,
+                  score: this.logicalQuestionRenderCurrent.score,
                 },
               },
-              res,
-            );
-          case 2:
-            // Candidate play memoryGame
-            this.timeNextMemoryItem = Date.now();
-            const memoryDataRender =
-              await this.gameService.getMemoryDataByLevel(1);
-            const correct_answer = [
-              ['left', 'right'][
-                Math.floor(Math.random() * ['left', 'right'].length)
-              ],
-            ];
-            this.memoryDataRenderCurrent = {
-              id: memoryDataRender.id,
-              level: memoryDataRender.level,
-              score: memoryDataRender.score,
-              time_limit: memoryDataRender.time_limit,
-              correct_answer: correct_answer,
-            };
-            return this.successResponse(
-              {
-                message: 'Start play game memory success.',
-                data: {
-                  game_result: this.gameResultPlaying,
-                  memory_data_next: this.memoryDataRenderCurrent,
-                },
+            },
+            res,
+          );
+        case 2:
+          // Candidate play memoryGame
+          this.timeNextMemoryItem = Date.now();
+          const memoryDataRender = await this.gameService.getMemoryDataByLevel(
+            1,
+          );
+          const correct_answer = [
+            ['left', 'right'][
+              Math.floor(Math.random() * ['left', 'right'].length)
+            ],
+          ];
+          this.memoryDataRenderCurrent = {
+            id: memoryDataRender.id,
+            level: memoryDataRender.level,
+            score: memoryDataRender.score,
+            time_limit: memoryDataRender.time_limit,
+            correct_answer: correct_answer,
+          };
+          return this.successResponse(
+            {
+              message: 'Start play game memory success.',
+              data: {
+                game_result: this.gameResultPlaying,
+                memory_data_next: this.memoryDataRenderCurrent,
               },
-              res,
-            );
-          default:
-            break;
-        }
-      } catch (e) {
-        console.log(e.message);
+            },
+            res,
+          );
+        default:
+          return this.errorsResponse(
+            {
+              message: 'You are not allowed to play this game.',
+              data: {
+                game_result: this.gameResultPlaying,
+              },
+            },
+            res,
+          );
       }
+    } catch (e) {
+      console.log(e.message);
     }
   }
 
@@ -339,6 +347,10 @@ export class GameResultPlayingController extends BaseController {
     if (
       this.logicalQuestionRenderCurrent.number > total_question_game_logical
     ) {
+      this.gameResultPlaying.is_done = true;
+      await this.gameResultService.updateIsDoneGameResult(
+        this.gameResultPlaying.id,
+      );
       return this.successResponse(
         {
           message: 'You have completed the game. End game.',
@@ -638,6 +650,15 @@ export class GameResultPlayingController extends BaseController {
         res,
       );
     }
+    if (this.gameResultPlaying.is_done === true) {
+      return this.successResponse(
+        {
+          data: this.gameResultPlaying,
+          message: `Game over. Can't continue.`,
+        },
+        res,
+      );
+    }
     // validate check assessment time_end
     const assessment_time_end = (
       await this.gameResultService.get_assessment_by_id(
@@ -750,7 +771,15 @@ export class GameResultPlayingController extends BaseController {
               res,
             );
           default:
-            break;
+            return this.errorsResponse(
+              {
+                message: 'You are not allowed to play this game.',
+                data: {
+                  game_result: this.gameResultPlaying,
+                },
+              },
+              res,
+            );
         }
       } catch (e) {
         console.log(e.message);
