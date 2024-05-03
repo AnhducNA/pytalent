@@ -324,7 +324,7 @@ export class GameResultPlayingController extends BaseController {
     this.gameResultPlaying.play_time = Date.now() - this.timeStart;
     const total_game_time = parseInt(
       (
-        await this.gameResultService.get_game_info_by_game_result(
+        await this.gameResultService.get_game_total_time_by_game_result(
           this.gameResultPlaying.id,
         )
       ).game.total_time,
@@ -410,9 +410,9 @@ export class GameResultPlayingController extends BaseController {
       // create new LogicalGameResult
       const newLogicalGameResult =
         await this.gameResultService.createLogicalGameResult({
+          index: this.logicalQuestionRenderCurrent.number,
           game_result_id: this.gameResultPlaying.id,
           logical_question_id: this.logicalQuestionRenderCurrent.id,
-          correct_answer: this.logicalQuestionRenderCurrent.correct_answer,
           answer_play: logicalGameAnswerDto.answer_play,
           is_correct: logicalGameAnswerDto.is_correct,
         });
@@ -718,7 +718,7 @@ export class GameResultPlayingController extends BaseController {
               ).map((obj) => obj.logical_question.correct_answer),
             };
             this.logicalQuestionRenderCurrent = {
-              ...{ number: logical_game_result_list.length },
+              ...{ number: logical_game_result_list.length + 1 },
               ...(await this.gameService.getLogicalQuestionRender(
                 this.logical_except_and_check_identical_answer
                   .id_logical_list_except,

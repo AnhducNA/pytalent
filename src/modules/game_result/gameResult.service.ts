@@ -6,6 +6,7 @@ import { LogicalGameResult } from '@entities/logicalGameResult.entity';
 import { MemoryGameResult } from '@entities/memoryGameResult.entity';
 import { AssessmentCandidate } from '@entities/assessmentCandidate.entity';
 import { Assessment } from '@entities/assessment.entity';
+import { createLogicalGameResultInterface } from '@interfaces/logicalGameResult.interface';
 
 @Injectable()
 export class GameResultService {
@@ -79,6 +80,15 @@ export class GameResultService {
       .getOne();
   }
 
+  async get_game_total_time_by_game_result(game_result_id: number) {
+    return await this.gameResultRepository
+      .createQueryBuilder('game_result')
+      .select(['game_result.id', 'game_result.game_id'])
+      .addSelect(['game.total_time'])
+      .innerJoin('game_result.game', 'game')
+      .where('game_result.id = :id', { id: game_result_id })
+      .getOne();
+  }
   async get_game_info_by_game_result(game_result_id: number) {
     return this.gameResultRepository
       .createQueryBuilder('game_result')
@@ -204,13 +214,7 @@ export class GameResultService {
       .execute();
   }
 
-  async createLogicalGameResult(payload: {
-    game_result_id: number;
-    logical_question_id: number;
-    correct_answer: boolean;
-    answer_play: boolean;
-    is_correct: boolean;
-  }) {
+  async createLogicalGameResult(payload: createLogicalGameResultInterface) {
     return await this.logicalGameResultRepository.save(payload);
   }
 
