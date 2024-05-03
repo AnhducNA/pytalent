@@ -659,6 +659,7 @@ export class GameResultPlayingController extends BaseController {
         res,
       );
     }
+    // validate check game_result is done
     if (this.gameResultPlaying.is_done === true) {
       return this.successResponse(
         {
@@ -714,7 +715,7 @@ export class GameResultPlayingController extends BaseController {
               ).map((obj) => obj.logical_question_id),
               check_identical_answer: Object.values(
                 logical_game_result_list,
-              ).map((obj) => obj.correct_answer),
+              ).map((obj) => obj.logical_question.correct_answer),
             };
             this.logicalQuestionRenderCurrent = {
               ...{ number: logical_game_result_list.length },

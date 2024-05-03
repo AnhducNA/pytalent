@@ -8,20 +8,21 @@ import {
 } from 'typeorm';
 import { BaseEntity } from '@entities/base.entity';
 import { GameResult } from '@entities/gameResult.entity';
+import { LogicalQuestion } from '@entities/logicalQuestion.entity';
 
 @Entity()
 export class LogicalGameResult extends BaseEntity {
   @PrimaryGeneratedColumn('increment')
   id: number;
 
-  @PrimaryColumn({ name: 'game_result_id' })
+  @Column()
+  index: number;
+
+  @Column()
   game_result_id: number;
 
   @Column()
   logical_question_id: number;
-
-  @Column()
-  correct_answer: boolean;
 
   @Column()
   answer_play: boolean;
@@ -35,4 +36,13 @@ export class LogicalGameResult extends BaseEntity {
   })
   @JoinColumn([{ name: 'game_result_id', referencedColumnName: 'id' }])
   gameResult: GameResult;
+
+  @ManyToOne(() => LogicalQuestion)
+  @JoinColumn([
+    {
+      name: 'logical_question_id',
+      referencedColumnName: 'id',
+    },
+  ])
+  logical_question: LogicalQuestion;
 }
