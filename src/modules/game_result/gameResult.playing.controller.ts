@@ -167,7 +167,7 @@ export class GameResultPlayingController extends BaseController {
   //  Start playing game
   @Post('start')
   @UseGuards(JwtAuthGuard)
-  async startPlayGame(
+  async startPlayingGame(
     @Req() req: any,
     @Body()
     gameResultDto: {
@@ -207,6 +207,14 @@ export class GameResultPlayingController extends BaseController {
       return this.errorsResponse(
         {
           message: `Assessment does not have candidate: ${userLogin.email}.`,
+        },
+        res,
+      );
+    }
+    if (gameResultDto.game_id > 2) {
+      return this.errorsResponse(
+        {
+          message: `Game with id = ${gameResultDto.game_id} does not setting.`,
         },
         res,
       );

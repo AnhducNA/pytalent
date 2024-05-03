@@ -1,6 +1,7 @@
 import {
   Body,
   Controller,
+  Delete,
   Get,
   HttpStatus,
   Param,
@@ -109,5 +110,20 @@ export class GameResultController extends BaseController {
   @RolesDecorator(RoleEnum.HR)
   findOne(@Param() params) {
     return this.gameResultService.findOne(params.id);
+  }
+
+  @Delete(':id')
+  @UseGuards(AuthGuard)
+  async delete(@Req() req, @Res() res) {
+    const result = await this.gameResultService.delete_game_result_by_id(
+      req.params.id,
+    );
+    return this.successResponse(
+      {
+        message: 'success',
+        data: result,
+      },
+      res,
+    );
   }
 }

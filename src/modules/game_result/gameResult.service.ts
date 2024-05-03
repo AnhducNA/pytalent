@@ -92,42 +92,39 @@ export class GameResultService {
     game_result_id: number,
     candidate_id: number,
   ) {
-    const query = this.logicalGameResultRepository
+    return this.logicalGameResultRepository
       .createQueryBuilder('logical_game_result')
       .innerJoin('logical_game_result.gameResult', 'game_result')
       .orderBy('logical_game_result.id', 'DESC')
       .where(`logical_game_result.game_result_id = ${game_result_id}`)
       .andWhere(`game_result.candidate_id = ${candidate_id}`)
       .getMany();
-    return query;
   }
 
   async get_logical_game_result_by_game_result(game_result_id: number) {
-    const query = this.logicalGameResultRepository
+    return this.logicalGameResultRepository
       .createQueryBuilder('logical_game_result')
       .select('logical_game_result.logical_game_id')
       .addSelect('logical_game_result.correct_answer')
       .where(`logical_game_result.game_result_id = ${game_result_id}`)
       .getMany();
-    return query;
   }
 
   async getMemoryGameResultByGameResultIdAndCandidateId(
     game_result_id: number,
     candidate_id: number,
   ) {
-    const query = this.memoryGameResultRepository
+    return this.memoryGameResultRepository
       .createQueryBuilder('memory_game_result')
       .innerJoin('memory_game_result.gameResults', 'game_result')
       .orderBy('memory_game_result.id', 'DESC')
       .where(`memory_game_result.game_result_id = ${game_result_id}`)
       .andWhere(`game_result.candidate_id = ${candidate_id}`)
       .getMany();
-    return query;
   }
 
   async get_memory_game_result_by_game_result_id(game_result_id: number) {
-    const query = this.memoryGameResultRepository
+    return this.memoryGameResultRepository
       .createQueryBuilder('memory_game_result')
       .select('memory_game_result.id')
       .addSelect('memory_game_result.memory_game_id')
@@ -136,15 +133,13 @@ export class GameResultService {
       .addSelect('memory_game_result.is_correct')
       .where(`memory_game_result.game_result_id = ${game_result_id}`)
       .getMany();
-    return query;
   }
 
   async get_count_memory_game_result_by_game_result(game_result_id: number) {
-    const query = this.memoryGameResultRepository
+    return this.memoryGameResultRepository
       .createQueryBuilder('memory_game_result')
       .where(`memory_game_result.game_result_id = ${game_result_id}`)
       .getCount();
-    return query;
   }
 
   async updateGameResult(payload: {
@@ -206,5 +201,9 @@ export class GameResultService {
     is_correct: boolean;
   }) {
     return await this.memoryGameResultRepository.save(payload);
+  }
+
+  async delete_game_result_by_id(game_result_id: number) {
+    return this.gameResultRepository.delete(game_result_id);
   }
 }
