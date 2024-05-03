@@ -12,4 +12,5 @@ export class CreateGameResultDto {
   play_time: number;
   play_score: number;
   is_done: boolean;
+  time_start: Date;
 }

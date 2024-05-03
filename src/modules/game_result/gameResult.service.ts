@@ -7,6 +7,7 @@ import { MemoryGameResult } from '@entities/memoryGameResult.entity';
 import { AssessmentCandidate } from '@entities/assessmentCandidate.entity';
 import { Assessment } from '@entities/assessment.entity';
 import { createLogicalGameResultInterface } from '@interfaces/logicalGameResult.interface';
+import { createGameResultInterface } from '@interfaces/gameResult.interface';
 
 @Injectable()
 export class GameResultService {
@@ -41,15 +42,7 @@ export class GameResultService {
     });
   }
 
-  async create(params: object) {
-    const payloadGameResult = {
-      candidate_id: params['candidate_id'],
-      assessment_id: params['assessment_id'],
-      game_id: params['game_id'],
-      play_time: params['play_time'],
-      play_score: params['play_score'],
-      is_done: params['is_done'],
-    };
+  async create(payloadGameResult: createGameResultInterface) {
     return await this.gameResultRepository.save(payloadGameResult);
   }
 

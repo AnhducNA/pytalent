@@ -16,6 +16,7 @@ import { JwtAuthGuard } from '@guards/jwt-auth.guard';
 import { Response } from 'express';
 import { arraysEqualWithoutLength } from '@helper/function';
 import { CreateGameResultDto } from '@modules/game_result/createGameResult.dto';
+import { StatusLogicalGameResultEnum } from '@enum/status-logical-game-result.enum';
 
 @Controller('api/game-result-playing')
 export class GameResultPlayingController extends BaseController {
@@ -240,18 +241,16 @@ export class GameResultPlayingController extends BaseController {
       );
     } else {
       //   Start play game: create new game_result
-
-      // this.timeStart = Date.now();
-
       // Default value game_result before add new
       gameResultDto.play_time = 0;
       gameResultDto.play_score = 0;
       gameResultDto.is_done = false;
+      gameResultDto.is_done = false;
+      gameResultDto.time_start = new Date();
       try {
         const gameResultPlaying = await this.gameResultService.create(
           gameResultDto,
         );
-        // this.gameResultPlaying = { ...{ id: 22 }, ...gameResultDto };
         // Get Data game
         switch (gameResultDto?.game_id) {
           case 1:
@@ -259,19 +258,22 @@ export class GameResultPlayingController extends BaseController {
             const logicalQuestionRenderCurrent =
               await this.gameService.getLogicalQuestionRender([], []);
             // create logical_game_result
-            await this.gameResultService.createLogicalGameResult({
-              index: 1,
-              game_result_id: gameResultPlaying.id,
-              logical_question_id: logicalQuestionRenderCurrent.id,
-              answer_play: null,
-              is_correct: null,
-            });
+            const logical_game_result_new =
+              await this.gameResultService.createLogicalGameResult({
+                index: 1,
+                game_result_id: gameResultPlaying.id,
+                logical_question_id: logicalQuestionRenderCurrent.id,
+                status: StatusLogicalGameResultEnum.NO_ANSWER,
+                answer_play: null,
+                is_correct: null,
+              });
             return this.successResponse(
               {
                 message: 'Start play game logical success.',
                 data: {
                   game_result: this.gameResultPlaying,
                   logical_question_render_next: {
+                    logical_game_result_id: logical_game_result_new.id,
                     index: 1,
                     statement1: logicalQuestionRenderCurrent.statement1,
                     statement2: logicalQuestionRenderCurrent.statement2,
@@ -441,6 +443,7 @@ export class GameResultPlayingController extends BaseController {
           index: this.logicalQuestionRenderCurrent.number,
           game_result_id: this.gameResultPlaying.id,
           logical_question_id: this.logicalQuestionRenderCurrent.id,
+          status: StatusLogicalGameResultEnum.ANSWERED,
           answer_play: logicalGameAnswerDto.answer_play,
           is_correct: logicalGameAnswerDto.is_correct,
         });

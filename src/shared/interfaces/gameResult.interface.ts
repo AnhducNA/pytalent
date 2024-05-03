@@ -6,6 +6,7 @@ export interface gameResultModel {
   play_time: number;
   play_score: number;
   is_done: boolean;
+  time_start: Date;
 }
 
 export interface createGameResultInterface {
@@ -15,4 +16,5 @@ export interface createGameResultInterface {
   play_time: number;
   play_score: number;
   is_done: boolean;
+  time_start: Date;
 }

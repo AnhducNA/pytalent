@@ -8,6 +8,7 @@ import {
 import { BaseEntity } from '@entities/base.entity';
 import { GameResult } from '@entities/gameResult.entity';
 import { LogicalQuestion } from '@entities/logicalQuestion.entity';
+import { StatusLogicalGameResultEnum } from '@enum/status-logical-game-result.enum';
 
 @Entity()
 export class LogicalGameResult extends BaseEntity {
@@ -22,6 +23,9 @@ export class LogicalGameResult extends BaseEntity {
 
   @Column()
   logical_question_id: number;
+
+  @Column()
+  status: StatusLogicalGameResultEnum;
 
   @Column()
   answer_play: boolean;
