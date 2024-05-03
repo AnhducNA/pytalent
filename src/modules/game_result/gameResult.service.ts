@@ -65,6 +65,19 @@ export class GameResultService {
       .execute();
   }
 
+  async get_game_result_exist_check(
+    candidate_id: number,
+    assessment_id: number,
+    game_id: number,
+  ) {
+    return this.gameResultRepository
+      .createQueryBuilder()
+      .where(`candidate_id = ${candidate_id}`)
+      .andWhere(`assessment_id = ${assessment_id}`)
+      .andWhere(`game_id = ${game_id}`)
+      .getOne();
+  }
+
   async getGameResultByCandidateId(candidateId: number) {
     return this.gameResultRepository.find({
       where: { candidate_id: candidateId },
@@ -89,6 +102,7 @@ export class GameResultService {
       .where('game_result.id = :id', { id: game_result_id })
       .getOne();
   }
+
   async get_game_info_by_game_result(game_result_id: number) {
     return this.gameResultRepository
       .createQueryBuilder('game_result')

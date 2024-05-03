@@ -31,6 +31,9 @@ export class GameResult extends BaseEntity {
   @Column({ nullable: true })
   is_done: boolean;
 
+  @Column({ nullable: true })
+  time_start: Date;
+
   @ManyToOne(() => Game)
   @JoinColumn({ name: 'game_id', referencedColumnName: 'id' })
   game: Game;
