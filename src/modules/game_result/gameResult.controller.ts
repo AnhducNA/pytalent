@@ -16,15 +16,11 @@ import { AuthGuard } from '@guards/auth.guard';
 import { RolesGuard } from '@guards/roles.guard';
 import { RolesDecorator } from '@shared/decorator/roles.decorator';
 import { RoleEnum } from '@enum/role.enum';
-import { GameService } from '@modules/game/game.service';
 import { JwtAuthGuard } from '@guards/jwt-auth.guard';
 
 @Controller('api/game-result')
 export class GameResultController extends BaseController {
-  constructor(
-    private readonly gameResultService: GameResultService,
-    private readonly gameService: GameService,
-  ) {
+  constructor(private readonly gameResultService: GameResultService) {
     super();
   }
 
@@ -112,9 +108,22 @@ export class GameResultController extends BaseController {
     return this.gameResultService.findOne(params.id);
   }
 
+  @Get('logical-game-result-item/:logical_game_result_id')
+  async getLogicalGameResultItem(@Req() req: any, @Res() res: any) {
+    const result = await this.gameResultService.get_logical_game_result_item(
+      req.params.logical_game_result_id,
+    );
+    return this.successResponse(
+      {
+        data: result,
+      },
+      res,
+    );
+  }
+
   @Delete(':id')
   @UseGuards(AuthGuard)
-  async delete(@Req() req, @Res() res) {
+  async delete(@Req() req: any, @Res() res: any) {
     const result = await this.gameResultService.delete_game_result_by_id(
       req.params.id,
     );

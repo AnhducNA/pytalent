@@ -101,10 +101,22 @@ export class GameResultService {
       .getMany();
   }
 
+  async get_logical_game_result_item(logical_game_result_id: number) {
+    return this.logicalGameResultRepository
+      .createQueryBuilder('logical_game_result')
+      .select([
+        'logical_game_result.id',
+        'logical_game_result.answer_play',
+        'logical_game_result.is_correct',
+      ])
+      .where(`logical_game_result.id = ${logical_game_result_id}`)
+      .getOne();
+  }
+
   async get_logical_game_result_by_game_result(game_result_id: number) {
     return this.logicalGameResultRepository
       .createQueryBuilder('logical_game_result')
-      .select('logical_game_result.logical_game_id')
+      .select('logical_game_result.logical_question_id')
       .addSelect('logical_game_result.correct_answer')
       .where(`logical_game_result.game_result_id = ${game_result_id}`)
       .getMany();
@@ -185,7 +197,7 @@ export class GameResultService {
 
   async createLogicalGameResult(payload: {
     game_result_id: number;
-    logical_game_id: number;
+    logical_question_id: number;
     correct_answer: boolean;
     answer_play: boolean;
     is_correct: boolean;

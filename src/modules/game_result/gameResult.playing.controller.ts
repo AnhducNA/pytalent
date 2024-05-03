@@ -211,6 +211,7 @@ export class GameResultPlayingController extends BaseController {
         res,
       );
     }
+    // validate check if game_id does not setting.
     if (gameResultDto.game_id > 2) {
       return this.errorsResponse(
         {
@@ -410,7 +411,7 @@ export class GameResultPlayingController extends BaseController {
       const newLogicalGameResult =
         await this.gameResultService.createLogicalGameResult({
           game_result_id: this.gameResultPlaying.id,
-          logical_game_id: this.logicalQuestionRenderCurrent.id,
+          logical_question_id: this.logicalQuestionRenderCurrent.id,
           correct_answer: this.logicalQuestionRenderCurrent.correct_answer,
           answer_play: logicalGameAnswerDto.answer_play,
           is_correct: logicalGameAnswerDto.is_correct,
@@ -710,7 +711,7 @@ export class GameResultPlayingController extends BaseController {
             this.logical_except_and_check_identical_answer = {
               id_logical_list_except: Object.values(
                 logical_game_result_list,
-              ).map((obj) => obj.logical_game_id),
+              ).map((obj) => obj.logical_question_id),
               check_identical_answer: Object.values(
                 logical_game_result_list,
               ).map((obj) => obj.correct_answer),
