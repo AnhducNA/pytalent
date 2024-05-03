@@ -48,18 +48,6 @@ export class AssessmentService {
       .getMany();
   }
 
-  async get_assessment_candidate_by_all(
-    assessment_id: number,
-    candidate_id: number,
-  ) {
-    return this.assessmentCandidateRepository
-      .createQueryBuilder('assessment_candidate')
-      .select('assessment_candidate.id')
-      .where('assessment_id = :assessment_id', { assessment_id: assessment_id })
-      .andWhere('candidate_id = :candidate_id', { candidate_id: candidate_id })
-      .getOne();
-  }
-
   async get_assessment_candidate_and_game_result_by_assessment_id(
     assessment_id: number,
   ) {
@@ -84,7 +72,8 @@ export class AssessmentService {
     return await this.assessmentCandidateRepository
       .createQueryBuilder('assessment_candidate')
       .select('assessment_candidate.assessment_id')
-      .leftJoinAndSelect('assessment_candidate.candidate', 'user')
+      .addSelect(['user.id', 'user.name', 'user.email'])
+      .innerJoin('assessment_candidate.candidate', 'user')
       .where('assessment_candidate.assessment_id = :assessment_id', {
         assessment_id: assessment_id,
       })
