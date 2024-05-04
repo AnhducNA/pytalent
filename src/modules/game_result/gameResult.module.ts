@@ -12,6 +12,7 @@ import { MemoryData } from '@entities/memoryData.entity';
 import { GameResultPlayingController } from '@modules/game_result/controllers/gameResult.playing.controller';
 import { AssessmentCandidate } from '@entities/assessmentCandidate.entity';
 import { Assessment } from '@entities/assessment.entity';
+import { GameResultPlayingLogicalController } from '@modules/game_result/controllers/gameResult.playingLogical.controller';
 
 @Module({
   imports: [
@@ -26,7 +27,11 @@ import { Assessment } from '@entities/assessment.entity';
       AssessmentCandidate,
     ]),
   ],
-  controllers: [GameResultController, GameResultPlayingController],
+  controllers: [
+    GameResultController,
+    GameResultPlayingController,
+    GameResultPlayingLogicalController,
+  ],
   providers: [GameResultService, GameService],
   exports: [GameResultService],
 })
