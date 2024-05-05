@@ -12,6 +12,7 @@ import {
   gameResultModel,
 } from '@interfaces/gameResult.interface';
 import { StatusLogicalGameResultEnum } from '@enum/status-logical-game-result.enum';
+import { createMemoryGameResultInterface } from '@interfaces/memoryGameResult.interface';
 
 @Injectable()
 export class GameResultService {
@@ -201,11 +202,33 @@ export class GameResultService {
       .getMany();
   }
 
-  async get_count_memory_game_result_by_game_result(game_result_id: number) {
+  async get_memory_game_result_final_by_game_result(game_result_id: number) {
     return this.memoryGameResultRepository
       .createQueryBuilder('memory_game_result')
+      .select([
+        'memory_game_result.id',
+        'memory_game_result.memory_game_id',
+        'memory_game_result.correct_answer',
+        'memory_game_result.answer_play',
+        'memory_game_result.is_correct',
+      ])
+      .addSelect(['memory_game.level', 'memory_game.score', 'memory_game.time_limit'])
+      .innerJoin('memory_game_result.memory_game', 'memory_game')
       .where(`memory_game_result.game_result_id = ${game_result_id}`)
-      .getCount();
+      .orderBy('memory_game_result.id', 'DESC')
+      .getOne();
+  }
+
+  async update_memory_game_result_correct_answer_by_id(
+    memory_game_result_id: number,
+    correct_answer: string,
+  ) {
+    return this.memoryGameResultRepository
+      .createQueryBuilder('memory_game_result')
+      .update(MemoryGameResult)
+      .set({ correct_answer: correct_answer })
+      .where(`memory_game_result.id = ${memory_game_result_id}`)
+      .execute();
   }
 
   async updateGameResult(payload: gameResultModel) {
@@ -274,13 +297,7 @@ export class GameResultService {
       .execute();
   }
 
-  async createMemoryGameResult(payload: {
-    game_result_id: number;
-    memory_game_id: number;
-    answer_play: string;
-    correct_answer: string;
-    is_correct: boolean;
-  }) {
+  async createMemoryGameResult(payload: createMemoryGameResultInterface) {
     return await this.memoryGameResultRepository.save(payload);
   }
 

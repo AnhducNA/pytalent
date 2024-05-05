@@ -113,7 +113,7 @@ export class GameService {
     return await this.memoryDataRepository
       .createQueryBuilder('memory_data')
       .select('memory_data.id')
-      .select('memory_data.level')
+      .addSelect('memory_data.level')
       .addSelect('memory_data.time_limit')
       .addSelect('memory_data.score')
       .where('level = :level', { level: level })
