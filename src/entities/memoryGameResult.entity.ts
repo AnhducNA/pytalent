@@ -23,10 +23,10 @@ export class MemoryGameResult extends BaseEntity {
   @Column({ nullable: true })
   correct_answer: string;
 
-  @Column()
+  @Column({ nullable: true })
   answer_play: string;
 
-  @Column()
+  @Column({ nullable: true })
   is_correct: boolean;
 
   @ManyToOne(() => GameResult, (gameResult) => gameResult.id, {

@@ -1,7 +1,6 @@
 import {
   Body,
   Controller,
-  Get,
   HttpStatus,
   Post,
   Put,
@@ -168,7 +167,7 @@ export class GameResultPlayingController extends BaseController {
         gameResultDto.assessment_id,
         gameResultDto.game_id,
       );
-    // Nếu có game_result_exist_check => Kết thúc/Dừng lại.
+    // Nếu có game_result_exist_check => Kết thúc/ Tiếp tục.
     // Nếu không có game_result_exist_check => Tạo mới trò chơi.
     if (game_result_exist_check?.is_done === true) {
       //   Game over
@@ -288,20 +287,20 @@ export class GameResultPlayingController extends BaseController {
       gameResultDto.is_done = false;
       gameResultDto.time_start = new Date();
       try {
-        const gameResultPlaying = await this.gameResultService.create(
+        const game_result_new = await this.gameResultService.create(
           gameResultDto,
         );
         // Get Data game
         switch (gameResultDto?.game_id) {
           case 1:
-            // Candidate play logicalQuestion
+            // Candidate start play logicalQuestion
             const logical_question_render_next =
               await this.gameService.getLogicalQuestionRender([], []);
             // create logical_game_result
             const logical_game_result_new =
               await this.gameResultService.createLogicalGameResult({
                 index: 1,
-                game_result_id: gameResultPlaying.id,
+                game_result_id: game_result_new.id,
                 logical_question_id: logical_question_render_next.id,
                 status: StatusLogicalGameResultEnum.NO_ANSWER,
                 answer_play: null,
@@ -326,32 +325,42 @@ export class GameResultPlayingController extends BaseController {
               res,
             );
           case 2:
-            // Candidate play memoryGame
-            this.timeNextMemoryItem = Date.now();
-            const memoryDataRender =
-              await this.gameService.getMemoryDataByLevel(1);
-            const correct_answer = [
-              ['left', 'right'][
-                Math.floor(Math.random() * ['left', 'right'].length)
-              ],
-            ];
-            this.memoryDataRenderCurrent = {
-              id: memoryDataRender.id,
-              level: memoryDataRender.level,
-              score: memoryDataRender.score,
-              time_limit: memoryDataRender.time_limit,
-              correct_answer: correct_answer,
-            };
-            return this.successResponse(
-              {
-                message: 'Start play game memory success.',
-                data: {
-                  game_result: this.gameResultPlaying,
-                  memory_data_next: this.memoryDataRenderCurrent,
+            // Candidate start play memoryGame
+            try {
+              const correct_answer = [
+                ['left', 'right'][
+                  Math.floor(Math.random() * ['left', 'right'].length)
+                ],
+              ];
+              const memory_game_result_new =
+                await this.gameResultService.createMemoryGameResult({
+                  game_result_id: game_result_new.id,
+                  correct_answer: JSON.stringify(correct_answer),
+                  answer_play: null,
+                  is_correct: null,
+                  memory_game_id: (
+                    await this.gameService.getMemoryDataByLevel(1)
+                  ).id,
+                });
+              return this.successResponse(
+                {
+                  message: 'Start play game memory success.',
+                  data: {
+                    game_result: game_result_new,
+                    memory_data_render_next: memory_game_result_new,
+                  },
                 },
-              },
-              res,
-            );
+                res,
+              );
+            } catch (e) {
+              return this.errorsResponse(
+                {
+                  message: 'Error start play memory game',
+                  data: e,
+                },
+                res,
+              );
+            }
           default:
             return this.errorsResponse(
               {
@@ -366,13 +375,6 @@ export class GameResultPlayingController extends BaseController {
       } catch (e) {
         console.log('Error start play game_result: ' + e.message);
       }
-
-      return this.successResponse(
-        {
-          message: 'Start.',
-        },
-        res,
-      );
     }
   }
 

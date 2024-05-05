@@ -123,15 +123,6 @@ export class GameResultService {
       .getMany();
   }
 
-  async get_count_logical_game_result_all_by_game_result(
-    game_result_id: number,
-  ) {
-    return this.logicalGameResultRepository
-      .createQueryBuilder('logical_game_result')
-      .where(`logical_game_result.game_result_id = ${game_result_id}`)
-      .getCount();
-  }
-
   async get_logical_game_result_item(logical_game_result_id: number) {
     return this.logicalGameResultRepository
       .createQueryBuilder('logical_game_result')

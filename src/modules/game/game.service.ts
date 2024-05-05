@@ -21,8 +21,7 @@ export class GameService {
   }
 
   async findOne(id: number): Promise<any> {
-    const game = await this.gameRepository.findOneBy({ id });
-    return game;
+    return await this.gameRepository.findOneBy({ id });
   }
 
   async checkOrCreateGame(params: any) {
@@ -44,10 +43,6 @@ export class GameService {
 
   async getMemoryGame() {
     return await this.memoryDataRepository.find();
-  }
-
-  async findLogicalGameById(id: number) {
-    return await this.logicalQuestionRepository.findOneBy({ id });
   }
 
   async getLogicalQuestionRender(id_except: any[], check_identical: any[]) {
@@ -114,27 +109,15 @@ export class GameService {
     }
   }
 
-  async getMemoryDataRender() {
-    return await this.memoryDataRepository
-      .createQueryBuilder('memory_data')
-      .select('memory_data.level')
-      .addSelect('memory_data.time_limit')
-      .addSelect('memory_data.score')
-      .getMany();
-  }
-
   async getMemoryDataByLevel(level: number) {
     return await this.memoryDataRepository
       .createQueryBuilder('memory_data')
+      .select('memory_data.id')
       .select('memory_data.level')
       .addSelect('memory_data.time_limit')
       .addSelect('memory_data.score')
       .where('level = :level', { level: level })
       .getOne();
-  }
-
-  async findMemoryDataById(id: number) {
-    return await this.memoryDataRepository.findOneBy({ id });
   }
 
   async createLogicalGame(params: {
