@@ -30,6 +30,9 @@ export class MemoryGameResult extends BaseEntity {
   @Column({ nullable: true })
   is_correct: boolean;
 
+  @Column({ nullable: true })
+  time_start_play_level: Date;
+
   @ManyToOne(() => GameResult, (gameResult) => gameResult.id, {
     onDelete: 'NO ACTION',
     onUpdate: 'NO ACTION',

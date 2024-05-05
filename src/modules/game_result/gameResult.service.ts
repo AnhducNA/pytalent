@@ -202,6 +202,28 @@ export class GameResultService {
       .getMany();
   }
 
+  async get_memory_game_result_by_id(memory_game_result_id: number) {
+    return this.memoryGameResultRepository
+      .createQueryBuilder('memory_game_result')
+      .select([
+        'memory_game_result.id',
+        'memory_game_result.game_result_id',
+        'memory_game_result.memory_game_id',
+        'memory_game_result.correct_answer',
+        'memory_game_result.answer_play',
+        'memory_game_result.is_correct',
+        'memory_game_result.time_start_play_level',
+      ])
+      .addSelect([
+        'memory_game.level',
+        'memory_game.score',
+        'memory_game.time_limit',
+      ])
+      .innerJoin('memory_game_result.memory_game', 'memory_game')
+      .where(`memory_game_result.id = ${memory_game_result_id}`)
+      .getOne();
+  }
+
   async get_memory_game_result_final_by_game_result(game_result_id: number) {
     return this.memoryGameResultRepository
       .createQueryBuilder('memory_game_result')
@@ -212,11 +234,23 @@ export class GameResultService {
         'memory_game_result.answer_play',
         'memory_game_result.is_correct',
       ])
-      .addSelect(['memory_game.level', 'memory_game.score', 'memory_game.time_limit'])
+      .addSelect([
+        'memory_game.level',
+        'memory_game.score',
+        'memory_game.time_limit',
+      ])
       .innerJoin('memory_game_result.memory_game', 'memory_game')
       .where(`memory_game_result.game_result_id = ${game_result_id}`)
       .orderBy('memory_game_result.id', 'DESC')
       .getOne();
+  }
+  async update_memory_game_result_time_start_play_level_final_by_id(memory_game_result_id: number) {
+    return this.memoryGameResultRepository
+      .createQueryBuilder('memory_game_result')
+      .update(MemoryGameResult)
+      .set({ time_start_play_level: new Date() })
+      .where(`memory_game_result.id = ${memory_game_result_id}`)
+      .execute()
   }
 
   async update_memory_game_result_correct_answer_by_id(
@@ -299,6 +333,21 @@ export class GameResultService {
 
   async createMemoryGameResult(payload: createMemoryGameResultInterface) {
     return await this.memoryGameResultRepository.save(payload);
+  }
+  async update_answer_play_memory_game_result(
+    memory_game_result_id: number,
+    answer_play: string,
+    is_correct: boolean,
+  ) {
+    return await this.logicalGameResultRepository
+      .createQueryBuilder()
+      .update(MemoryGameResult)
+      .set({
+        answer_play: answer_play,
+        is_correct: is_correct,
+      })
+      .where('id = :id', { id: memory_game_result_id })
+      .execute();
   }
 
   async delete_game_result_by_id(game_result_id: number) {

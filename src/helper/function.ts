@@ -9,7 +9,7 @@ export function arraysEqual(a, b) {
   return true;
 }
 
-export function arraysEqualWithoutLength(a, b) {
+export function arraysEqualWithoutLength(a: any[], b: any[]) {
   if (a == null || b == null) return false;
   if (a.length <= b.length) {
     for (let i = 0; i < a.length; ++i) {

@@ -5,6 +5,7 @@ export interface memoryGameResultModel {
   correct_answer: string;
   answer_play: string;
   is_correct: boolean;
+  time_start_play_level: Date;
 }
 
 export interface createMemoryGameResultInterface {
@@ -13,4 +14,5 @@ export interface createMemoryGameResultInterface {
   correct_answer: string;
   answer_play: string;
   is_correct: boolean;
+  time_start_play_level: Date;
 }
