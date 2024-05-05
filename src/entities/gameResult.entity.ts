@@ -7,6 +7,7 @@ import {
 } from 'typeorm';
 import { BaseEntity } from '@entities/base.entity';
 import { Game } from '@entities/game.entity';
+import { Assessment } from '@entities/assessment.entity';
 
 @Entity()
 export class GameResult extends BaseEntity {
@@ -37,4 +38,8 @@ export class GameResult extends BaseEntity {
   @ManyToOne(() => Game)
   @JoinColumn({ name: 'game_id', referencedColumnName: 'id' })
   game: Game;
+
+  @ManyToOne(() => Assessment)
+  @JoinColumn({ name: 'assessment_id', referencedColumnName: 'id' })
+  assessment: Assessment;
 }

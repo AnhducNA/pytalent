@@ -31,19 +31,6 @@ export class GameResultPlayingController extends BaseController {
     play_score: number;
     is_done: boolean;
   };
-  private _logical_except_and_check_identical_answer: {
-    id_logical_list_except: any[];
-    check_identical_answer: any[];
-  };
-  private _logicalQuestionRenderCurrent: {
-    id: number;
-    number: number;
-    statement1: string;
-    statement2: string;
-    conclusion: string;
-    score: number;
-    correct_answer: boolean;
-  };
   private _memoryDataRenderCurrent: {
     id: number;
     level: number;
@@ -99,44 +86,6 @@ export class GameResultPlayingController extends BaseController {
     this._gameResultPlaying = value;
   }
 
-  get logical_except_and_check_identical_answer(): {
-    id_logical_list_except: any[];
-    check_identical_answer: any[];
-  } {
-    return this._logical_except_and_check_identical_answer;
-  }
-
-  set logical_except_and_check_identical_answer(value: {
-    id_logical_list_except: any[];
-    check_identical_answer: any[];
-  }) {
-    this._logical_except_and_check_identical_answer = value;
-  }
-
-  get logicalQuestionRenderCurrent(): {
-    id: number;
-    number: number;
-    statement1: string;
-    statement2: string;
-    conclusion: string;
-    score: number;
-    correct_answer: boolean;
-  } {
-    return this._logicalQuestionRenderCurrent;
-  }
-
-  set logicalQuestionRenderCurrent(value: {
-    id: number;
-    number: number;
-    statement1: string;
-    statement2: string;
-    conclusion: string;
-    score: number;
-    correct_answer: boolean;
-  }) {
-    this._logicalQuestionRenderCurrent = value;
-  }
-
   get memoryDataRenderCurrent(): {
     id: number;
     level: number;
@@ -156,6 +105,11 @@ export class GameResultPlayingController extends BaseController {
   }) {
     this._memoryDataRenderCurrent = value;
   }
+
+  //  Continue playing game
+  // @Get('continue_playing_game_result/:game_result_id')
+  // @UseGuards(JwtAuthGuard)
+  // async continuePlayingGameResult(@Req() req: any, @Res() res: Response) {}
 
   //  Start playing game
   @Post('play')
@@ -183,7 +137,7 @@ export class GameResultPlayingController extends BaseController {
         res,
       );
     }
-    // validate check assessment exit Candidate?
+    // validate check assessment contain Candidate?
     const assessmentCheckCandidate =
       await this.gameResultService.findOneAssessmentCandidate(
         gameResultDto.assessment_id,
@@ -214,6 +168,8 @@ export class GameResultPlayingController extends BaseController {
         gameResultDto.assessment_id,
         gameResultDto.game_id,
       );
+    // Nếu có game_result_exist_check => Kết thúc/Dừng lại.
+    // Nếu không có game_result_exist_check => Tạo mới trò chơi.
     if (game_result_exist_check?.is_done === true) {
       //   Game over
       return this.successResponse(
@@ -224,15 +180,107 @@ export class GameResultPlayingController extends BaseController {
       );
     } else if (game_result_exist_check?.is_done === false) {
       // continue play game_result
-
-      return this.successResponse(
-        {
-          message: 'Continue.',
-        },
-        res,
+      const time_start = new Date(
+        Date.now() - game_result_exist_check.play_time,
       );
+      await this.gameResultService.updateTimeStartGameResult(
+        game_result_exist_check.id,
+        time_start,
+      );
+      switch (gameResultDto?.game_id) {
+        case 1:
+          // Candidate play logicalQuestion
+          try {
+            const logical_game_result_final_by_game_result =
+              await this.gameResultService.get_logical_game_result_final_by_game_result(
+                game_result_exist_check.id,
+              );
+            return this.successResponse(
+              {
+                message: 'Continue play game logical success.',
+                data: {
+                  game_result: game_result_exist_check,
+                  logical_question_render_current: {
+                    logical_game_result_id:
+                      logical_game_result_final_by_game_result.id,
+                    logical_question_id:
+                      logical_game_result_final_by_game_result.logical_question_id,
+                    index: logical_game_result_final_by_game_result.index,
+                    statement1:
+                      logical_game_result_final_by_game_result.logical_question
+                        .statement1,
+                    statement2:
+                      logical_game_result_final_by_game_result.logical_question
+                        .statement2,
+                    conclusion:
+                      logical_game_result_final_by_game_result.logical_question
+                        .conclusion,
+                    score:
+                      logical_game_result_final_by_game_result.logical_question
+                        .score,
+                  },
+                },
+              },
+              res,
+            );
+          } catch (e) {
+            return this.errorsResponse(
+              {
+                message: 'Continue play game logical fail.',
+                data: e,
+              },
+              res,
+            );
+          }
+        case 2:
+          // Candidate play memoryGame
+          const count_memory_game_result_list =
+            await this.gameResultService.get_count_memory_game_result_by_game_result(
+              this.gameResultPlaying.id,
+            );
+          this.timeNextMemoryItem = Date.now();
+          const memoryDataRender = await this.gameService.getMemoryDataByLevel(
+            count_memory_game_result_list + 1,
+          );
+          let correct_answer = [];
+          for (let i = 1; i <= count_memory_game_result_list + 1; i++) {
+            correct_answer = [
+              ...correct_answer,
+              ['left', 'right'][
+                Math.floor(Math.random() * ['left', 'right'].length)
+              ],
+            ];
+          }
+          this.memoryDataRenderCurrent = {
+            id: memoryDataRender.id,
+            level: memoryDataRender.level,
+            score: memoryDataRender.score,
+            time_limit: memoryDataRender.time_limit,
+            correct_answer: correct_answer,
+          };
+          return this.successResponse(
+            {
+              message: 'Start play game memory success.',
+              data: {
+                game_result: this.gameResultPlaying,
+                memory_data_next: this.memoryDataRenderCurrent,
+              },
+            },
+            res,
+          );
+        default:
+          return this.errorsResponse(
+            {
+              message: 'You are not allowed to play this game.',
+              data: {
+                game_result: this.gameResultPlaying,
+              },
+            },
+            res,
+          );
+      }
     } else {
-      //   Start play game: create new game_result
+      //   New game_result: Start play game: create new game_result
       // Default value game_result before add new
       gameResultDto.play_time = 0;
       gameResultDto.play_score = 0;
@@ -489,161 +537,6 @@ export class GameResultPlayingController extends BaseController {
       });
     } catch (e) {
       console.log(e.message);
-    }
-  }
-
-  //  Continue playing game
-  @Get('continue_playing_game_result/:game_result_id')
-  @UseGuards(JwtAuthGuard)
-  async continuePlayingGameResult(@Req() req: any, @Res() res: Response) {
-    // set candidate_id for gameResultDto
-    const userLogin = req['userLogin'];
-    this.gameResultPlaying = await this.gameResultService.findOne(
-      req.params.game_result_id,
-    );
-    if (!this.gameResultPlaying) {
-      return this.errorsResponse(
-        {
-          message: `Game_result, id = ${req.params.game_result_id} does not exit.`,
-        },
-        res,
-      );
-    }
-    // validate check game_result is done
-    if (this.gameResultPlaying.is_done === true) {
-      return this.successResponse(
-        {
-          data: this.gameResultPlaying,
-          message: `Game over. Can't continue.`,
-        },
-        res,
-      );
-    }
-    // validate check assessment time_end
-    const assessment_time_end = (
-      await this.gameResultService.get_assessment_by_id(
-        this.gameResultPlaying.assessment_id,
-      )
-    ).time_end;
-    if (Date.now() - assessment_time_end.getTime() > 0) {
-      return this.errorsResponse(
-        {
-          message: `Assessment has expired: ${userLogin.email}.`,
-        },
-        res,
-      );
-    }
-    // validate check assessment exit?
-    const assessmentCheckCandidate =
-      await this.gameResultService.findOneAssessmentCandidate(
-        this.gameResultPlaying.assessment_id,
-        userLogin.id,
-      );
-    if (!assessmentCheckCandidate) {
-      return this.errorsResponse(
-        {
-          message: `Assessment does not have candidate: ${userLogin.email}.`,
-        },
-        res,
-      );
-    } else {
-      // Default value before continue
-      this.timeStart = Date.now() - this.gameResultPlaying.play_time;
-      try {
-        this.gameResultPlaying = this.gameResultPlaying;
-        // Get Data game
-        switch (this.gameResultPlaying?.game_id) {
-          case 1:
-            // Candidate play logicalQuestion
-            const logical_game_result_list =
-              await this.gameResultService.get_logical_game_result_by_game_result(
-                this.gameResultPlaying.id,
-              );
-            this.logical_except_and_check_identical_answer = {
-              id_logical_list_except: Object.values(
-                logical_game_result_list,
-              ).map((obj) => obj.logical_question_id),
-              check_identical_answer: Object.values(
-                logical_game_result_list,
-              ).map((obj) => obj.logical_question.correct_answer),
-            };
-            this.logicalQuestionRenderCurrent = {
-              ...{ number: logical_game_result_list.length + 1 },
-              ...(await this.gameService.getLogicalQuestionRender(
-                this.logical_except_and_check_identical_answer
-                  .id_logical_list_except,
-                this.logical_except_and_check_identical_answer
-                  .check_identical_answer,
-              )),
-            };
-            return this.successResponse(
-              {
-                message: 'Continue play game logical success',
-                data: {
-                  game_result: this.gameResultPlaying,
-                  logical_question_render_next: {
-                    id: this.logicalQuestionRenderCurrent.id,
-                    number: this.logicalQuestionRenderCurrent.number,
-                    statement1: this.logicalQuestionRenderCurrent.statement1,
-                    statement2: this.logicalQuestionRenderCurrent.statement2,
-                    conclusion: this.logicalQuestionRenderCurrent.conclusion,
-                    score: this.logicalQuestionRenderCurrent.score,
-                  },
-                },
-              },
-              res,
-            );
-          case 2:
-            // Candidate play memoryGame
-            const count_memory_game_result_list =
-              await this.gameResultService.get_count_memory_game_result_by_game_result(
-                this.gameResultPlaying.id,
-              );
-            this.timeNextMemoryItem = Date.now();
-            const memoryDataRender =
-              await this.gameService.getMemoryDataByLevel(
-                count_memory_game_result_list + 1,
-              );
-            let correct_answer = [];
-            for (let i = 1; i <= count_memory_game_result_list + 1; i++) {
-              correct_answer = [
-                ...correct_answer,
-                ['left', 'right'][
-                  Math.floor(Math.random() * ['left', 'right'].length)
-                ],
-              ];
-            }
-            this.memoryDataRenderCurrent = {
-              id: memoryDataRender.id,
-              level: memoryDataRender.level,
-              score: memoryDataRender.score,
-              time_limit: memoryDataRender.time_limit,
-              correct_answer: correct_answer,
-            };
-            return this.successResponse(
-              {
-                message: 'Start play game memory success.',
-                data: {
-                  game_result: this.gameResultPlaying,
-                  memory_data_next: this.memoryDataRenderCurrent,
-                },
-              },
-              res,
-            );
-          default:
-            return this.errorsResponse(
-              {
-                message: 'You are not allowed to play this game.',
-                data: {
-                  game_result: this.gameResultPlaying,
-                },
-              },
-              res,
-            );
-        }
-      } catch (e) {
-        console.log(e.message);
-      }
     }
   }
 }

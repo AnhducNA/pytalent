@@ -166,6 +166,25 @@ export class GameResultService {
       .getMany();
   }
 
+  async get_logical_game_result_final_by_game_result(game_result_id: number) {
+    return this.logicalGameResultRepository
+      .createQueryBuilder('logical_game_result')
+      .select([
+        'logical_game_result.id',
+        'logical_game_result.logical_question_id',
+      ])
+      .addSelect([
+        'logical_question.statement1',
+        'logical_question.statement2',
+        'logical_question.conclusion',
+        'logical_question.score',
+      ])
+      .innerJoin('logical_game_result.logical_question', 'logical_question')
+      .where(`logical_game_result.game_result_id = ${game_result_id}`)
+      .orderBy('logical_game_result.id', 'DESC')
+      .getOne();
+  }
+
   async getMemoryGameResultByGameResultIdAndCandidateId(
     game_result_id: number,
     candidate_id: number,
@@ -204,6 +223,17 @@ export class GameResultService {
       .update(GameResult)
       .set(payload)
       .where('id = :id', { id: payload.id })
+      .execute();
+  }
+
+  async updateTimeStartGameResult(id: number, time_start: Date) {
+    return this.gameResultRepository
+      .createQueryBuilder()
+      .update(GameResult)
+      .set({
+        time_start: time_start,
+      })
+      .where('id = :id', { id: id })
       .execute();
   }
 

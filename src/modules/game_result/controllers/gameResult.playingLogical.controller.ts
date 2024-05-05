@@ -164,12 +164,7 @@ export class GameResultPlayingLogicalController extends BaseController {
         );
       }
       // validate check answer question skip
-      if (
-        logical_game_result.index <
-        (await this.gameResultService.get_count_logical_game_result_all_by_game_result(
-          game_result_update.id,
-        ))
-      ) {
+      if (logical_game_result.index < logical_game_result_history.length) {
         return this.successResponse(
           {
             message: message_res,
@@ -194,7 +189,7 @@ export class GameResultPlayingLogicalController extends BaseController {
           logical_except_and_check_identical_answer.id_logical_list_except,
           logical_except_and_check_identical_answer.check_identical_answer,
         );
-      const logical_game_result_next =
+      const logical_game_result_render_next =
         await this.gameResultService.createLogicalGameResult({
           index: logical_game_result.index + 1,
           game_result_id: logical_game_result.game_result_id,
@@ -209,9 +204,9 @@ export class GameResultPlayingLogicalController extends BaseController {
           data: {
             game_result: game_result_update,
             logical_question_render_next: {
-              logical_game_result_id: logical_game_result_next.id,
+              logical_game_result_id: logical_game_result_render_next.id,
               logical_question_id: logical_question_render_next.id,
-              index: logical_game_result_next.index,
+              index: logical_game_result_render_next.index,
               statement1: logical_question_render_next.statement1,
               statement2: logical_question_render_next.statement2,
               conclusion: logical_question_render_next.conclusion,
