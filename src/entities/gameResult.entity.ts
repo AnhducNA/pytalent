@@ -3,11 +3,14 @@ import {
   Entity,
   JoinColumn,
   ManyToOne,
+  OneToMany,
   PrimaryGeneratedColumn,
 } from 'typeorm';
 import { BaseEntity } from '@entities/base.entity';
 import { Game } from '@entities/game.entity';
 import { Assessment } from '@entities/assessment.entity';
+import { MemoryGameResult } from '@entities/memoryGameResult.entity';
+import { LogicalGameResult } from '@entities/logicalGameResult.entity';
 
 @Entity()
 export class GameResult extends BaseEntity {
@@ -34,6 +37,18 @@ export class GameResult extends BaseEntity {
 
   @Column({ nullable: true })
   time_start: Date;
+
+  @OneToMany(
+    () => LogicalGameResult,
+    (logical_game_result) => logical_game_result.game_result,
+  )
+  logical_game_result_list: LogicalGameResult[];
+
+  @OneToMany(
+    () => MemoryGameResult,
+    (memory_game_result) => memory_game_result.game_result,
+  )
+  memory_game_result_list: MemoryGameResult[];
 
   @ManyToOne(() => Game)
   @JoinColumn({ name: 'game_id', referencedColumnName: 'id' })

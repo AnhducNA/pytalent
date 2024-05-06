@@ -33,12 +33,9 @@ export class LogicalGameResult extends BaseEntity {
   @Column({ nullable: true })
   is_correct: boolean;
 
-  @ManyToOne(() => GameResult, (gameResult) => gameResult.id, {
-    onDelete: 'NO ACTION',
-    onUpdate: 'NO ACTION',
-  })
+  @ManyToOne(() => GameResult)
   @JoinColumn([{ name: 'game_result_id', referencedColumnName: 'id' }])
-  gameResult: GameResult;
+  game_result: GameResult;
 
   @ManyToOne(() => LogicalQuestion)
   @JoinColumn([

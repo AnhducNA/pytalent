@@ -330,6 +330,9 @@ export class GameResultPlayingController extends BaseController {
       await this.gameResultService.updateIsDoneGameResult(game_result_id);
       return res.status(HttpStatus.OK).json({
         message: 'End play game success.',
+        data: await this.gameResultService.get_history_type_game_result_by_game_result(
+          game_result_id,
+        ),
       });
     } catch (e) {
       console.log(e.message);

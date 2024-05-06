@@ -76,6 +76,31 @@ export class GameResultService {
       .getOne();
   }
 
+  async get_history_type_game_result_by_game_result(game_result_id: number) {
+    return this.gameResultRepository
+      .createQueryBuilder('game_result')
+      .select([
+        'game_result.id',
+        'game_result.candidate_id',
+        'game_result.assessment_id',
+        'game_result.game_id',
+        'game_result.play_time',
+        'game_result.play_score',
+        'game_result.is_done',
+        'game_result.time_start',
+      ])
+      .leftJoinAndSelect(
+        'game_result.logical_game_result_list',
+        'logical_game_result',
+      )
+      .leftJoinAndSelect(
+        'game_result.memory_game_result_list',
+        'memory_game_result',
+      )
+      .where('game_result.id = :id', { id: game_result_id })
+      .getMany();
+  }
+
   async getGameResultByCandidateId(candidateId: number) {
     return this.gameResultRepository.find({
       where: { candidate_id: candidateId },
@@ -148,16 +173,6 @@ export class GameResultService {
       .getOne();
   }
 
-  async get_logical_game_result_by_game_result(game_result_id: number) {
-    return this.logicalGameResultRepository
-      .createQueryBuilder('logical_game_result')
-      .select('logical_game_result.logical_question_id')
-      .addSelect(['logical_question.correct_answer'])
-      .innerJoin('logical_game_result.logical_question', 'logical_question')
-      .where(`logical_game_result.game_result_id = ${game_result_id}`)
-      .getMany();
-  }
-
   async get_logical_game_result_final_by_game_result(game_result_id: number) {
     return this.logicalGameResultRepository
       .createQueryBuilder('logical_game_result')
@@ -183,7 +198,7 @@ export class GameResultService {
   ) {
     return this.memoryGameResultRepository
       .createQueryBuilder('memory_game_result')
-      .innerJoin('memory_game_result.gameResults', 'game_result')
+      .innerJoin('memory_game_result.game_result', 'game_result')
       .orderBy('memory_game_result.id', 'DESC')
       .where(`memory_game_result.game_result_id = ${game_result_id}`)
       .andWhere(`game_result.candidate_id = ${candidate_id}`)
@@ -244,13 +259,16 @@ export class GameResultService {
       .orderBy('memory_game_result.id', 'DESC')
       .getOne();
   }
-  async update_memory_game_result_time_start_play_level_final_by_id(memory_game_result_id: number) {
+
+  async update_memory_game_result_time_start_play_level_final_by_id(
+    memory_game_result_id: number,
+  ) {
     return this.memoryGameResultRepository
       .createQueryBuilder('memory_game_result')
       .update(MemoryGameResult)
       .set({ time_start_play_level: new Date() })
       .where(`memory_game_result.id = ${memory_game_result_id}`)
-      .execute()
+      .execute();
   }
 
   async update_memory_game_result_correct_answer_by_id(
@@ -334,6 +352,7 @@ export class GameResultService {
   async createMemoryGameResult(payload: createMemoryGameResultInterface) {
     return await this.memoryGameResultRepository.save(payload);
   }
+
   async update_answer_play_memory_game_result(
     memory_game_result_id: number,
     answer_play: string,

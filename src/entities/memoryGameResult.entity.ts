@@ -38,7 +38,7 @@ export class MemoryGameResult extends BaseEntity {
     onUpdate: 'NO ACTION',
   })
   @JoinColumn([{ name: 'game_result_id', referencedColumnName: 'id' }])
-  gameResults: GameResult[];
+  game_result: GameResult;
 
   @ManyToOne(() => MemoryData)
   @JoinColumn([{ name: 'memory_game_id', referencedColumnName: 'id' }])
