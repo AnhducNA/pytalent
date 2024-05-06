@@ -1,4 +1,5 @@
 import { IsNotEmpty } from 'class-validator';
+import { StatusGameResultEnum } from '@enum/status-game-result.enum';
 
 export class CreateGameResultDto {
   candidate_id: number;
@@ -11,6 +12,6 @@ export class CreateGameResultDto {
 
   play_time: number;
   play_score: number;
-  is_done: boolean;
+  status: StatusGameResultEnum;
   time_start: Date;
 }
