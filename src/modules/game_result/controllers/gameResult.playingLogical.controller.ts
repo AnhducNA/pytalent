@@ -5,6 +5,7 @@ import { Response } from 'express';
 import { StatusLogicalGameResultEnum } from '@enum/status-logical-game-result.enum';
 import { GameResultService } from '@modules/game_result/gameResult.service';
 import { GameService } from '@modules/game/game.service';
+import { StatusGameResultEnum } from '@enum/status-game-result.enum';
 
 @Controller('api/game-result-playing-logical')
 export class GameResultPlayingLogicalController extends BaseController {
@@ -57,7 +58,7 @@ export class GameResultPlayingLogicalController extends BaseController {
         game_result_update.id,
       );
     // validate check game_result is_done
-    if (game_result_update.is_done === true) {
+    if (game_result_update.status === StatusGameResultEnum.FINISHED) {
       return this.errorsResponse(
         {
           message: 'Game over.',
@@ -81,8 +82,8 @@ export class GameResultPlayingLogicalController extends BaseController {
     );
     if (game_result_update.play_time > total_game_time) {
       // when the game time is up, set done for game_result
-      game_result_update.is_done = true;
-      await this.gameResultService.updateIsDoneGameResult(
+      game_result_update.status = StatusGameResultEnum.FINISHED;
+      await this.gameResultService.updateStatusDoneGameResult(
         game_result_update.id,
       );
       return this.errorsResponse(
@@ -105,8 +106,8 @@ export class GameResultPlayingLogicalController extends BaseController {
       ).game.total_question,
     );
     if (logical_game_result.index > total_question_game_logical) {
-      game_result_update.is_done = true;
-      await this.gameResultService.updateIsDoneGameResult(
+      game_result_update.status = StatusGameResultEnum.FINISHED;
+      await this.gameResultService.updateStatusDoneGameResult(
         game_result_update.id,
       );
       return this.errorsResponse(
@@ -146,8 +147,8 @@ export class GameResultPlayingLogicalController extends BaseController {
       );
       // validate check final logical_question of total
       if (logical_game_result.index === total_question_game_logical) {
-        game_result_update.is_done = true;
-        await this.gameResultService.updateIsDoneGameResult(
+        game_result_update.status = StatusGameResultEnum.FINISHED;
+        await this.gameResultService.updateStatusDoneGameResult(
           game_result_update.id,
         );
         return this.successResponse(

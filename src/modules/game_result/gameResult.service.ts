@@ -13,6 +13,7 @@ import {
 } from '@interfaces/gameResult.interface';
 import { StatusLogicalGameResultEnum } from '@enum/status-logical-game-result.enum';
 import { createMemoryGameResultInterface } from '@interfaces/memoryGameResult.interface';
+import { StatusGameResultEnum } from '@enum/status-game-result.enum';
 
 @Injectable()
 export class GameResultService {
@@ -311,12 +312,12 @@ export class GameResultService {
       .execute();
   }
 
-  async updateIsDoneGameResult(id: number) {
+  async updateStatusDoneGameResult(id: number) {
     return this.gameResultRepository
       .createQueryBuilder()
       .update(GameResult)
       .set({
-        is_done: true,
+        status: StatusGameResultEnum.FINISHED,
       })
       .where('id = :id', { id: id })
       .execute();

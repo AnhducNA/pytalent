@@ -11,6 +11,7 @@ import { Game } from '@entities/game.entity';
 import { Assessment } from '@entities/assessment.entity';
 import { MemoryGameResult } from '@entities/memoryGameResult.entity';
 import { LogicalGameResult } from '@entities/logicalGameResult.entity';
+import { StatusGameResultEnum } from '@enum/status-game-result.enum';
 
 @Entity()
 export class GameResult extends BaseEntity {
@@ -33,7 +34,7 @@ export class GameResult extends BaseEntity {
   play_score: number;
 
   @Column({ nullable: true })
-  is_done: boolean;
+  status: StatusGameResultEnum;
 
   @Column({ nullable: true })
   time_start: Date;

@@ -1,3 +1,5 @@
+import { StatusGameResultEnum } from '@enum/status-game-result.enum';
+
 export interface gameResultModel {
   id: number;
   candidate_id: number;
@@ -5,7 +7,7 @@ export interface gameResultModel {
   game_id: number;
   play_time: number;
   play_score: number;
-  is_done: boolean;
+  status: StatusGameResultEnum;
   time_start: Date;
 }
 
@@ -15,6 +17,6 @@ export interface createGameResultInterface {
   game_id: number;
   play_time: number;
   play_score: number;
-  is_done: boolean;
+  status: StatusGameResultEnum;
   time_start: Date;
 }

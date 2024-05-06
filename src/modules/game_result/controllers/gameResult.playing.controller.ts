@@ -15,6 +15,7 @@ import { JwtAuthGuard } from '@guards/jwt-auth.guard';
 import { Response } from 'express';
 import { CreateGameResultDto } from '@modules/game_result/createGameResult.dto';
 import { StatusLogicalGameResultEnum } from '@enum/status-logical-game-result.enum';
+import { StatusGameResultEnum } from '@enum/status-game-result.enum';
 
 @Controller('api/game-result-playing')
 export class GameResultPlayingController extends BaseController {
@@ -75,7 +76,7 @@ export class GameResultPlayingController extends BaseController {
       );
     // Nếu có game_result_exist_check => Kết thúc/ Tiếp tục.
     // Nếu không có game_result_exist_check => Tạo mới trò chơi.
-    if (game_result_exist_check?.is_done === true) {
+    if (game_result_exist_check?.status === StatusGameResultEnum.FINISHED) {
       //   Game over
       return this.successResponse(
         {
@@ -86,7 +87,9 @@ export class GameResultPlayingController extends BaseController {
         },
         res,
       );
-    } else if (game_result_exist_check?.is_done === false) {
+    } else if (
+      game_result_exist_check?.status === StatusGameResultEnum.PAUSED
+    ) {
       // continue play game_result
       const time_start = new Date(
         Date.now() - game_result_exist_check.play_time,
@@ -208,8 +211,7 @@ export class GameResultPlayingController extends BaseController {
       // Default value game_result before add new
       gameResultDto.play_time = 0;
       gameResultDto.play_score = 0;
-      gameResultDto.is_done = false;
-      gameResultDto.is_done = false;
+      gameResultDto.status = StatusGameResultEnum.STARTED;
       gameResultDto.time_start = new Date();
       try {
         const game_result_new = await this.gameResultService.create(
@@ -330,7 +332,7 @@ export class GameResultPlayingController extends BaseController {
   async endPlayGame(@Req() req: any, @Res() res: Response) {
     try {
       const game_result_id = req.params.game_result_id;
-      await this.gameResultService.updateIsDoneGameResult(game_result_id);
+      await this.gameResultService.updateStatusDoneGameResult(game_result_id);
       return res.status(HttpStatus.OK).json({
         message: 'End play game success.',
         data: await this.gameResultService.get_history_type_game_result_by_game_result(

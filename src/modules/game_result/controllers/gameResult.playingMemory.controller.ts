@@ -5,6 +5,7 @@ import { GameResultService } from '@modules/game_result/gameResult.service';
 import { GameService } from '@modules/game/game.service';
 import { Response } from 'express';
 import { arraysEqualWithoutLength } from '@helper/function';
+import { StatusGameResultEnum } from '@enum/status-game-result.enum';
 
 @Controller('api/game-result-playing-memory')
 export class GameResultPlayingMemoryController extends BaseController {
@@ -60,7 +61,7 @@ export class GameResultPlayingMemoryController extends BaseController {
         game_result_update.id,
       );
     // validate check game_result is_done
-    if (game_result_update.is_done === true) {
+    if (game_result_update.status === StatusGameResultEnum.FINISHED) {
       return this.errorsResponse(
         {
           message: 'Game over.',
@@ -76,7 +77,7 @@ export class GameResultPlayingMemoryController extends BaseController {
     const play_time =
       Date.now() - memory_game_result_playing.time_start_play_level.getTime();
     if (play_time > memory_game_result_playing.memory_game.time_limit) {
-      await this.gameResultService.updateIsDoneGameResult(
+      await this.gameResultService.updateStatusDoneGameResult(
         memory_game_result_playing.game_result_id,
       );
       return this.successResponse(
@@ -106,7 +107,7 @@ export class GameResultPlayingMemoryController extends BaseController {
       } else {
         message_res = 'Your answer is false. End game';
         memoryGameResultDto.is_correct = false;
-        await this.gameResultService.updateIsDoneGameResult(
+        await this.gameResultService.updateStatusDoneGameResult(
           game_result_update.id,
         );
       }
@@ -125,7 +126,7 @@ export class GameResultPlayingMemoryController extends BaseController {
       );
       // check max level = 25
       if (memory_game_result_playing.memory_game.level >= 25) {
-        await this.gameResultService.updateIsDoneGameResult(
+        await this.gameResultService.updateStatusDoneGameResult(
           game_result_update.id,
         );
         return this.errorsResponse(
