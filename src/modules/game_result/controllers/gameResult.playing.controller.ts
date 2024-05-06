@@ -80,6 +80,9 @@ export class GameResultPlayingController extends BaseController {
       return this.successResponse(
         {
           message: 'Game Over.',
+          data: await this.gameResultService.get_history_type_game_result_by_game_result(
+            game_result_exist_check.id,
+          ),
         },
         res,
       );

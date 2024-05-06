@@ -72,7 +72,7 @@ export class GameResultPlayingMemoryController extends BaseController {
         res,
       );
     }
-    // validate check play_time end time_limit_render's level
+    // validate check play_time > time_limit_render's level
     const play_time =
       Date.now() - memory_game_result_playing.time_start_play_level.getTime();
     if (play_time > memory_game_result_playing.memory_game.time_limit) {
@@ -123,6 +123,25 @@ export class GameResultPlayingMemoryController extends BaseController {
         JSON.stringify(memoryGameResultDto.answer_play),
         memoryGameResultDto.is_correct,
       );
+      // check max level = 25
+      if (memory_game_result_playing.memory_game.level >= 25) {
+        await this.gameResultService.updateIsDoneGameResult(
+          game_result_update.id,
+        );
+        return this.errorsResponse(
+          {
+            message: 'You have completed the game. End game.',
+            data: {
+              game_result: game_result_update,
+              memory_game_result_history:
+                await this.gameResultService.get_memory_game_result_by_game_result_id(
+                  game_result_update.id,
+                ),
+            },
+          },
+          res,
+        );
+      }
       // Return if player answer true/false?
       if (!!memoryGameResultDto.is_correct) {
         // new memoryDataRenderCurrent: next level
@@ -184,7 +203,10 @@ export class GameResultPlayingMemoryController extends BaseController {
             message: message_res,
             data: {
               game_result: game_result_update,
-              memory_data_history: memory_game_result_history,
+              memory_game_result_history:
+                await this.gameResultService.get_memory_game_result_by_game_result_id(
+                  game_result_update.id,
+                ),
             },
           },
           res,
