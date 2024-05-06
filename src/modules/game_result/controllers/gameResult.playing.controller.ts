@@ -1,9 +1,9 @@
 import {
   Body,
   Controller,
+  Get,
   HttpStatus,
   Post,
-  Put,
   Req,
   Res,
   UseGuards,
@@ -13,57 +13,17 @@ import { GameResultService } from '@modules/game_result/gameResult.service';
 import { GameService } from '@modules/game/game.service';
 import { JwtAuthGuard } from '@guards/jwt-auth.guard';
 import { Response } from 'express';
-import { arraysEqualWithoutLength } from '@helper/function';
 import { CreateGameResultDto } from '@modules/game_result/createGameResult.dto';
 import { StatusLogicalGameResultEnum } from '@enum/status-logical-game-result.enum';
 
 @Controller('api/game-result-playing')
 export class GameResultPlayingController extends BaseController {
-  private _gameResultPlaying: {
-    id: number;
-    candidate_id: number;
-    assessment_id: number;
-    game_id: number;
-    play_time: number;
-    play_score: number;
-    is_done: boolean;
-  };
-
   constructor(
     private readonly gameResultService: GameResultService,
     private readonly gameService: GameService,
   ) {
     super();
   }
-
-  get gameResultPlaying(): {
-    id: number;
-    candidate_id: number;
-    assessment_id: number;
-    game_id: number;
-    play_time: number;
-    play_score: number;
-    is_done: boolean;
-  } {
-    return this._gameResultPlaying;
-  }
-
-  set gameResultPlaying(value: {
-    id: number;
-    candidate_id: number;
-    assessment_id: number;
-    game_id: number;
-    play_time: number;
-    play_score: number;
-    is_done: boolean;
-  }) {
-    this._gameResultPlaying = value;
-  }
-
-  //  Continue playing game
-  // @Get('continue_playing_game_result/:game_result_id')
-  // @UseGuards(JwtAuthGuard)
-  // async continuePlayingGameResult(@Req() req: any, @Res() res: Response) {}
 
   //  Start playing game
   @Post('play')
@@ -101,15 +61,6 @@ export class GameResultPlayingController extends BaseController {
       return this.errorsResponse(
         {
           message: `Assessment does not have candidate: ${userLogin.email}.`,
-        },
-        res,
-      );
-    }
-    // validate check if game_id does not setting.
-    if (gameResultDto.game_id > 2) {
-      return this.errorsResponse(
-        {
-          message: `Game with id = ${gameResultDto.game_id} does not setting.`,
         },
         res,
       );
@@ -241,12 +192,10 @@ export class GameResultPlayingController extends BaseController {
             );
           }
         default:
+          // validate check if game_id does not setting.
           return this.errorsResponse(
             {
-              message: 'You are not allowed to play this game.',
-              data: {
-                game_result: this.gameResultPlaying,
-              },
+              message: `Game with id = ${gameResultDto.game_id} does not setting.`,
             },
             res,
           );
@@ -283,7 +232,7 @@ export class GameResultPlayingController extends BaseController {
               {
                 message: 'Start play game logical success.',
                 data: {
-                  game_result: this.gameResultPlaying,
+                  game_result: game_result_exist_check,
                   logical_question_render_next: {
                     logical_game_result_id: logical_game_result_new.id,
                     logical_question_id: logical_question_render_next.id,
@@ -360,12 +309,10 @@ export class GameResultPlayingController extends BaseController {
               );
             }
           default:
+            // validate check if game_id does not setting.
             return this.errorsResponse(
               {
-                message: 'You are not allowed to play this game.',
-                data: {
-                  game_result: this.gameResultPlaying,
-                },
+                message: `Game with id = ${gameResultDto.game_id} does not setting.`,
               },
               res,
             );
@@ -376,25 +323,13 @@ export class GameResultPlayingController extends BaseController {
     }
   }
 
-  @Put('end')
-  async endPlayGame(
-    @Body()
-    gameResultDto: {
-      id: number;
-      candidate_id: number;
-      assessment_id: number;
-      game_id: number;
-      play_time: number;
-      play_score: number;
-      is_done: true;
-    },
-    @Res() res: Response,
-  ) {
+  @Get('end/:game_result_id')
+  async endPlayGame(@Req() req: any, @Res() res: Response) {
     try {
-      await this.gameResultService.updateIsDoneGameResult(gameResultDto.id);
-      // const dataNew = gameResultDto;
+      const game_result_id = req.params.game_result_id;
+      await this.gameResultService.updateIsDoneGameResult(game_result_id);
       return res.status(HttpStatus.OK).json({
-        message: 'End play game success',
+        message: 'End play game success.',
       });
     } catch (e) {
       console.log(e.message);

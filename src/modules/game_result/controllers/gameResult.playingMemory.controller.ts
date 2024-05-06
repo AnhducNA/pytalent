@@ -26,23 +26,28 @@ export class GameResultPlayingMemoryController extends BaseController {
     },
     @Res() res: Response,
   ) {
-    // try {
-    //
-    // } catch (e) {
-    //   return this.errorsResponse({
-    //     message: 'Error play memory game.',
-    //     data: e,
-    //   }, res);
-    // }
     const memory_game_result_id = req.params.memory_game_result_id;
     const memory_game_result_playing =
       await this.gameResultService.get_memory_game_result_by_id(
         memory_game_result_id,
       );
+    // validate check memory_game_result_playing exist
     if (!memory_game_result_playing) {
       return this.errorsResponse(
         {
           message: `Error: memory_game_result with id = ${memory_game_result_id} does not exist.`,
+        },
+        res,
+      );
+    }
+    // validate check memory_game_result_playing answered
+    if (
+      memory_game_result_playing.answer_play &&
+      memory_game_result_playing.is_correct
+    ) {
+      return this.errorsResponse(
+        {
+          message: `memory_game_result with id = ${memory_game_result_id} answered.`,
         },
         res,
       );
