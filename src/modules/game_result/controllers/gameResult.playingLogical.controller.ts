@@ -215,7 +215,13 @@ export class GameResultPlayingLogicalController extends BaseController {
         res,
       );
     } catch (e) {
-      console.log(e);
+      return this.errorsResponse(
+        {
+          message: 'Error 123',
+          data: e,
+        },
+        res,
+      );
     }
   }
 }

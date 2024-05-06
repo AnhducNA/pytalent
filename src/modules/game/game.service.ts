@@ -57,7 +57,9 @@ export class GameService {
       check_identical[check_identical.length - 2] ===
         check_identical[check_identical.length - 3]
     );
+    //  Check số câu loại trừ.
     if (id_except && id_except.length > 0) {
+      // Kiểm tra 3 câu liên tiếp trùng nhau
       if (
         !check_identical ||
         check_identical.length <= 3 ||

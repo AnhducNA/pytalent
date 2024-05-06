@@ -142,7 +142,15 @@ export class GameResultService {
   async get_logical_game_result_all_by_game_result(game_result_id: number) {
     return this.logicalGameResultRepository
       .createQueryBuilder('logical_game_result')
-      .select('logical_game_result.*')
+      .select([
+        'logical_game_result.id',
+        'logical_game_result.index',
+        'logical_game_result.game_result_id',
+        'logical_game_result.logical_question_id',
+        'logical_game_result.status',
+        'logical_game_result.answer_play',
+        'logical_game_result.is_correct',
+      ])
       .addSelect('logical_question.correct_answer')
       .innerJoin('logical_game_result.logical_question', 'logical_question')
       .where(`logical_game_result.game_result_id = ${game_result_id}`)
