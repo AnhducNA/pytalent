@@ -135,9 +135,9 @@ export class GameResultPlayingLogicalController extends BaseController {
         message_res = 'Your answer is false';
         logicalGameAnswerDto.is_correct = false;
       }
-      // // updateGameResult
+      // updateGameResult
       await this.gameResultService.updateGameResult(game_result_update);
-      // // update LogicalGameResult
+      // update LogicalGameResult
       await this.gameResultService.update_answer_play_logical_game_result(
         logical_game_result_id,
         StatusLogicalGameResultEnum.ANSWERED,
@@ -152,9 +152,7 @@ export class GameResultPlayingLogicalController extends BaseController {
         );
         return this.successResponse(
           {
-            message: `You answered ${
-              logical_game_result.index / total_question_game_logical
-            } question. Game over.`,
+            message: `You answered ${logical_game_result.index} / ${total_question_game_logical} question. Game over.`,
             data: {
               game_result: game_result_update,
               logical_game_result_history: logical_game_result_history,
