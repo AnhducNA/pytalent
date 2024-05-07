@@ -87,7 +87,7 @@ export class GameResultService {
         'game_result.game_id',
         'game_result.play_time',
         'game_result.play_score',
-        'game_result.is_done',
+        'game_result.status',
         'game_result.time_start',
       ])
       .leftJoinAndSelect(
@@ -312,14 +312,17 @@ export class GameResultService {
       .execute();
   }
 
-  async updateStatusDoneGameResult(id: number) {
+  async update_game_result_status(
+    game_result_id: number,
+    status: StatusGameResultEnum,
+  ) {
     return this.gameResultRepository
       .createQueryBuilder()
       .update(GameResult)
       .set({
-        status: StatusGameResultEnum.FINISHED,
+        status: status,
       })
-      .where('id = :id', { id: id })
+      .where('id = :id', { id: game_result_id })
       .execute();
   }
 

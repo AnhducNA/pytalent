@@ -60,8 +60,11 @@ export class GameResultPlayingMemoryController extends BaseController {
       await this.gameResultService.get_memory_game_result_by_game_result_id(
         game_result_update.id,
       );
-    // validate check game_result is_done
-    if (game_result_update.status === StatusGameResultEnum.FINISHED) {
+    // validate check game_result status
+    if (
+      game_result_update.status === StatusGameResultEnum.FINISHED ||
+      game_result_update.status === StatusGameResultEnum.PAUSED
+    ) {
       return this.errorsResponse(
         {
           message: 'Game over.',
@@ -77,8 +80,9 @@ export class GameResultPlayingMemoryController extends BaseController {
     const play_time =
       Date.now() - memory_game_result_playing.time_start_play_level.getTime();
     if (play_time > memory_game_result_playing.memory_game.time_limit) {
-      await this.gameResultService.updateStatusDoneGameResult(
+      await this.gameResultService.update_game_result_status(
         memory_game_result_playing.game_result_id,
+        StatusGameResultEnum.FINISHED,
       );
       return this.successResponse(
         {
@@ -107,8 +111,9 @@ export class GameResultPlayingMemoryController extends BaseController {
       } else {
         message_res = 'Your answer is false. End game';
         memoryGameResultDto.is_correct = false;
-        await this.gameResultService.updateStatusDoneGameResult(
+        await this.gameResultService.update_game_result_status(
           game_result_update.id,
+          StatusGameResultEnum.FINISHED,
         );
       }
       // End check done
@@ -126,8 +131,9 @@ export class GameResultPlayingMemoryController extends BaseController {
       );
       // check max level = 25
       if (memory_game_result_playing.memory_game.level >= 25) {
-        await this.gameResultService.updateStatusDoneGameResult(
+        await this.gameResultService.update_game_result_status(
           game_result_update.id,
+          StatusGameResultEnum.FINISHED,
         );
         return this.errorsResponse(
           {

@@ -88,7 +88,8 @@ export class GameResultPlayingController extends BaseController {
         res,
       );
     } else if (
-      game_result_exist_check?.status === StatusGameResultEnum.PAUSED
+      game_result_exist_check?.status === StatusGameResultEnum.PAUSED ||
+      game_result_exist_check?.status === StatusGameResultEnum.STARTED
     ) {
       // continue play game_result
       const time_start = new Date(
@@ -328,13 +329,31 @@ export class GameResultPlayingController extends BaseController {
     }
   }
 
+  @Get('pause/:game_result_id')
+  async exitGame(@Req() req: any, @Res() res: Response) {
+    const game_result_id = req.params.game_result_id;
+    await this.gameResultService.update_game_result_status(
+      game_result_id,
+      StatusGameResultEnum.PAUSED,
+    );
+    return res.status(HttpStatus.OK).json({
+      message: 'Pause game success.',
+      data: await this.gameResultService.get_history_type_game_result_by_game_result(
+        game_result_id,
+      ),
+    });
+  }
+
   @Get('end/:game_result_id')
   async endPlayGame(@Req() req: any, @Res() res: Response) {
     try {
       const game_result_id = req.params.game_result_id;
-      await this.gameResultService.updateStatusDoneGameResult(game_result_id);
+      await this.gameResultService.update_game_result_status(
+        game_result_id,
+        StatusGameResultEnum.FINISHED,
+      );
       return res.status(HttpStatus.OK).json({
-        message: 'End play game success.',
+        message: 'End game success.',
         data: await this.gameResultService.get_history_type_game_result_by_game_result(
           game_result_id,
         ),

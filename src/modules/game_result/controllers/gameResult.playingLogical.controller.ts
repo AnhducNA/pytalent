@@ -57,8 +57,11 @@ export class GameResultPlayingLogicalController extends BaseController {
       await this.gameResultService.get_logical_game_result_all_by_game_result(
         game_result_update.id,
       );
-    // validate check game_result is_done
-    if (game_result_update.status === StatusGameResultEnum.FINISHED) {
+    // validate check game_result finished or paused
+    if (
+      game_result_update.status === StatusGameResultEnum.FINISHED ||
+      game_result_update.status === StatusGameResultEnum.PAUSED
+    ) {
       return this.errorsResponse(
         {
           message: 'Game over.',
@@ -83,8 +86,9 @@ export class GameResultPlayingLogicalController extends BaseController {
     if (game_result_update.play_time > total_game_time) {
       // when the game time is up, set done for game_result
       game_result_update.status = StatusGameResultEnum.FINISHED;
-      await this.gameResultService.updateStatusDoneGameResult(
+      await this.gameResultService.update_game_result_status(
         game_result_update.id,
+        StatusGameResultEnum.FINISHED,
       );
       return this.errorsResponse(
         {
@@ -107,8 +111,9 @@ export class GameResultPlayingLogicalController extends BaseController {
     );
     if (logical_game_result.index > total_question_game_logical) {
       game_result_update.status = StatusGameResultEnum.FINISHED;
-      await this.gameResultService.updateStatusDoneGameResult(
+      await this.gameResultService.update_game_result_status(
         game_result_update.id,
+        StatusGameResultEnum.FINISHED,
       );
       return this.errorsResponse(
         {
@@ -148,8 +153,9 @@ export class GameResultPlayingLogicalController extends BaseController {
       // validate check final logical_question of total
       if (logical_game_result.index === total_question_game_logical) {
         game_result_update.status = StatusGameResultEnum.FINISHED;
-        await this.gameResultService.updateStatusDoneGameResult(
+        await this.gameResultService.update_game_result_status(
           game_result_update.id,
+          StatusGameResultEnum.FINISHED,
         );
         return this.successResponse(
           {
