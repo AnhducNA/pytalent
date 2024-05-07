@@ -10,8 +10,8 @@ export class BaseController {
     const { data, message } = result;
     return this.apiResponse(res, {
       status: true,
-      data: data ?? {},
       message: message ?? 'success',
+      data: data ?? {},
     });
   }
 
@@ -19,8 +19,8 @@ export class BaseController {
     const { data, message } = result;
     return res.status(HttpStatus.OK).json({
       status: false,
-      data: data ?? {},
       message: message ?? 'errors',
+      data: data ?? {},
     });
   }
 

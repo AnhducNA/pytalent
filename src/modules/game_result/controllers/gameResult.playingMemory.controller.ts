@@ -192,7 +192,7 @@ export class GameResultPlayingMemoryController extends BaseController {
                 memory_game_id: memory_game_result_render_next.memory_game_id,
                 level: memory_game_result_render_next.memory_game.level,
                 score: memory_game_result_render_next.memory_game.score,
-                time_limit:
+                time_render:
                   memory_game_result_render_next.memory_game.time_limit,
                 correct_answer: JSON.parse(
                   memory_game_result_render_next.correct_answer,

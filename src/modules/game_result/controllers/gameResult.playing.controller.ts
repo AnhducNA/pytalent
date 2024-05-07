@@ -175,14 +175,21 @@ export class GameResultPlayingController extends BaseController {
               {
                 message: 'Continue play game memory success.',
                 data: {
-                  game_result: game_result_exist_check,
+                  game_result: {
+                    id: game_result_exist_check.id,
+                    play_time: game_result_exist_check.play_time,
+                    play_score: game_result_exist_check.play_score,
+                    status: game_result_exist_check.status,
+                    time_start: game_result_exist_check.time_start,
+                  },
                   memory_game_render_current: {
                     game_result_id: memory_game_result_final.game_result_id,
                     memory_game_result_id: memory_game_result_final.id,
                     memory_game_id: memory_game_result_final.memory_game_id,
                     level: memory_game_result_final.memory_game.level,
                     score: memory_game_result_final.memory_game.score,
-                    time_limit: memory_game_result_final.memory_game.time_limit,
+                    time_render:
+                      memory_game_result_final.memory_game.time_limit,
                     correct_answer: correct_answer,
                   },
                 },
@@ -238,7 +245,13 @@ export class GameResultPlayingController extends BaseController {
               {
                 message: 'Start play game logical success.',
                 data: {
-                  game_result: game_result_exist_check,
+                  game_result: {
+                    id: game_result_exist_check.id,
+                    play_time: game_result_exist_check.play_time,
+                    play_score: game_result_exist_check.play_score,
+                    status: game_result_exist_check.status,
+                    time_start: game_result_exist_check.time_start,
+                  },
                   logical_question_render_next: {
                     logical_game_result_id: logical_game_result_new.id,
                     logical_question_id: logical_question_render_next.id,
@@ -292,7 +305,7 @@ export class GameResultPlayingController extends BaseController {
                       score:
                         memory_game_result_final_by_game_result.memory_game
                           .score,
-                      time_limit:
+                      time_render:
                         memory_game_result_final_by_game_result.memory_game
                           .time_limit,
                       correct_answer: JSON.parse(
