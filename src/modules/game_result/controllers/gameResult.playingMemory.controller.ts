@@ -41,10 +41,20 @@ export class GameResultPlayingMemoryController extends BaseController {
         res,
       );
     }
+    const game_result_update = await this.gameResultService.findOne(
+      memory_game_result_playing.game_result_id,
+    );
+    const memory_game_result_history =
+      await this.gameResultService.get_memory_game_result_by_game_result_id(
+        game_result_update.id,
+      );
+
     // validate check memory_game_result_playing answered
     if (
       memory_game_result_playing.answer_play &&
-      memory_game_result_playing.is_correct
+      memory_game_result_playing.is_correct &&
+      memory_game_result_playing.memory_game.level !==
+        memory_game_result_history.length
     ) {
       return this.errorsResponse(
         {
@@ -53,21 +63,22 @@ export class GameResultPlayingMemoryController extends BaseController {
         res,
       );
     }
-    const game_result_update = await this.gameResultService.findOne(
-      memory_game_result_playing.game_result_id,
-    );
-    const memory_game_result_history =
-      await this.gameResultService.get_memory_game_result_by_game_result_id(
-        game_result_update.id,
-      );
     // validate check game_result status
-    if (
-      game_result_update.status === StatusGameResultEnum.FINISHED ||
-      game_result_update.status === StatusGameResultEnum.PAUSED
-    ) {
+    if (game_result_update.status === StatusGameResultEnum.FINISHED) {
       return this.errorsResponse(
         {
           message: 'Game over.',
+          data: {
+            game_result: game_result_update,
+            memory_game_result_history: memory_game_result_history,
+          },
+        },
+        res,
+      );
+    } else if (game_result_update.status === StatusGameResultEnum.PAUSED) {
+      return this.errorsResponse(
+        {
+          message: 'Game was paused. You need to continue to play',
           data: {
             game_result: game_result_update,
             memory_game_result_history: memory_game_result_history,
@@ -168,6 +179,27 @@ export class GameResultPlayingMemoryController extends BaseController {
           await this.gameService.getMemoryDataByLevel(
             memory_game_result_playing.memory_game.level + 1,
           );
+        // Validate check if does not have data in memory_data
+        if (!memory_data_render_next) {
+          await this.gameResultService.update_game_result_status(
+            game_result_update.id,
+            StatusGameResultEnum.FINISHED,
+          );
+          return this.errorsResponse(
+            {
+              message:
+                'You have not created new data in memory_data. End game.',
+              data: {
+                game_result: game_result_update,
+                memory_game_result_history:
+                  await this.gameResultService.get_memory_game_result_by_game_result_id(
+                    game_result_update.id,
+                  ),
+              },
+            },
+            res,
+          );
+        }
         await this.gameResultService.createMemoryGameResult({
           game_result_id: game_result_update.id,
           memory_game_id: memory_data_render_next.id,

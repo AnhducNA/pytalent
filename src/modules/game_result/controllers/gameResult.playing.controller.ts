@@ -99,6 +99,11 @@ export class GameResultPlayingController extends BaseController {
         game_result_exist_check.id,
         time_start,
       );
+      game_result_exist_check.status = StatusGameResultEnum.STARTED;
+      await this.gameResultService.update_game_result_status(
+        game_result_exist_check.id,
+        StatusGameResultEnum.STARTED,
+      );
       switch (gameResultDto?.game_id) {
         case 1:
           // Candidate play logicalQuestion
