@@ -174,7 +174,7 @@ export class GameResultPlayingMemoryController extends BaseController {
           answer_play: null,
           is_correct: null,
           correct_answer: JSON.stringify(correct_answer),
-          time_start_play_level: new Date(),
+          time_start_play_level: new Date(Date.now()),
         });
         const memory_game_result_render_next =
           await this.gameResultService.get_memory_game_result_final_by_game_result(

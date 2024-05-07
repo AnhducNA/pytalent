@@ -220,7 +220,7 @@ export class GameResultPlayingController extends BaseController {
       gameResultDto.play_time = 0;
       gameResultDto.play_score = 0;
       gameResultDto.status = StatusGameResultEnum.STARTED;
-      gameResultDto.time_start = new Date();
+      gameResultDto.time_start = new Date(Date.now());
       try {
         const game_result_new = await this.gameResultService.create(
           gameResultDto,
@@ -281,7 +281,7 @@ export class GameResultPlayingController extends BaseController {
                 correct_answer: JSON.stringify(correct_answer),
                 answer_play: null,
                 is_correct: null,
-                time_start_play_level: new Date(),
+                time_start_play_level: new Date(Date.now()),
               });
               const memory_game_result_final_by_game_result =
                 await this.gameResultService.get_memory_game_result_final_by_game_result(

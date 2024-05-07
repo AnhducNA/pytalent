@@ -275,7 +275,7 @@ export class GameResultService {
     return this.memoryGameResultRepository
       .createQueryBuilder('memory_game_result')
       .update(MemoryGameResult)
-      .set({ time_start_play_level: new Date() })
+      .set({ time_start_play_level: new Date(Date.now()) })
       .where(`memory_game_result.id = ${memory_game_result_id}`)
       .execute();
   }
