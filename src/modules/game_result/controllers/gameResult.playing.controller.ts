@@ -354,6 +354,14 @@ export class GameResultPlayingController extends BaseController {
   @Get('pause/:game_result_id')
   async exitGame(@Req() req: any, @Res() res: Response) {
     const game_result_id = req.params.game_result_id;
+    const game_result_detail = await this.gameResultService.findOne(
+      game_result_id,
+    );
+    const play_time = Date.now() - game_result_detail.time_start.getTime();
+    await this.gameResultService.update_game_result_play_time(
+      game_result_id,
+      play_time,
+    );
     await this.gameResultService.update_game_result_status(
       game_result_id,
       StatusGameResultEnum.PAUSED,

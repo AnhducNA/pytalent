@@ -326,6 +326,20 @@ export class GameResultService {
       .execute();
   }
 
+  async update_game_result_play_time(
+    game_result_id: number,
+    play_time: number,
+  ) {
+    return this.gameResultRepository
+      .createQueryBuilder()
+      .update(GameResult)
+      .set({
+        play_time: play_time,
+      })
+      .where('id = :id', { id: game_result_id })
+      .execute();
+  }
+
   async updateGameResultPlayTimeAndScore(payload: {
     id: number;
     play_time: number;
