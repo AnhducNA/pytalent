@@ -106,7 +106,23 @@ export class GameResultPlayingController extends BaseController {
       );
       switch (gameResultDto?.game_id) {
         case 1:
-          // Candidate play logicalQuestion
+          // Candidate continue play logicalQuestion
+          // validate check end play_time
+          if (game_result_exist_check.play_time > 90000) {
+            await this.gameResultService.update_game_result_status(
+              game_result_exist_check.id,
+              StatusGameResultEnum.FINISHED,
+            );
+            return this.errorsResponse(
+              {
+                message: 'You have run out of logical game time',
+                data: await this.gameResultService.get_history_type_game_result_by_game_result(
+                  game_result_exist_check.id,
+                ),
+              },
+              res,
+            );
+          }
           try {
             const logical_game_result_final_by_game_result =
               await this.gameResultService.get_logical_game_result_final_by_game_result(
