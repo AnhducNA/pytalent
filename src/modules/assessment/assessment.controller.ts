@@ -206,10 +206,11 @@ export class AssessmentController extends BaseController {
     new AuthorizationGuard([RoleEnum.ADMIN, RoleEnum.HR]),
   )
   async hrInviteCandidate(
+    @Req() req: any,
     @Body()
     paramsDto: {
       assessment_id: number;
-      candidate_list: any;
+      candidate_list: any[];
     },
     @Res() res: Response,
   ) {
@@ -236,6 +237,11 @@ export class AssessmentController extends BaseController {
     await this.assessmentService.delete_assessment_candidate_by_assessment_id(
       paramsDto.assessment_id,
     );
+    const hrLogin = req['userLogin'];
+    await this.assessmentService.create_assessment_candidate({
+      assessment_id: paramsDto.assessment_id,
+      candidate_id: hrLogin.id,
+    });
     let assessmentCandidateListResult = [];
     for (const candidate_email of paramsDto.candidate_list) {
       const payloadUser = {
@@ -251,6 +257,81 @@ export class AssessmentController extends BaseController {
         await this.assessmentService.create_assessment_candidate(
           payloadAssessmentCandidate,
         );
+      assessmentCandidateListResult = [
+        ...assessmentCandidateListResult,
+        assessmentCandidateResult,
+      ];
+    }
+    // Send email to candidate
+    await this.mailServerService.sendMail(paramsDto.candidate_list);
+    return this.successResponse(
+      {
+        message: `Success. Email sent to: ${paramsDto.candidate_list.toString()}`,
+      },
+      res,
+    );
+  }
+
+  @Post('hr-invite-more-candidate')
+  @UseGuards(
+    JwtAuthGuard,
+    new AuthorizationGuard([RoleEnum.ADMIN, RoleEnum.HR]),
+  )
+  async hrInviteMoreCandidate(
+    @Req() req: any,
+    @Body()
+    paramsDto: {
+      assessment_id: number;
+      candidate_list: any[];
+    },
+    @Res() res: Response,
+  ) {
+    if (!paramsDto.candidate_list) {
+      return this.errorsResponse(
+        {
+          message: `candidate_list don't have data`,
+        },
+        res,
+      );
+    }
+    // validate assessment
+    const assessment = await this.assessmentService.findOne(
+      paramsDto.assessment_id,
+    );
+    if (!assessment) {
+      return this.errorsResponse(
+        {
+          message: 'assessment does not exit.',
+        },
+        res,
+      );
+    }
+    let assessmentCandidateListResult = [];
+    for (const candidate_email of paramsDto.candidate_list) {
+      const payloadUser = {
+        email: candidate_email,
+        password: '123456',
+      };
+      const userResult = await this.userService.checkOrCreateUser(payloadUser);
+      const payloadAssessmentCandidate = {
+        assessment_id: paramsDto.assessment_id,
+        candidate_id: userResult.id,
+      };
+      const assessment_candidate_exit =
+        await this.assessmentService.get_assessment_candidate_exit(
+          paramsDto.assessment_id,
+          userResult.id,
+        );
+      let assessmentCandidateResult: any;
+      if (assessment_candidate_exit?.id) {
+        assessmentCandidateResult = assessment_candidate_exit;
+      } else {
+        assessmentCandidateResult =
+          await this.assessmentService.create_assessment_candidate(
+            payloadAssessmentCandidate,
+          );
+      }
+
       assessmentCandidateListResult = [
         ...assessmentCandidateListResult,
         assessmentCandidateResult,

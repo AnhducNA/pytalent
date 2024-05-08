@@ -204,6 +204,17 @@ export class AssessmentService {
       .execute();
   }
 
+  async get_assessment_candidate_exit(
+    assessment_id: number,
+    candidate_id: number,
+  ) {
+    return await this.assessmentCandidateRepository
+      .createQueryBuilder()
+      .where(`assessment_id = ${assessment_id}`)
+      .andWhere(`candidate_id = ${candidate_id}`)
+      .getOne();
+  }
+
   async create_assessment_candidate(assessment_candidate: {
     assessment_id: number;
     candidate_id: number;
