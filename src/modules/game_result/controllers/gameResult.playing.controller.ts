@@ -226,13 +226,13 @@ export class GameResultPlayingController extends BaseController {
       gameResultDto.play_score = 0;
       gameResultDto.status = StatusGameResultEnum.STARTED;
       gameResultDto.time_start = new Date(Date.now());
-      try {
-        const game_result_new = await this.gameResultService.create(
-          gameResultDto,
-        );
-        // Get Data game
-        switch (gameResultDto?.game_id) {
-          case 1:
+      const game_result_new = await this.gameResultService.create(
+        gameResultDto,
+      );
+      // Get Data game
+      switch (gameResultDto?.game_id) {
+        case 1:
+          try {
             // Candidate start play logicalQuestion
             const logical_question_render_next =
               await this.gameService.getLogicalQuestionRender([], []);
@@ -251,11 +251,11 @@ export class GameResultPlayingController extends BaseController {
                 message: 'Start play game logical success.',
                 data: {
                   game_result: {
-                    id: game_result_exist_check.id,
-                    play_time: game_result_exist_check.play_time,
-                    play_score: game_result_exist_check.play_score,
-                    status: game_result_exist_check.status,
-                    time_start: game_result_exist_check.time_start,
+                    id: game_result_new.id,
+                    play_time: game_result_new.play_time,
+                    play_score: game_result_new.play_score,
+                    status: game_result_new.status,
+                    time_start: game_result_new.time_start,
                   },
                   logical_question_render_next: {
                     logical_game_result_id: logical_game_result_new.id,
@@ -270,79 +270,83 @@ export class GameResultPlayingController extends BaseController {
               },
               res,
             );
-          case 2:
-            // Candidate start play memoryGame
-            try {
-              const correct_answer = [
-                ['left', 'right'][
-                  Math.floor(Math.random() * ['left', 'right'].length)
-                ],
-              ];
-              await this.gameResultService.createMemoryGameResult({
-                game_result_id: game_result_new.id,
-                memory_game_id: (
-                  await this.gameService.getMemoryDataByLevel(1)
-                ).id,
-                correct_answer: JSON.stringify(correct_answer),
-                answer_play: null,
-                is_correct: null,
-                time_start_play_level: new Date(Date.now()),
-              });
-              const memory_game_result_final_by_game_result =
-                await this.gameResultService.get_memory_game_result_final_by_game_result(
-                  game_result_new.id,
-                );
-              return this.successResponse(
-                {
-                  message: 'Start play game memory success.',
-                  data: {
-                    game_result: game_result_new,
-                    memory_data_render_next: {
-                      game_result_id:
-                        memory_game_result_final_by_game_result.game_result_id,
-                      memory_game_result_id:
-                        memory_game_result_final_by_game_result.id,
-                      memory_game_id:
-                        memory_game_result_final_by_game_result.memory_game_id,
-                      level:
-                        memory_game_result_final_by_game_result.memory_game
-                          .level,
-                      score:
-                        memory_game_result_final_by_game_result.memory_game
-                          .score,
-                      time_render:
-                        memory_game_result_final_by_game_result.memory_game
-                          .time_limit,
-                      correct_answer: JSON.parse(
-                        memory_game_result_final_by_game_result.correct_answer,
-                      ),
-                      time_start_play_level:
-                        memory_game_result_final_by_game_result.time_start_play_level,
-                    },
-                  },
-                },
-                res,
-              );
-            } catch (e) {
-              return this.errorsResponse(
-                {
-                  message: 'Error start play memory game',
-                  data: e,
-                },
-                res,
-              );
-            }
-          default:
-            // validate check if game_id does not setting.
+          } catch (e) {
             return this.errorsResponse(
               {
-                message: `Game with id = ${gameResultDto.game_id} does not setting.`,
+                message: 'Error start play logical game',
+                data: e,
               },
               res,
             );
-        }
-      } catch (e) {
-        console.log('Error start play game_result: ' + e.message);
+          }
+        case 2:
+          // Candidate start play memoryGame
+          try {
+            const correct_answer = [
+              ['left', 'right'][
+                Math.floor(Math.random() * ['left', 'right'].length)
+              ],
+            ];
+            await this.gameResultService.createMemoryGameResult({
+              game_result_id: game_result_new.id,
+              memory_game_id: (
+                await this.gameService.getMemoryDataByLevel(1)
+              ).id,
+              correct_answer: JSON.stringify(correct_answer),
+              answer_play: null,
+              is_correct: null,
+              time_start_play_level: new Date(Date.now()),
+            });
+            const memory_game_result_final_by_game_result =
+              await this.gameResultService.get_memory_game_result_final_by_game_result(
+                game_result_new.id,
+              );
+            return this.successResponse(
+              {
+                message: 'Start play game memory success.',
+                data: {
+                  game_result: game_result_new,
+                  memory_data_render_next: {
+                    game_result_id:
+                      memory_game_result_final_by_game_result.game_result_id,
+                    memory_game_result_id:
+                      memory_game_result_final_by_game_result.id,
+                    memory_game_id:
+                      memory_game_result_final_by_game_result.memory_game_id,
+                    level:
+                      memory_game_result_final_by_game_result.memory_game.level,
+                    score:
+                      memory_game_result_final_by_game_result.memory_game.score,
+                    time_render:
+                      memory_game_result_final_by_game_result.memory_game
+                        .time_limit,
+                    correct_answer: JSON.parse(
+                      memory_game_result_final_by_game_result.correct_answer,
+                    ),
+                    time_start_play_level:
+                      memory_game_result_final_by_game_result.time_start_play_level,
+                  },
+                },
+              },
+              res,
+            );
+          } catch (e) {
+            return this.errorsResponse(
+              {
+                message: 'Error start play memory game',
+                data: e,
+              },
+              res,
+            );
+          }
+        default:
+          // validate check if game_id does not setting.
+          return this.errorsResponse(
+            {
+              message: `Game with id = ${gameResultDto.game_id} does not setting.`,
+            },
+            res,
+          );
       }
     }
   }

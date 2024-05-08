@@ -58,13 +58,21 @@ export class GameResultPlayingLogicalController extends BaseController {
         game_result_update.id,
       );
     // validate check game_result finished or paused
-    if (
-      game_result_update.status === StatusGameResultEnum.FINISHED ||
-      game_result_update.status === StatusGameResultEnum.PAUSED
-    ) {
+    if (game_result_update.status === StatusGameResultEnum.FINISHED) {
       return this.errorsResponse(
         {
           message: 'Game over.',
+          data: {
+            game_result: game_result_update,
+            logical_game_result_history: logical_game_result_history,
+          },
+        },
+        res,
+      );
+    } else if (game_result_update.status === StatusGameResultEnum.PAUSED) {
+      return this.errorsResponse(
+        {
+          message: 'Game was paused. You need to continue to play',
           data: {
             game_result: game_result_update,
             logical_game_result_history: logical_game_result_history,
