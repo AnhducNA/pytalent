@@ -60,6 +60,23 @@ export class UserAdminController extends BaseController {
     );
   }
 
+  @Get('hr-approach-game-by-hr-login')
+  @UseGuards(
+    JwtAuthGuard,
+    new AuthorizationGuard([RoleEnum.ADMIN, RoleEnum.HR]),
+  )
+  async getHrApproachGameByHrLogin(@Request() req: any, @Res() res: Response) {
+    const hrId = req['userLogin'].id;
+    const hrApproachGameList = await this.userService.getHrApproachGameByHrId(
+      hrId,
+    );
+    return res.status(HttpStatus.OK).json({
+      success: true,
+      data: hrApproachGameList,
+      message: 'Get data success!',
+    });
+  }
+
   @Get('hr-approach-game/:hrId')
   @UseGuards(
     JwtAuthGuard,
