@@ -69,7 +69,7 @@ export class UserService {
     return user;
   }
 
-  async getHrApproachGameByHrId(hr_id: string) {
+  async getHrApproachGameByHrId(hr_id: number) {
     return await this.hrGameRepository
       .createQueryBuilder()
       .where('hr_id = :hr_id', { hr_id: hr_id })
