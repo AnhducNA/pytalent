@@ -169,7 +169,7 @@ export class GameResultService {
   ) {
     return this.logicalGameResultRepository
       .createQueryBuilder('logical_game_result')
-      .innerJoin('logical_game_result.gameResult', 'game_result')
+      .innerJoin('logical_game_result.game_result', 'game_result')
       .orderBy('logical_game_result.id', 'DESC')
       .where(`logical_game_result.game_result_id = ${game_result_id}`)
       .andWhere(`game_result.candidate_id = ${candidate_id}`)
