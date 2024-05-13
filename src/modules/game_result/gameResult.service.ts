@@ -77,6 +77,42 @@ export class GameResultService {
       .getOne();
   }
 
+  async get_total_play_score_by_game_result(
+    game_result_id: number,
+    game_id: number,
+  ) {
+    let game_result_play_score = 0;
+    switch (game_id) {
+      case 1:
+        const logical_game_result_list = await this.logicalGameResultRepository
+          .createQueryBuilder('logical_game_result')
+          .select('logical_game_result.id')
+          .addSelect('logical_question.score')
+          .innerJoin('logical_game_result.logical_question', 'logical_question')
+          .where(`logical_game_result.game_result_id = ${game_result_id}`)
+          .andWhere(`logical_game_result.is_correct = 1`)
+          .getMany();
+        logical_game_result_list.map((item) => {
+          game_result_play_score += item.logical_question.score;
+        });
+        break;
+      case 2:
+        const memory_game_result_list = await this.memoryGameResultRepository
+          .createQueryBuilder('memory_game_result')
+          .select('memory_game_result.id')
+          .addSelect('memory_game.score')
+          .innerJoin('memory_game_result.memory_game', 'memory_game')
+          .where(`memory_game_result.game_result_id = ${game_result_id}`)
+          .andWhere(`memory_game_result.is_correct = 1`)
+          .getMany();
+        memory_game_result_list.map((item) => {
+          game_result_play_score += item.memory_game.score;
+        });
+        break;
+    }
+    return game_result_play_score;
+  }
+
   async get_history_type_game_result_by_game_result(game_result_id: number) {
     return this.gameResultRepository
       .createQueryBuilder('game_result')

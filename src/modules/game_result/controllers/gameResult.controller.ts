@@ -30,6 +30,13 @@ export class GameResultController extends BaseController {
     const userLogin = req['userLogin'];
     const gameResultList =
       await this.gameResultService.getGameResultByCandidateId(userLogin.id);
+    for (const game_result of gameResultList) {
+      game_result.play_score =
+        await this.gameResultService.get_total_play_score_by_game_result(
+          game_result.id,
+          game_result.game_id,
+        );
+    }
     return res.status(HttpStatus.OK).json({
       success: true,
       data: {
