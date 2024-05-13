@@ -84,13 +84,11 @@ export class GameResultPlayingLogicalController extends BaseController {
     // validate check play_time > total_game_time
     game_result_update.play_time =
       Date.now() - game_result_update.time_start.getTime();
-    const total_game_time = parseInt(
-      (
-        await this.gameResultService.get_game_info_by_game_result(
-          game_result_update.id,
-        )
-      ).game.total_time,
-    );
+    const total_game_time = (
+      await this.gameResultService.get_game_info_by_game_result(
+        game_result_update.id,
+      )
+    ).game.total_time;
     if (game_result_update.play_time > total_game_time) {
       // when the game time is up, set done for game_result
       game_result_update.status = StatusGameResultEnum.FINISHED;

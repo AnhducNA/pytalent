@@ -77,6 +77,48 @@ export class GameResultService {
       .getOne();
   }
 
+  async check_game_result_play_time_finish() {
+    const game_result_playing_list = await this.gameResultRepository
+      .createQueryBuilder('game_result')
+      .select([
+        'game_result.id',
+        'game_result.time_start',
+        'game_result.game_id',
+      ])
+      .addSelect('game.total_time')
+      .innerJoin('game_result.game', 'game')
+      .where('game_result.status IN (:...status_list)', {
+        status_list: [
+          StatusGameResultEnum.STARTED,
+          StatusGameResultEnum.PAUSED,
+        ],
+      })
+      .getMany();
+    game_result_playing_list.map((game_result_playing) => {
+      switch (game_result_playing.game_id) {
+        case 1:
+          if (
+            Date.now() - game_result_playing.time_start.getTime() >
+            game_result_playing.game.total_time
+          ) {
+            this.update_game_result_status(
+              game_result_playing.id,
+              StatusGameResultEnum.FINISHED,
+            );
+          }
+          break;
+        case 2:
+          if (Date.now() - game_result_playing.time_start.getTime() > 100000) {
+            this.update_game_result_status(
+              game_result_playing.id,
+              StatusGameResultEnum.FINISHED,
+            );
+          }
+          break;
+      }
+    });
+  }
+
   async get_total_play_score_by_game_result(
     game_result_id: number,
     game_id: number,

@@ -23,11 +23,14 @@ import { GameResult } from '@entities/gameResult.entity';
 import { GameResultModule } from '@modules/game_result/gameResult.module';
 import { MailServerModule } from '@modules/mail_server/mail_server.module';
 import { ConfigModule } from '@nestjs/config';
+import { ScheduleModule } from '@nestjs/schedule';
+import { TaskModule } from '@modules/task/task.module';
 
 const options = databaseConfig as TypeOrmModuleOptions;
 
 @Module({
   imports: [
+    ScheduleModule.forRoot(),
     ThrottlerModule.forRoot({
       ttl: 60,
       limit: 10,
@@ -53,6 +56,7 @@ const options = databaseConfig as TypeOrmModuleOptions;
       isGlobal: true, // no need to import into other modules
     }),
     //other module
+    TaskModule,
     UserModule,
     GameModule,
     AuthModule,

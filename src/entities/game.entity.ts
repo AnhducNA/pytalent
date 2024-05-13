@@ -22,7 +22,7 @@ export class Game extends BaseEntity {
   description: string;
 
   @Column()
-  total_time: string;
+  total_time: number;
 
   @Column()
   total_question: string;
