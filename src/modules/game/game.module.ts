@@ -9,7 +9,9 @@ import { GameLogicalController } from '@modules/game/game.logical.controller';
 import { GameMemoryController } from '@modules/game/game.memory.controller';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([Game, LogicalQuestion, MemoryData, MemoryData])],
+  imports: [
+    TypeOrmModule.forFeature([Game, LogicalQuestion, MemoryData, MemoryData]),
+  ],
   controllers: [GameController, GameLogicalController, GameMemoryController],
   providers: [GameService],
   exports: [GameService],
