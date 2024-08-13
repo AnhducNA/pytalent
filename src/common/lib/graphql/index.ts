@@ -1,5 +1,4 @@
 import { GraphQLClient, gql } from 'graphql-request';
-import { logger } from '@logs/app.log';
 import { env } from '@env';
 
 export class GraphqlLib {
@@ -21,7 +20,7 @@ export class GraphqlLib {
       const resGql = await this.graphQLClient.request(mutation, { variables });
       return JSON.stringify(resGql, undefined, 2);
     } catch (e) {
-      logger.error(`login with graphql error: ${e}`);
+      console.log(`login with graphql error: ${e}`);
       return false;
     }
   }

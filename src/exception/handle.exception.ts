@@ -7,7 +7,6 @@ import {
 import { CustomizeException } from '@exception/customize.exception';
 import { I18nValidationException } from 'nestjs-i18n';
 import { env } from '@env';
-import { logger } from '@logs/app.log';
 
 @Catch()
 export class AllExceptionsFilter implements ExceptionFilter {
@@ -36,7 +35,7 @@ export class AllExceptionsFilter implements ExceptionFilter {
       if (env.node != 'development') {
         message = 'something errors';
       }
-      logger.error(`errors with message: ${message}`);
+      console.log(`errors with message: ${message}`);
       //response system exception
       response
         .status(exception.status ?? HttpStatus.INTERNAL_SERVER_ERROR)

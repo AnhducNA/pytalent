@@ -5,7 +5,6 @@ import { BaseController } from '@modules/app/base.controller';
 import { Response } from 'express';
 import { CustomizeException } from '@exception/customize.exception';
 import { UserService } from '@modules/users/services/user.service';
-import { logger } from '@logs/app.log';
 import { HttpStatus } from '@nestjs/common/enums/http-status.enum';
 import { AssessmentService } from '@modules/assessment/assessment.service';
 
@@ -47,7 +46,7 @@ export class AuthController extends BaseController {
         );
       }
     } catch (e) {
-      logger.error('login errors: ' + e.message);
+      console.log('login errors: ' + e.message);
       throw new CustomizeException(
         e.message.toString(),
         HttpStatus.BAD_REQUEST,
@@ -96,7 +95,7 @@ export class AuthController extends BaseController {
         );
       }
     } catch (e) {
-      logger.error('login errors: ' + e.message);
+      console.log('login errors: ' + e.message);
       throw new CustomizeException(
         e.message.toString(),
         HttpStatus.BAD_REQUEST,

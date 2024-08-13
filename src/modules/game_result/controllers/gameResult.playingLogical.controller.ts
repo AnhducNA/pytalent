@@ -29,7 +29,7 @@ export class GameResultPlayingLogicalController extends BaseController {
   ) {
     const logical_game_result_id = req.params.logical_game_result_id;
     const logical_game_result =
-      await this.gameResultService.get_logical_game_result_item(
+      await this.gameResultService.getLogicalGameResultItem(
         logical_game_result_id,
       );
     // validate check logical_game_result exit
