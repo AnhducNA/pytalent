@@ -218,7 +218,7 @@ export class GameResultService {
       .getMany();
   }
 
-  async get_logical_game_result_all_by_game_result(game_result_id: number) {
+  async getLogicalGameResultAllByGameResult(game_result_id: number) {
     return this.logicalGameResultRepository
       .createQueryBuilder('logical_game_result')
       .select([

@@ -8,12 +8,12 @@ export class TaskService {
 
   constructor(private readonly gameResultService: GameResultService) {}
 
-  @Cron('*/5 * * * * *')
-  async handleCron() {
-    const game_result_list =
-      await this.gameResultService.check_game_result_play_time_finish();
-    this.logger.debug('Called every 5 second');
-  }
+  // @Cron('*/5 * * * * *')
+  // async handleCron() {
+  //   const game_result_list =
+  //     await this.gameResultService.check_game_result_play_time_finish();
+  //   this.logger.debug('Called every 5 second');
+  // }
   // @Interval(10000)
   // handleInterval() {
   //   this.logger.debug('Called every 10 seconds');

@@ -54,31 +54,24 @@ export class GameResultPlayingLogicalController extends BaseController {
       logicalGameResult.game_result_id,
     );
     const logicalGameResultHistory =
-      await this.gameResultService.get_logical_game_result_all_by_game_result(
+      await this.gameResultService.getLogicalGameResultAllByGameResult(
         gameResultUpdate.id,
       );
     // validate check game_result finished or paused
     if (gameResultUpdate.status === StatusGameResultEnum.FINISHED) {
-      return this.errorsResponse(
-        {
-          message: 'Game over.',
-          data: {
-            gameResult: gameResultUpdate,
-            logical_game_result_history: logicalGameResultHistory,
-          },
-        },
+      return this.responseErrorLogicalGame(
         res,
+        'Game over',
+        gameResultUpdate,
+        logicalGameResultHistory,
       );
-    } else if (gameResultUpdate.status === StatusGameResultEnum.PAUSED) {
-      return this.errorsResponse(
-        {
-          message: 'Game was paused. You need to continue to play',
-          data: {
-            game_result: gameResultUpdate,
-            logical_game_result_history: logicalGameResultHistory,
-          },
-        },
+    }
+    if (gameResultUpdate.status === StatusGameResultEnum.PAUSED) {
+      return this.responseErrorLogicalGame(
         res,
+        'Game was paused. You need to continue to play',
+        gameResultUpdate,
+        logicalGameResultHistory,
       );
     }
     // validate check play_time > total_game_time
@@ -96,15 +89,11 @@ export class GameResultPlayingLogicalController extends BaseController {
         gameResultUpdate.id,
         StatusGameResultEnum.FINISHED,
       );
-      return this.errorsResponse(
-        {
-          message: 'Gaming time is over. End game.',
-          data: {
-            game_result: gameResultUpdate,
-            logical_game_result_history: logicalGameResultHistory,
-          },
-        },
+      return this.responseErrorLogicalGame(
         res,
+        'Gaming time is over. End game.',
+        gameResultUpdate,
+        logicalGameResultHistory,
       );
     }
     // validate check index_question_answer > total_question in game
@@ -121,15 +110,11 @@ export class GameResultPlayingLogicalController extends BaseController {
         gameResultUpdate.id,
         StatusGameResultEnum.FINISHED,
       );
-      return this.errorsResponse(
-        {
-          message: 'You have completed the game. End game.',
-          data: {
-            game_result: gameResultUpdate,
-            logical_game_result_history: logicalGameResultHistory,
-          },
-        },
+      return this.responseErrorLogicalGame(
         res,
+        'You have completed the game. End game.',
+        gameResultUpdate,
+        logicalGameResultHistory,
       );
     }
     let message_res = '';
@@ -235,5 +220,23 @@ export class GameResultPlayingLogicalController extends BaseController {
         res,
       );
     }
+  }
+  async responseErrorLogicalGame(
+    res: Response,
+    message,
+    gameResultUpdate,
+    logicalGameResultHistory,
+  ) {
+    // validate check game_result finished or paused
+    return this.errorsResponse(
+      {
+        message: message,
+        data: {
+          gameResult: gameResultUpdate,
+          logicalGameResultHistory: logicalGameResultHistory,
+        },
+      },
+      res,
+    );
   }
 }
