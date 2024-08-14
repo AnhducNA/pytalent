@@ -15,7 +15,7 @@
     "db:seed": "ts-node ./node_modules/typeorm-seeding/dist/cli.js seed -n ./src/databases/config/orm.config.seed.ts",
     "db:refresh": "npm run db:drop; npm run typeorm migration:run; npm run db:seed;",
     "db:refresh:mariadb": "export NODE_ENV=mariadb; npm run db:drop; npm run typeorm migration:run; npm run db:seed;",
-    "start:dev": "nest start --watch",
+    "dev": "nest start --watch",
     "start:debug": "nest start --debug --watch",
     "start:prod": "export NODE_ENV=production; node dist/main",
     "lint": "eslint \"{src,apps,libs,test}/**/*.ts\" --fix",

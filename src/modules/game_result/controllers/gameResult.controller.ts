@@ -117,7 +117,7 @@ export class GameResultController extends BaseController {
 
   @Get('logical-game-result-item/:logical_game_result_id')
   async getLogicalGameResultItem(@Req() req: any, @Res() res: any) {
-    const result = await this.gameResultService.get_logical_game_result_item(
+    const result = await this.gameResultService.getLogicalGameResultItem(
       req.params.logical_game_result_id,
     );
     return this.successResponse(
