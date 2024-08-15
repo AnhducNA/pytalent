@@ -1,6 +1,8 @@
+import { GameResult } from '@entities/gameResult.entity';
+import { LogicalQuestion } from '@entities/logicalQuestion.entity';
 import { StatusLogicalGameResultEnum } from '@enum/status-logical-game-result.enum';
 
-export interface logicalGameResultModel {
+export interface IlogicalGameResult {
   id: number;
   index: number;
   game_result_id: number;
@@ -8,6 +10,8 @@ export interface logicalGameResultModel {
   status: StatusLogicalGameResultEnum;
   answer_play: boolean;
   is_correct: boolean;
+  game_result: GameResult[];
+  logical_question: LogicalQuestion;
 }
 
 export interface createLogicalGameResultInterface {

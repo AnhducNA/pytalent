@@ -195,7 +195,7 @@ export class GameResultService {
       .getOne();
   }
 
-  async get_game_info_by_game_result(game_result_id: number) {
+  async getGameInfoByGameResult(game_result_id: number) {
     return this.gameResultRepository
       .createQueryBuilder('game_result')
       .select('game_result.id', 'game_result_id')
@@ -218,7 +218,7 @@ export class GameResultService {
       .getMany();
   }
 
-  async getLogicalGameResultAllByGameResult(game_result_id: number) {
+  async getLogicalGameResultAllByGameResult(gameResultId: number) {
     return this.logicalGameResultRepository
       .createQueryBuilder('logical_game_result')
       .select([
@@ -232,7 +232,7 @@ export class GameResultService {
       ])
       .addSelect('logical_question.correct_answer')
       .innerJoin('logical_game_result.logical_question', 'logical_question')
-      .where(`logical_game_result.game_result_id = ${game_result_id}`)
+      .where(`logical_game_result.game_result_id = ${gameResultId}`)
       .getMany();
   }
 
