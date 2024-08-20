@@ -1,6 +1,5 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
 import { GameResultService } from './gameResult.service';
 import { LogicalGameResult } from '@entities/logicalGameResult.entity';
 import { StatusGameResultEnum } from '@common/enum/status-game-result.enum';
@@ -51,13 +50,11 @@ export class LogicalGameResultService {
       logicalGameResult.game_result_id,
     );
     if (resFinalLogicalQuestion.isFinish === true) {
-      return {
-        message: `You answered all question. Game over.`,
-        data: {
-          gameResult: gameResultAfterPlay,
-          logicalGameResultHistory,
-        },
-      };
+      return this.responseData(
+        `You answered all question. Game over.`,
+        gameResultAfterPlay,
+        logicalGameResultHistory,
+      );
     }
 
     return await this.getNextLogicalQuestion(
@@ -87,35 +84,29 @@ export class LogicalGameResultService {
     logicalGameResultHistory,
     logicalGameResult,
   ) {
-    // validate check game_result finished or paused
+    // validate check gameResult finished or paused
     if (gameResultUpdate.status === StatusGameResultEnum.FINISHED) {
-      return {
-        message: 'Game over',
-        data: {
-          gameResult: gameResultUpdate,
-          logicalGameResultHistory: logicalGameResultHistory,
-        },
-      };
+      return this.responseData(
+        'Game over',
+        gameResultUpdate,
+        logicalGameResultHistory,
+      );
     }
     if (gameResultUpdate.status === StatusGameResultEnum.PAUSED) {
-      return {
-        message: 'Game was paused. You need to continue to play',
-        data: {
-          gameResult: gameResultUpdate,
-          logicalGameResultHistory: logicalGameResultHistory,
-        },
-      };
+      return this.responseData(
+        'Game was paused. You need to continue to play',
+        gameResultUpdate,
+        logicalGameResultHistory,
+      );
     }
     // validate check play_time > total_game_time
     const validatePlayTime = this.validatePlayTime(gameResultUpdate);
     if (!validatePlayTime) {
-      return {
-        message: 'Gaming time is over. End game.',
-        data: {
-          gameResult: gameResultUpdate,
-          logicalGameResultHistory: logicalGameResultHistory,
-        },
-      };
+      return this.responseData(
+        'Gaming time is over. End game.',
+        gameResultUpdate,
+        logicalGameResultHistory,
+      );
     }
     // validate check index_question_answer > total_question in game
     const totalQuestionGameLogical = parseInt(
@@ -138,6 +129,7 @@ export class LogicalGameResultService {
       );
     }
   }
+
   private async validatePlayTime(gameResultUpdate) {
     const newPlayTime = Date.now() - gameResultUpdate.time_start.getTime();
     const totalGameTime = (
