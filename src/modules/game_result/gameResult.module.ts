@@ -14,6 +14,7 @@ import { AssessmentCandidate } from '@entities/assessmentCandidate.entity';
 import { Assessment } from '@entities/assessment.entity';
 import { GameResultPlayingLogicalController } from '@modules/game_result/controllers/gameResult.playingLogical.controller';
 import { GameResultPlayingMemoryController } from '@modules/game_result/controllers/gameResult.playingMemory.controller';
+import { LogicalGameResultService } from './logicalGameResult.service';
 
 @Module({
   imports: [
@@ -34,7 +35,7 @@ import { GameResultPlayingMemoryController } from '@modules/game_result/controll
     GameResultPlayingMemoryController,
     GameResultPlayingLogicalController,
   ],
-  providers: [GameResultService, GameService],
+  providers: [GameResultService, GameService, LogicalGameResultService],
   exports: [GameResultService],
 })
 export class GameResultModule {}

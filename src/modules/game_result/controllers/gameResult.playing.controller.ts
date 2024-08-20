@@ -100,7 +100,7 @@ export class GameResultPlayingController extends BaseController {
         time_start,
       );
       game_result_exist_check.status = StatusGameResultEnum.STARTED;
-      await this.gameResultService.update_game_result_status(
+      await this.gameResultService.updateGameResultWithStatus(
         game_result_exist_check.id,
         StatusGameResultEnum.STARTED,
       );
@@ -109,7 +109,7 @@ export class GameResultPlayingController extends BaseController {
           // Candidate continue play logicalQuestion
           // validate check end play_time
           if (game_result_exist_check.play_time > 90000) {
-            await this.gameResultService.update_game_result_status(
+            await this.gameResultService.updateGameResultWithStatus(
               game_result_exist_check.id,
               StatusGameResultEnum.FINISHED,
             );
@@ -374,11 +374,11 @@ export class GameResultPlayingController extends BaseController {
       game_result_id,
     );
     const play_time = Date.now() - game_result_detail.time_start.getTime();
-    await this.gameResultService.update_game_result_play_time(
+    await this.gameResultService.updateGameResultWithPlayTime(
       game_result_id,
       play_time,
     );
-    await this.gameResultService.update_game_result_status(
+    await this.gameResultService.updateGameResultWithStatus(
       game_result_id,
       StatusGameResultEnum.PAUSED,
     );
@@ -394,7 +394,7 @@ export class GameResultPlayingController extends BaseController {
   async endPlayGame(@Req() req: any, @Res() res: Response) {
     try {
       const game_result_id = req.params.game_result_id;
-      await this.gameResultService.update_game_result_status(
+      await this.gameResultService.updateGameResultWithStatus(
         game_result_id,
         StatusGameResultEnum.FINISHED,
       );
