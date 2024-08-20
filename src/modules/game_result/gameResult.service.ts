@@ -101,7 +101,7 @@ export class GameResultService {
             Date.now() - game_result_playing.time_start.getTime() >
             game_result_playing.game.total_time
           ) {
-            this.update_game_result_status(
+            this.updateGameResultWithStatus(
               game_result_playing.id,
               StatusGameResultEnum.FINISHED,
             );
@@ -109,7 +109,7 @@ export class GameResultService {
           break;
         case 2:
           if (Date.now() - game_result_playing.time_start.getTime() > 100000) {
-            this.update_game_result_status(
+            this.updateGameResultWithStatus(
               game_result_playing.id,
               StatusGameResultEnum.FINISHED,
             );
@@ -379,18 +379,18 @@ export class GameResultService {
       .execute();
   }
 
-  async updateTimeStartGameResult(id: number, time_start: Date) {
+  async updateTimeStartGameResult(id: number, timeStart: Date) {
     return this.gameResultRepository
       .createQueryBuilder()
       .update(GameResult)
       .set({
-        time_start: time_start,
+        time_start: timeStart,
       })
       .where('id = :id', { id: id })
       .execute();
   }
 
-  async update_game_result_status(
+  async updateGameResultWithStatus(
     game_result_id: number,
     status: StatusGameResultEnum,
   ) {
@@ -404,7 +404,7 @@ export class GameResultService {
       .execute();
   }
 
-  async update_game_result_play_time(
+  async updateGameResultWithPlayTime(
     game_result_id: number,
     play_time: number,
   ) {
@@ -417,7 +417,12 @@ export class GameResultService {
       .where('id = :id', { id: game_result_id })
       .execute();
   }
-
+  async updateGameResultWithPlayScore(gameResultId: number, playScore: number) {
+    return this.gameResultRepository.save({
+      id: gameResultId,
+      play_score: playScore,
+    });
+  }
   async updateGameResultPlayTimeAndScore(payload: {
     id: number;
     play_time: number;
@@ -435,7 +440,7 @@ export class GameResultService {
     return await this.logicalGameResultRepository.save(payload);
   }
 
-  async update_answer_play_logical_game_result(
+  async updateAnswerPlayLogicalGameResult(
     logical_game_result_id: number,
     status: StatusLogicalGameResultEnum,
     answer_play: boolean,

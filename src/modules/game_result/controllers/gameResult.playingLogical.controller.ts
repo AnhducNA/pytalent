@@ -7,12 +7,14 @@ import { GameResultService } from '@modules/game_result/gameResult.service';
 import { GameService } from '@modules/game/game.service';
 import { StatusGameResultEnum } from '@enum/status-game-result.enum';
 import { LogicalGameResult } from '@entities/logicalGameResult.entity';
+import { LogicalGameResultService } from '../logicalGameResult.service';
 
 @Controller('api/game-result-playing-logical')
 export class GameResultPlayingLogicalController extends BaseController {
   constructor(
     private readonly gameResultService: GameResultService,
     private readonly gameService: GameService,
+    private readonly logicalGameResultService: LogicalGameResultService,
   ) {
     super();
   }
@@ -24,33 +26,17 @@ export class GameResultPlayingLogicalController extends BaseController {
     @Body()
     logicalGameAnswerDto: {
       answerPlay: boolean;
-      isCorrect: boolean | null;
     },
     @Res() res: Response,
   ) {
     const logicalGameResultId = req.params.logicalGameResultId;
-    const logicalGameResult =
-      await this.gameResultService.getLogicalGameResultItem(
-        logicalGameResultId,
-      );
-    // validate check logical_game_result exit
-    if (!logicalGameResult) {
-      return this.errorsResponse(
-        {
-          message: `logical_game_result with id = ${logicalGameResultId} does not exist.`,
-        },
-        res,
-      );
-    }
-    // validate check logical_game_result was answered
-    if (logicalGameResult.status === StatusLogicalGameResultEnum.ANSWERED) {
-      return this.errorsResponse(
-        {
-          message: `logical_game_result with id = ${logicalGameResultId} was answered.`,
-        },
-        res,
-      );
-    }
+    const logicalGameResult = await this.validateLogicalGameResultExist(
+      logicalGameResultId,
+      res,
+    );
+
+    if (!logicalGameResult) return;
+
     const gameResultUpdate = await this.gameResultService.findOne(
       logicalGameResult.game_result_id,
     );
@@ -58,23 +44,24 @@ export class GameResultPlayingLogicalController extends BaseController {
       await this.gameResultService.getLogicalGameResultAllByGameResult(
         gameResultUpdate.id,
       );
-
-    // validate check game_result finished or paused
-    if (gameResultUpdate.status === StatusGameResultEnum.FINISHED) {
-      return this.responseErrorLogicalGame(
-        res,
-        'Game over',
-        gameResultUpdate,
-        logicalGameResultHistory,
-      );
+    if (this.validateGameResult) {
+      return;
     }
-    if (gameResultUpdate.status === StatusGameResultEnum.PAUSED) {
-      return this.responseErrorLogicalGame(
+    const resValidateGameResult = this.validateGameResult(
+      res,
+      logicalGameResult,
+      gameResultUpdate,
+      logicalGameResultHistory,
+    );
+    if (
+      this.validateGameResult(
         res,
-        'Game was paused. You need to continue to play',
+        logicalGameResult,
         gameResultUpdate,
         logicalGameResultHistory,
-      );
+      )
+    ) {
+      return resValidateGameResult;
     }
     // validate check play_time > total_game_time
     gameResultUpdate.play_time =
@@ -85,7 +72,7 @@ export class GameResultPlayingLogicalController extends BaseController {
     if (gameResultUpdate.play_time > totalGameTime) {
       // when the game time is up, set done for game_result
       gameResultUpdate.status = StatusGameResultEnum.FINISHED;
-      await this.gameResultService.update_game_result_status(
+      await this.gameResultService.updateGameResultWithStatus(
         gameResultUpdate.id,
         StatusGameResultEnum.FINISHED,
       );
@@ -106,7 +93,7 @@ export class GameResultPlayingLogicalController extends BaseController {
     );
     if (logicalGameResult.index > totalQuestionGameLogical) {
       gameResultUpdate.status = StatusGameResultEnum.FINISHED;
-      await this.gameResultService.update_game_result_status(
+      await this.gameResultService.updateGameResultWithStatus(
         gameResultUpdate.id,
         StatusGameResultEnum.FINISHED,
       );
@@ -131,7 +118,7 @@ export class GameResultPlayingLogicalController extends BaseController {
     logicalGameAnswerDto = processUserAnswer.logicalGameAnswerDto;
     const gameResultUpdateAfterPlay = processUserAnswer.gameResultUpdate;
 
-    // validate check final logical_question of total
+    // handleFinalLogicalQuestion
     if (logicalGameResult.index === totalQuestionGameLogical) {
       gameResultUpdateAfterPlay.status = StatusGameResultEnum.FINISHED;
       return await this.handleFinalLogicalQuestion(
@@ -165,6 +152,51 @@ export class GameResultPlayingLogicalController extends BaseController {
     return nextLogicalQuestionResponse;
   }
 
+  private async validateLogicalGameResultExist(
+    logicalGameResultId: number,
+    res: Response,
+  ) {
+    const logicalGameResult =
+      await this.gameResultService.getLogicalGameResultItem(
+        logicalGameResultId,
+      );
+    // validate check logical_game_result exit
+    if (!logicalGameResult) {
+      this.errorsResponse(
+        {
+          message: `logical_game_result with id = ${logicalGameResultId} does not exist.`,
+        },
+        res,
+      );
+      return null;
+    }
+    return logicalGameResult;
+  }
+  private validateGameResult(
+    res,
+    logicalGameResult,
+    gameResultUpdate,
+    logicalGameResultHistory,
+  ) {
+    // validate check game_result finished or paused
+    if (gameResultUpdate.status === StatusGameResultEnum.FINISHED) {
+      this.responseErrorLogicalGame(
+        res,
+        'Game over',
+        gameResultUpdate,
+        logicalGameResultHistory,
+      );
+    }
+    if (gameResultUpdate.status === StatusGameResultEnum.PAUSED) {
+      return this.responseErrorLogicalGame(
+        res,
+        'Game was paused. You need to continue to play',
+        gameResultUpdate,
+        logicalGameResultHistory,
+      );
+    }
+  }
+
   private async handleFinalLogicalQuestion(
     gameResultUpdateAfterPlay,
     logicalGameResultHistory,
@@ -172,7 +204,7 @@ export class GameResultPlayingLogicalController extends BaseController {
     totalQuestion: number,
     res,
   ) {
-    await this.gameResultService.update_game_result_status(
+    await this.gameResultService.updateGameResultWithStatus(
       gameResultUpdateAfterPlay.id,
       StatusGameResultEnum.FINISHED,
     );
@@ -187,6 +219,7 @@ export class GameResultPlayingLogicalController extends BaseController {
       res,
     );
   }
+
   private async processUserAnswer(
     logicalGameAnswerDto,
     logicalGameResult,
@@ -212,7 +245,7 @@ export class GameResultPlayingLogicalController extends BaseController {
     // updateGameResult
     await this.gameResultService.updateGameResult(gameResultUpdate);
     // update LogicalGameResult
-    await this.gameResultService.update_answer_play_logical_game_result(
+    await this.gameResultService.updateAnswerPlayLogicalGameResult(
       logicalGameResultId,
       StatusLogicalGameResultEnum.ANSWERED,
       logicalGameAnswerDto.answerPlay,

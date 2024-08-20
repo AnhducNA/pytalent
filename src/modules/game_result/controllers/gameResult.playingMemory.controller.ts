@@ -91,7 +91,7 @@ export class GameResultPlayingMemoryController extends BaseController {
     const play_time =
       Date.now() - memory_game_result_playing.time_start_play_level.getTime();
     if (play_time > memory_game_result_playing.memory_game.time_limit) {
-      await this.gameResultService.update_game_result_status(
+      await this.gameResultService.updateGameResultWithStatus(
         memory_game_result_playing.game_result_id,
         StatusGameResultEnum.FINISHED,
       );
@@ -122,7 +122,7 @@ export class GameResultPlayingMemoryController extends BaseController {
       } else {
         message_res = 'Your answer is false. End game';
         memoryGameResultDto.is_correct = false;
-        await this.gameResultService.update_game_result_status(
+        await this.gameResultService.updateGameResultWithStatus(
           game_result_update.id,
           StatusGameResultEnum.FINISHED,
         );
@@ -142,7 +142,7 @@ export class GameResultPlayingMemoryController extends BaseController {
       );
       // check max level = 25
       if (memory_game_result_playing.memory_game.level >= 25) {
-        await this.gameResultService.update_game_result_status(
+        await this.gameResultService.updateGameResultWithStatus(
           game_result_update.id,
           StatusGameResultEnum.FINISHED,
         );
@@ -181,7 +181,7 @@ export class GameResultPlayingMemoryController extends BaseController {
           );
         // Validate check if does not have data in memory_data
         if (!memory_data_render_next) {
-          await this.gameResultService.update_game_result_status(
+          await this.gameResultService.updateGameResultWithStatus(
             game_result_update.id,
             StatusGameResultEnum.FINISHED,
           );
