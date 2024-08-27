@@ -218,24 +218,6 @@ export class GameResultService {
       .getMany();
   }
 
-  async getLogicalGameResultAllByGameResult(gameResultId: number) {
-    return this.logicalGameResultRepository
-      .createQueryBuilder('logical_game_result')
-      .select([
-        'logical_game_result.id',
-        'logical_game_result.index',
-        'logical_game_result.game_result_id',
-        'logical_game_result.logical_question_id',
-        'logical_game_result.status',
-        'logical_game_result.answer_play',
-        'logical_game_result.is_correct',
-      ])
-      .addSelect('logical_question.correct_answer')
-      .innerJoin('logical_game_result.logical_question', 'logical_question')
-      .where(`logical_game_result.game_result_id = ${gameResultId}`)
-      .getMany();
-  }
-
   async getLogicalGameResultItem(logical_game_result_id: number) {
     return this.logicalGameResultRepository
       .createQueryBuilder('logical_game_result')
@@ -389,6 +371,16 @@ export class GameResultService {
       .where('id = :id', { id: id })
       .execute();
   }
+  async updateFinishGame(gameResultId: number) {
+    return this.gameResultRepository
+      .createQueryBuilder()
+      .update(GameResult)
+      .set({
+        status: StatusGameResultEnum.FINISHED,
+      })
+      .where('id = :id', { id: gameResultId })
+      .execute();
+  }
 
   async updateGameResultWithStatus(
     game_result_id: number,
@@ -423,6 +415,7 @@ export class GameResultService {
       play_score: playScore,
     });
   }
+
   async updateGameResultPlayTimeAndScore(payload: {
     id: number;
     play_time: number;
@@ -433,6 +426,23 @@ export class GameResultService {
       .update(GameResult)
       .set({ play_time: payload.play_time, play_score: payload.play_score })
       .where('id = :id', { id: payload.id })
+      .execute();
+  }
+
+  async updateLogicalAnswered(
+    logical_game_result_id: number,
+    answer_play: boolean,
+    is_correct: boolean,
+  ) {
+    return await this.logicalGameResultRepository
+      .createQueryBuilder()
+      .update(LogicalGameResult)
+      .set({
+        status: StatusLogicalGameResultEnum.ANSWERED,
+        answer_play: answer_play,
+        is_correct: is_correct,
+      })
+      .where('id = :id', { id: logical_game_result_id })
       .execute();
   }
 

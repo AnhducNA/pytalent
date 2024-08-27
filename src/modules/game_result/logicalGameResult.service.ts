@@ -2,74 +2,83 @@ import { BadRequestException, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { GameResultService } from './gameResult.service';
 import { LogicalGameResult } from '@entities/logicalGameResult.entity';
+import { GameService } from '@modules/game/game.service';
+import { Repository } from 'typeorm';
 import { StatusGameResultEnum } from '@common/enum/status-game-result.enum';
 import { StatusLogicalGameResultEnum } from '@common/enum/status-logical-game-result.enum';
-import { GameService } from '@modules/game/game.service';
+import { ResponseInterface } from '@shared/interfaces/response.interface';
 
 @Injectable()
 export class LogicalGameResultService {
   constructor(
     @InjectRepository(LogicalGameResult)
-    private gameResultService: GameResultService,
-    private gameService: GameService,
+    private readonly logicalGameResultRepository: Repository<LogicalGameResult>,
+    private readonly gameResultService: GameResultService,
+    private readonly gameService: GameService,
   ) {}
 
-  async handlePlayingLogical(logicalGameResultId, answerPlay) {
-    const logicalGameResult = await this.validateLogicalGameResult(
-      logicalGameResultId,
+  async caculatePlayingLogical(
+    id: number,
+    answerPlay: boolean,
+  ): Promise<ResponseInterface> {
+    // get logical_game_result place hold
+    const logicalAnswerPlaceHold = await this.findLogicalAnswerPlaceHold(id);
+    const gameResultUpdate = await this.gameResultService.findOne(
+      logicalAnswerPlaceHold.game_result_id,
     );
-    const gameResult = await this.gameResultService.findOne(
-      logicalGameResult.game_result_id,
-    );
-    const logicalGameResultHistory: LogicalGameResult[] =
-      await this.gameResultService.getLogicalGameResultAllByGameResult(
-        gameResult.id,
-      );
-    const resValidateGameResult = await this.validateGameResult(
-      gameResult,
-      logicalGameResultHistory,
-      logicalGameResult,
+    const validateGameResult = await this.validateGameResult(
+      gameResultUpdate,
+      logicalAnswerPlaceHold,
     );
 
-    if (resValidateGameResult !== undefined) {
-      return resValidateGameResult;
+    // have validate => end game
+    if (validateGameResult.status === false) {
+      await this.gameResultService.updateFinishGame(gameResultUpdate.id);
+      return { message: validateGameResult.message };
     }
 
-    const processUserAnswer = await this.calculateAnswerOfUser(
+    // check logical answer is true or false
+    const checkCorrectAnswer = await this.checkCorrectAnswer(
       answerPlay,
-      logicalGameResult,
-      gameResult,
-      logicalGameResultId,
+      gameResultUpdate.play_score,
+      logicalAnswerPlaceHold,
     );
-    const messageResponse = processUserAnswer.messageResponse;
-    const resFinalLogicalQuestion = await this.handleFinalLogicalQuestion(
-      logicalGameResult.index,
-      gameResult.id,
-    );
-    const gameResultAfterPlay = await this.gameResultService.findOne(
-      logicalGameResult.game_result_id,
-    );
-    if (resFinalLogicalQuestion.isFinish === true) {
-      return this.responseData(
-        `You answered all question. Game over.`,
-        gameResultAfterPlay,
-        logicalGameResultHistory,
-      );
-    }
+    // update new playScore and new playTime
+    await this.gameResultService.updateGameResultPlayTimeAndScore({
+      id: gameResultUpdate.id,
+      play_time: Date.now() - gameResultUpdate.time_start.getTime(),
+      play_score: checkCorrectAnswer.data.newPlayScore,
+    });
 
-    return await this.getNextLogicalQuestion(
-      logicalGameResultHistory,
-      logicalGameResult,
-      gameResultAfterPlay,
-      messageResponse,
+    // update answer in LogicalGameResult
+    await this.gameResultService.updateLogicalAnswered(
+      logicalAnswerPlaceHold.id,
+      answerPlay,
+      checkCorrectAnswer.isCorrect,
     );
+
+    // Check final logical game => compare index question with total question
+    if (logicalAnswerPlaceHold.index >= 20) {
+      await this.gameResultService.updateFinishGame(gameResultUpdate.id);
+      return {
+        message: 'End Game',
+      };
+    }
+    const logicalQuestionNext = await this.getNextLogicalQuestion(
+      logicalAnswerPlaceHold.index,
+      gameResultUpdate.id,
+    );
+    return {
+      message: checkCorrectAnswer.message,
+      data: logicalQuestionNext,
+    };
   }
 
-  private async validateLogicalGameResult(logicalGameResultId: number) {
-    const logicalGameResult =
-      await this.gameResultService.getLogicalGameResultItem(
-        logicalGameResultId,
-      );
+  // find PlaceHold in LogicalGameResult
+  async findLogicalAnswerPlaceHold(logicalGameResultId: number) {
+    const logicalGameResult = await this.findLogicalGameResult(
+      logicalGameResultId,
+    );
     // validate check logical_game_result exit
     if (!logicalGameResult) {
       throw new BadRequestException(
@@ -79,34 +88,28 @@ export class LogicalGameResultService {
     return logicalGameResult;
   }
 
-  private async validateGameResult(
+  async validateGameResult(
     gameResultUpdate,
-    logicalGameResultHistory,
-    logicalGameResult,
+    logicalGameResult: LogicalGameResult,
   ) {
     // validate check gameResult finished or paused
     if (gameResultUpdate.status === StatusGameResultEnum.FINISHED) {
-      return this.responseData(
-        'Game over',
-        gameResultUpdate,
-        logicalGameResultHistory,
-      );
+      return { status: false, message: 'Game over' };
     }
     if (gameResultUpdate.status === StatusGameResultEnum.PAUSED) {
-      return this.responseData(
-        'Game was paused. You need to continue to play',
-        gameResultUpdate,
-        logicalGameResultHistory,
-      );
+      return {
+        status: false,
+        message: 'Game was paused. You need to continue to play',
+      };
     }
     // validate check play_time > total_game_time
-    const validatePlayTime = this.validatePlayTime(gameResultUpdate);
+    const validatePlayTime = await this.validatePlayTime(gameResultUpdate);
+
     if (!validatePlayTime) {
-      return this.responseData(
-        'Gaming time is over. End game.',
-        gameResultUpdate,
-        logicalGameResultHistory,
-      );
+      return {
+        status: false,
+        message: 'Gaming time is over. End game.',
+      };
     }
     // validate check index_question_answer > total_question in game
     const totalQuestionGameLogical = parseInt(
@@ -117,17 +120,14 @@ export class LogicalGameResultService {
       ).game.total_question,
     );
     if (logicalGameResult.index > totalQuestionGameLogical) {
-      gameResultUpdate.status = StatusGameResultEnum.FINISHED;
-      await this.gameResultService.updateGameResultWithStatus(
-        gameResultUpdate.id,
-        StatusGameResultEnum.FINISHED,
-      );
-      return this.responseData(
-        'You have completed the game. End game.',
-        gameResultUpdate,
-        logicalGameResultHistory,
-      );
+      return {
+        status: false,
+        message: 'You have completed the game. End game.',
+      };
     }
+    return {
+      status: true,
+    };
   }
 
   private async validatePlayTime(gameResultUpdate) {
@@ -135,80 +135,46 @@ export class LogicalGameResultService {
     const totalGameTime = (
       await this.gameResultService.getGameInfoByGameResult(gameResultUpdate.id)
     ).game.total_time;
-    await this.gameResultService.updateGameResultWithPlayTime(
-      gameResultUpdate.id,
-      newPlayTime,
-    );
     if (newPlayTime > totalGameTime) {
       // when the game time is up, set done for game_result
-      await this.gameResultService.updateGameResultWithStatus(
-        gameResultUpdate.id,
-        StatusGameResultEnum.FINISHED,
-      );
-      return { status: false };
+      return false;
     }
-    return { status: true };
+    return true;
   }
 
-  private async calculateAnswerOfUser(
-    answerPlay,
-    logicalGameResult,
-    gameResultUpdate,
-    logicalGameResultId,
+  async updateCorrectAnswer(gameResultUpdate, logicalResultPlaceHold) {
+    const newPlayScore =
+      gameResultUpdate.play_score +
+      logicalResultPlaceHold.logical_question.score;
+    await this.gameResultService.updateGameResultWithPlayScore(
+      gameResultUpdate.id,
+      newPlayScore,
+    );
+  }
+
+  async checkCorrectAnswer(
+    answerPlay: boolean,
+    play_score: number,
+    logicalGameResult: LogicalGameResult,
   ) {
     const isCorrectAnswer: boolean =
       answerPlay === logicalGameResult.logical_question.correct_answer;
-    // Check answer_play is true
-    const messageResponse = !!isCorrectAnswer
-      ? 'Your answer is true.'
-      : 'Your answer is false.';
-    if (!!isCorrectAnswer) {
-      const newPlayScore =
-        gameResultUpdate.play_score + logicalGameResult.logical_question.score;
-      await this.gameResultService.updateGameResultWithPlayScore(
-        gameResultUpdate.id,
-        newPlayScore,
-      );
-    }
-    // update LogicalGameResult
-    await this.gameResultService.updateAnswerPlayLogicalGameResult(
-      logicalGameResultId,
-      StatusLogicalGameResultEnum.ANSWERED,
-      answerPlay,
-      isCorrectAnswer,
-    );
+    const newPlayScore = !!isCorrectAnswer
+      ? play_score + logicalGameResult.logical_question.score
+      : play_score;
+
     return {
-      messageResponse,
-      isCorrectAnswer,
+      isCorrect: !!isCorrectAnswer,
+      message: 'Your answer is ' + isCorrectAnswer,
+      data: { newPlayScore },
     };
   }
 
-  private async handleFinalLogicalQuestion(
-    infexOfLogicalGameResult,
-    idOfGameResult,
-  ) {
-    const totalQuestionGameLogical = parseInt(
-      (await this.gameResultService.getGameInfoByGameResult(idOfGameResult))
-        .game.total_question,
-    );
-    if (infexOfLogicalGameResult === totalQuestionGameLogical) {
-      await this.gameResultService.updateGameResultWithStatus(
-        idOfGameResult,
-        StatusGameResultEnum.FINISHED,
-      );
-      return {
-        isFinish: true,
-      };
-    }
-    return { isFinish: false };
-  }
+  async getNextLogicalQuestion(indexQuestion: number, gameResultId: number) {
+    // getLogicalGameResultByGameResult
+    const logicalGameResultHistory: LogicalGameResult[] =
+      await this.getHistoryAnswered(gameResultId);
 
-  private async getNextLogicalQuestion(
-    logicalGameResultHistory: LogicalGameResult[],
-    logicalGameResult,
-    gameResultUpdate,
-    messageResponse,
-  ) {
     // validate except logical played and avoid 3 identical answer to get next logical_question
     const logicalExceptAndCheckIdenticalAnswer = {
       idLogicalListExcept: Object.values(logicalGameResultHistory).map(
@@ -225,36 +191,38 @@ export class LogicalGameResultService {
       );
     const logicalGameResultRenderNext =
       await this.gameResultService.createLogicalGameResult({
-        index: logicalGameResult.index + 1,
-        game_result_id: logicalGameResult.game_result_id,
+        index: indexQuestion + 1,
+        game_result_id: gameResultId,
         logical_question_id: logicalQuestionRenderNext.id,
         status: StatusLogicalGameResultEnum.NO_ANSWER,
         answer_play: null,
         is_correct: null,
       });
     return {
-      message: messageResponse,
-      data: {
-        gameResult: gameResultUpdate,
-        logicalQuestionRenderNext: {
-          logicalGameResultId: logicalGameResultRenderNext.id,
-          logicalQuestionId: logicalQuestionRenderNext.id,
-          index: logicalGameResultRenderNext.index,
-          statement1: logicalQuestionRenderNext.statement1,
-          statement2: logicalQuestionRenderNext.statement2,
-          conclusion: logicalQuestionRenderNext.conclusion,
-          score: logicalQuestionRenderNext.score,
-        },
+      logicalQuestionRenderNext: {
+        logicalGameResultId: logicalGameResultRenderNext.id,
+        logicalQuestionId: logicalQuestionRenderNext.id,
+        index: logicalGameResultRenderNext.index,
+        statement1: logicalQuestionRenderNext.statement1,
+        statement2: logicalQuestionRenderNext.statement2,
+        conclusion: logicalQuestionRenderNext.conclusion,
+        score: logicalQuestionRenderNext.score,
       },
     };
   }
-  private async responseData(message, gameResult, logicalGameResultHistory) {
-    return {
-      message,
-      data: {
-        gameResult,
-        logicalGameResultHistory,
-      },
-    };
+
+  async findLogicalGameResult(logicalGameResultId: number) {
+    const data = await this.logicalGameResultRepository.findOne({
+      where: { id: logicalGameResultId },
+      relations: ['logical_question'],
+    });
+    return data;
+  }
+
+  async getHistoryAnswered(gameResultId: number) {
+    return await this.logicalGameResultRepository.find({
+      relations: ['logical_question'],
+      where: { game_result_id: gameResultId },
+    });
   }
 }
