@@ -14,86 +14,20 @@ export class GameResultPlayingLogicalController extends BaseController {
     super();
   }
 
-  @Patch('logical-game-answer/:logicalGameResultId')
+  @Patch('logical-game-answer/:logicalAnswerId')
   @UseGuards(JwtAuthGuard)
   async playingLogicalGame(
-    @Param() params: { logicalGameResultId: number },
+    @Param() params: { logicalAnswerId: number },
     @Body()
     logicalGameAnswerDto: {
       answerPlay: boolean;
     },
     @Res() res: Response,
   ) {
-    // get logical_game_result place hold
-    const resLogicalResultPlaceHold =
-      await this.logicalAnswerService.findLogicalGameResultPlaceHold(
-        params.logicalGameResultId,
-      );
-
-    if (resLogicalResultPlaceHold.status === false) {
-      return this.errorsResponse(resLogicalResultPlaceHold, res);
-    }
-
-    const logicalAnswerPlaceHold = resLogicalResultPlaceHold.data;
-    const gameResultUpdate = await this.gameResultService.findOne(
-      logicalAnswerPlaceHold.game_result_id,
-    );
-
-    const validateGameResult =
-      await this.logicalAnswerService.validateGameResult(
-        gameResultUpdate,
-        logicalAnswerPlaceHold,
-      );
-
-    // have validate => end game
-    if (validateGameResult.status === false) {
-      await this.gameResultService.updateFinishGame(gameResultUpdate.id);
-      return this.errorsResponse(validateGameResult, res);
-    }
-
-    // check logical answer is true or false
-    const checkCorrectAnswer =
-      await this.logicalAnswerService.checkCorrectAnswer(
-        logicalGameAnswerDto.answerPlay,
-        gameResultUpdate.play_score,
-        logicalAnswerPlaceHold,
-      );
-    const newPlayTime = Date.now() - gameResultUpdate.time_start.getTime();
-    await this.gameResultService.updateGameResultPlayTimeAndScore({
-      id: gameResultUpdate.id,
-      play_time: newPlayTime,
-      play_score: checkCorrectAnswer.data.newPlayScore,
-    });
-
-    // update answer in LogicalGameResult
-    await this.gameResultService.updateLogicalAnswered(
-      logicalAnswerPlaceHold.id,
+    const resData = await this.logicalAnswerService.caculatePlayingLogical(
+      params.logicalAnswerId,
       logicalGameAnswerDto.answerPlay,
-      checkCorrectAnswer.isCorrect,
     );
-
-    // Check final logical game => compare index question with total question
-    if (logicalAnswerPlaceHold.index >= 20) {
-      await this.gameResultService.updateFinishGame(gameResultUpdate.id);
-      return this.successResponse(
-        {
-          message: `You answered all question. Game over.`,
-        },
-        res,
-      );
-    }
-
-    const logicalQuestionNext =
-      await this.logicalAnswerService.getNextLogicalQuestion(
-        logicalAnswerPlaceHold.index,
-        gameResultUpdate.id,
-      );
-    return this.successResponse(
-      {
-        message: checkCorrectAnswer.message,
-        data: logicalQuestionNext,
-      },
-      res,
-    );
+    return this.successResponse(resData, res);
   }
 }

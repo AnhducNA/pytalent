@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { BadRequestException, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { GameResultService } from './gameResult.service';
 import { LogicalGameResult } from '@entities/logicalGameResult.entity';
@@ -6,6 +6,7 @@ import { GameService } from '@modules/game/game.service';
 import { Repository } from 'typeorm';
 import { StatusGameResultEnum } from '@common/enum/status-game-result.enum';
 import { StatusLogicalGameResultEnum } from '@common/enum/status-logical-game-result.enum';
+import { ResponseInterface } from '@shared/interfaces/response.interface';
 
 @Injectable()
 export class LogicalGameResultService {
@@ -16,36 +17,75 @@ export class LogicalGameResultService {
     private readonly gameService: GameService,
   ) {}
 
-  async findLogicalGameResult(logicalGameResultId: number) {
-    const data = await this.logicalGameResultRepository.findOne({
-      where: { id: logicalGameResultId },
-      relations: ['logical_question'],
+  async caculatePlayingLogical(
+    id: number,
+    answerPlay: boolean,
+  ): Promise<ResponseInterface> {
+    // get logical_game_result place hold
+    const logicalAnswerPlaceHold = await this.findLogicalAnswerPlaceHold(id);
+    const gameResultUpdate = await this.gameResultService.findOne(
+      logicalAnswerPlaceHold.game_result_id,
+    );
+    const validateGameResult = await this.validateGameResult(
+      gameResultUpdate,
+      logicalAnswerPlaceHold,
+    );
+
+    // have validate => end game
+    if (validateGameResult.status === false) {
+      await this.gameResultService.updateFinishGame(gameResultUpdate.id);
+      return { message: validateGameResult.message };
+    }
+
+    // check logical answer is true or false
+    const checkCorrectAnswer = await this.checkCorrectAnswer(
+      answerPlay,
+      gameResultUpdate.play_score,
+      logicalAnswerPlaceHold,
+    );
+    const newPlayTime = Date.now() - gameResultUpdate.time_start.getTime();
+    await this.gameResultService.updateGameResultPlayTimeAndScore({
+      id: gameResultUpdate.id,
+      play_time: newPlayTime,
+      play_score: checkCorrectAnswer.data.newPlayScore,
     });
-    return data;
+
+    // update answer in LogicalGameResult
+    await this.gameResultService.updateLogicalAnswered(
+      logicalAnswerPlaceHold.id,
+      answerPlay,
+      checkCorrectAnswer.isCorrect,
+    );
+
+    // Check final logical game => compare index question with total question
+    if (logicalAnswerPlaceHold.index >= 20) {
+      await this.gameResultService.updateFinishGame(gameResultUpdate.id);
+      return {
+        message: 'End Game',
+      };
+    }
+    const logicalQuestionNext = await this.getNextLogicalQuestion(
+      logicalAnswerPlaceHold.index,
+      gameResultUpdate.id,
+    );
+    return {
+      message: checkCorrectAnswer.message,
+      data: logicalQuestionNext,
+    };
   }
 
-  async getHistoryAnswered(gameResultId: number) {
-    return this.logicalGameResultRepository.find({
-      relations: ['logical_question'],
-      where: { game_result_id: gameResultId },
-    });
-  }
-
-  async findLogicalGameResultPlaceHold(logicalGameResultId: number) {
+  // find PlaceHold in LogicalGameResult
+  async findLogicalAnswerPlaceHold(logicalGameResultId: number) {
     const logicalGameResult = await this.findLogicalGameResult(
       logicalGameResultId,
     );
     // validate check logical_game_result exit
     if (!logicalGameResult) {
-      return {
-        status: false,
-        message: `logicalGameResult with id = ${logicalGameResultId} does not exist.`,
-      };
+      throw new BadRequestException(
+        `logicalGameResult with id = ${logicalGameResultId} does not exist.`,
+      );
     }
-    return {
-      status: true,
-      data: logicalGameResult,
-    };
+    return logicalGameResult;
   }
 
   async validateGameResult(gameResultUpdate, logicalGameResult) {
@@ -90,9 +130,9 @@ export class LogicalGameResultService {
     ).game.total_time;
     if (newPlayTime > totalGameTime) {
       // when the game time is up, set done for game_result
-      return { status: false };
+      return false;
     }
-    return { status: true };
+    return true;
   }
 
   async updateCorrectAnswer(gameResultUpdate, logicalResultPlaceHold) {
@@ -162,5 +202,20 @@ export class LogicalGameResultService {
         score: logicalQuestionRenderNext.score,
       },
     };
+  }
+
+  async findLogicalGameResult(logicalGameResultId: number) {
+    const data = await this.logicalGameResultRepository.findOne({
+      where: { id: logicalGameResultId },
+      relations: ['logical_question'],
+    });
+    return data;
+  }
+
+  async getHistoryAnswered(gameResultId: number) {
+    return this.logicalGameResultRepository.find({
+      relations: ['logical_question'],
+      where: { game_result_id: gameResultId },
+    });
   }
 }
