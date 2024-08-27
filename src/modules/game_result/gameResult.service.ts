@@ -447,7 +447,7 @@ export class GameResultService {
       .execute();
   }
 
-  async updateAnsweredLogicalGameResult(
+  async updateLogicalAnswered(
     logical_game_result_id: number,
     answer_play: boolean,
     is_correct: boolean,

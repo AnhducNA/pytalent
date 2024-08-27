@@ -2,10 +2,11 @@ import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { GameResultService } from './gameResult.service';
 import { LogicalGameResult } from '@entities/logicalGameResult.entity';
-import { GameService } from '../game/game.service';
+import { GameService } from '@modules/game/game.service';
 import { Repository } from 'typeorm';
 import { StatusGameResultEnum } from '@common/enum/status-game-result.enum';
 import { StatusLogicalGameResultEnum } from '@common/enum/status-logical-game-result.enum';
+import { GameResult } from '@entities/gameResult.entity';
 
 @Injectable()
 export class LogicalGameResultService {
@@ -88,13 +89,8 @@ export class LogicalGameResultService {
     const totalGameTime = (
       await this.gameResultService.getGameInfoByGameResult(gameResultUpdate.id)
     ).game.total_time;
-    await this.gameResultService.updateGameResultWithPlayTime(
-      gameResultUpdate.id,
-      newPlayTime,
-    );
     if (newPlayTime > totalGameTime) {
       // when the game time is up, set done for game_result
-      await this.gameResultService.updateGameResultFinish(gameResultUpdate.id);
       return { status: false };
     }
     return { status: true };
@@ -112,23 +108,19 @@ export class LogicalGameResultService {
 
   async checkCorrectAnswer(
     answerPlay: boolean,
-    game_result_play_score: number,
+    play_score: number,
     logicalGameResult: LogicalGameResult,
   ) {
     const isCorrectAnswer: boolean =
       answerPlay === logicalGameResult.logical_question.correct_answer;
-    if (!!isCorrectAnswer) {
-      const newPlayScore =
-        game_result_play_score + logicalGameResult.logical_question.score;
-      return {
-        isCorrect: true,
-        message: 'Your answer is true.',
-        data: { newPlayScore },
-      };
-    }
+    const newPlayScore = !!isCorrectAnswer
+      ? play_score + logicalGameResult.logical_question.score
+      : play_score;
+
     return {
-      isCorrect: false,
-      message: 'Your answer is false.',
+      isCorrect: !!isCorrectAnswer,
+      message: 'Your answer is ' + isCorrectAnswer,
+      data: { newPlayScore },
     };
   }
 

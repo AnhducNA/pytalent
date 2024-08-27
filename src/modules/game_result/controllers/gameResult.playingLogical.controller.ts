@@ -60,14 +60,15 @@ export class GameResultPlayingLogicalController extends BaseController {
         gameResultUpdate.play_score,
         logicalAnswerPlaceHold,
       );
-    if (checkCorrectAnswer.isCorrect === true) {
-      await this.gameResultService.updateGameResultWithPlayScore(
-        gameResultUpdate.id,
-        checkCorrectAnswer.data.newPlayScore,
-      );
-    }
-    // update LogicalGameResult
-    await this.gameResultService.updateAnsweredLogicalGameResult(
+    const newPlayTime = Date.now() - gameResultUpdate.time_start.getTime();
+    await this.gameResultService.updateGameResultPlayTimeAndScore({
+      id: gameResultUpdate.id,
+      play_time: newPlayTime,
+      play_score: checkCorrectAnswer.data.newPlayScore,
+    });
+
+    // update answer in LogicalGameResult
+    await this.gameResultService.updateLogicalAnswered(
       logicalAnswerPlaceHold.id,
       logicalGameAnswerDto.answerPlay,
       checkCorrectAnswer.isCorrect,
