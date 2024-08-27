@@ -125,7 +125,7 @@ export class GameResultPlayingController extends BaseController {
           }
           try {
             const logical_game_result_final_by_game_result =
-              await this.gameResultService.get_logical_game_result_final_by_game_result(
+              await this.gameResultService.getLogicalGameResultFinalByGameResult(
                 game_result_exist_check.id,
               );
             return this.successResponse(

@@ -218,58 +218,23 @@ export class GameResultService {
       .getMany();
   }
 
-  async getLogicalGameResultItem(logical_game_result_id: number) {
-    return this.logicalGameResultRepository
-      .createQueryBuilder('logical_game_result')
-      .select([
-        'logical_game_result.id',
-        'logical_game_result.index',
-        'logical_game_result.game_result_id',
-        'logical_game_result.status',
-        'logical_game_result.answer_play',
-        'logical_game_result.is_correct',
-      ])
-      .addSelect([
-        'logical_question.id',
-        'logical_question.statement1',
-        'logical_question.statement2',
-        'logical_question.conclusion',
-        'logical_question.score',
-        'logical_question.correct_answer',
-      ])
-      .innerJoin('logical_game_result.logical_question', 'logical_question')
-      .where(`logical_game_result.id = ${logical_game_result_id}`)
-      .getOne();
-  }
-
-  async get_logical_game_result_final_by_game_result(game_result_id: number) {
-    return this.logicalGameResultRepository
-      .createQueryBuilder('logical_game_result')
-      .select([
-        'logical_game_result.id',
-        'logical_game_result.logical_question_id',
-      ])
-      .addSelect([
-        'logical_question.statement1',
-        'logical_question.statement2',
-        'logical_question.conclusion',
-        'logical_question.score',
-      ])
-      .innerJoin('logical_game_result.logical_question', 'logical_question')
-      .where(`logical_game_result.game_result_id = ${game_result_id}`)
-      .orderBy('logical_game_result.id', 'DESC')
-      .getOne();
+  async getLogicalGameResultFinalByGameResult(gameResultId: number) {
+    return this.logicalGameResultRepository.findOne({
+      relations: ['logical_game_result'],
+      where: { game_result_id: gameResultId },
+      order: { game_result_id: 'DESC' },
+    });
   }
 
   async getMemoryGameResultByGameResultIdAndCandidateId(
-    game_result_id: number,
+    gameResultId: number,
     candidate_id: number,
   ) {
     return this.memoryGameResultRepository
       .createQueryBuilder('memory_game_result')
       .innerJoin('memory_game_result.game_result', 'game_result')
       .orderBy('memory_game_result.id', 'DESC')
-      .where(`memory_game_result.game_result_id = ${game_result_id}`)
+      .where(`memory_game_result.game_result_id = ${gameResultId}`)
       .andWhere(`game_result.candidate_id = ${candidate_id}`)
       .getMany();
   }
