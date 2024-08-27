@@ -4,7 +4,7 @@ import { AppModule } from '@modules/app/app.module';
 import { AppService } from '@modules/app/app.service';
 import { RoleEnum } from '@enum/role.enum';
 import { plainToClass } from 'class-transformer';
-import { Users } from '@entities/user.entity';
+import { User } from '@entities/user.entity';
 import * as bcrypt from 'bcrypt';
 
 describe('UserAdminController (e2e)', () => {
@@ -28,13 +28,13 @@ describe('UserAdminController (e2e)', () => {
   });
 
   test('Create Function', async () => {
-    const createUserObject = plainToClass(Users, {
+    const createUserObject = plainToClass(User, {
       email: 'testservice@gmail.com',
       password: await bcrypt.hash('123456', 10),
-      role: RoleEnum.SELLER,
+      role: RoleEnum.HR,
     });
 
-    const createUser: Users = await usersRepository.save(createUserObject);
+    const createUser: User = await usersRepository.save(createUserObject);
 
     expect(createUser).not.toBeNull();
     expect(createUser.email).toEqual(createUserObject.email);

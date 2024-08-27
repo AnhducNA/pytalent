@@ -4,7 +4,6 @@ import { JwtAuthGuard } from '@guards/jwt-auth.guard';
 import { GameResultService } from '@modules/game_result/gameResult.service';
 import { GameService } from '@modules/game/game.service';
 import { Response } from 'express';
-import { arraysEqualWithoutLength } from '@helper/function';
 import { StatusGameResultEnum } from '@enum/status-game-result.enum';
 
 @Controller('api/game-result-playing-memory')
@@ -261,4 +260,17 @@ export class GameResultPlayingMemoryController extends BaseController {
       );
     }
   }
+}
+function arraysEqualWithoutLength(a: any[], b: any[]) {
+  if (a == null || b == null) return false;
+  if (a.length <= b.length) {
+    for (let i = 0; i < a.length; ++i) {
+      if (a[i] !== b[i]) return false;
+    }
+  } else {
+    for (let i = 0; i < b.length; ++i) {
+      if (a[i] !== b[i]) return false;
+    }
+  }
+  return true;
 }

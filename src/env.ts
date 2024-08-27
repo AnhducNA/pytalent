@@ -55,7 +55,4 @@ export const env = {
     authPassword: getOsEnvOptional('MAIL_AUTH_PASSWORD'),
     fromName: getOsEnvOptional('MAIL_FROM_NAME'),
   },
-  graphql: {
-    endPointLogin: getOsEnv('END_POINT_LOGIN'),
-  },
 };

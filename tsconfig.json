@@ -32,6 +32,7 @@
       "@decorators/*": ["shared/decorators/*"],
       "@pipes/*": ["shared/pipes/*"],
       "@utils": ["utils"],
+      "@helper": ["helper"],
       "@common/*": ["common/*"],
       "@plugins": ["common/plugins"],
       "@enum/*": ["common/enum/*"],

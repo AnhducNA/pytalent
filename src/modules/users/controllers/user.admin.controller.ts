@@ -22,6 +22,19 @@ export class UserAdminController extends BaseController {
     super();
   }
 
+  @Get('/list')
+  @UseGuards(JwtAuthGuard, new AuthorizationGuard([RoleEnum.ADMIN]))
+  async getAll(@Res() res: Response) {
+    const userList = await this.userService.findAll();
+    return this.successResponse(
+      {
+        message: 'success',
+        data: userList,
+      },
+      res,
+    );
+  }
+
   @Post('create-hr-account')
   @UseGuards(JwtAuthGuard, new AuthorizationGuard([RoleEnum.ADMIN]))
   async createHrAccount(
