@@ -30,7 +30,6 @@ export class LogicalGameResultService {
       gameResultUpdate,
       logicalAnswerPlaceHold,
     );
-    console.log(validateGameResult);
 
     // have validate => end game
     if (validateGameResult.status === false) {
