@@ -7,6 +7,7 @@ import { LogicalGameResultService } from './logicalGameResult.service';
 import { LogicalGameResult } from '@entities/logicalGameResult.entity';
 import { BadRequestException } from '@nestjs/common';
 import { StatusGameResultEnum } from '@common/enum/status-game-result.enum';
+import { GameResult } from '@entities/gameResult.entity';
 
 describe('LogicalGameResultService', () => {
   let service: LogicalGameResultService;
@@ -52,6 +53,23 @@ describe('LogicalGameResultService', () => {
 
   it('should be defined', () => {
     expect(service).toBeDefined();
+  });
+
+  describe('caculatePlayingLogical', () => {
+    it('should return game over if the game is finished', async () => {
+      jest.spyOn(service, 'findLogicalAnswerPlaceHold').mockResolvedValue({
+        game_result_id: 1,
+        index: 20,
+      } as LogicalGameResult);
+      jest
+        .spyOn(gameResultService, 'findOne')
+        .mockResolvedValue(new GameResult());
+
+      const result = await service.caculatePlayingLogical(183, true);
+      console.log(result, 123456);
+
+      expect(result.message).toBe('Game over');
+    });
   });
 
   describe('findLogicalAnswerPlaceHold', () => {
