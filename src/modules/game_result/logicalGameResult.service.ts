@@ -30,6 +30,7 @@ export class LogicalGameResultService {
       gameResultUpdate,
       logicalAnswerPlaceHold,
     );
+    console.log(validateGameResult);
 
     // have validate => end game
     if (validateGameResult.status === false) {
@@ -43,10 +44,10 @@ export class LogicalGameResultService {
       gameResultUpdate.play_score,
       logicalAnswerPlaceHold,
     );
-    const newPlayTime = Date.now() - gameResultUpdate.time_start.getTime();
+    // update new playScore and new playTime
     await this.gameResultService.updateGameResultPlayTimeAndScore({
       id: gameResultUpdate.id,
-      play_time: newPlayTime,
+      play_time: Date.now() - gameResultUpdate.time_start.getTime(),
       play_score: checkCorrectAnswer.data.newPlayScore,
     });
 
@@ -88,7 +89,10 @@ export class LogicalGameResultService {
     return logicalGameResult;
   }
 
-  async validateGameResult(gameResultUpdate, logicalGameResult) {
+  async validateGameResult(
+    gameResultUpdate,
+    logicalGameResult: LogicalGameResult,
+  ) {
     // validate check gameResult finished or paused
     if (gameResultUpdate.status === StatusGameResultEnum.FINISHED) {
       return { status: false, message: 'Game over' };
@@ -100,7 +104,8 @@ export class LogicalGameResultService {
       };
     }
     // validate check play_time > total_game_time
-    const validatePlayTime = this.validatePlayTime(gameResultUpdate);
+    const validatePlayTime = await this.validatePlayTime(gameResultUpdate);
+
     if (!validatePlayTime) {
       return {
         status: false,
@@ -121,6 +126,9 @@ export class LogicalGameResultService {
         message: 'You have completed the game. End game.',
       };
     }
+    return {
+      status: true,
+    };
   }
 
   private async validatePlayTime(gameResultUpdate) {
@@ -213,7 +221,7 @@ export class LogicalGameResultService {
   }
 
   async getHistoryAnswered(gameResultId: number) {
-    return this.logicalGameResultRepository.find({
+    return await this.logicalGameResultRepository.find({
       relations: ['logical_question'],
       where: { game_result_id: gameResultId },
     });
