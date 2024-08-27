@@ -3,15 +3,13 @@ import { BaseController } from '@modules/app/base.controller';
 import { JwtAuthGuard } from '@guards/jwt-auth.guard';
 import { Response } from 'express';
 import { GameResultService } from '@modules/game_result/gameResult.service';
-import { GameService } from '@modules/game/game.service';
 import { LogicalGameResultService } from '../logicalGameResult.service';
 
 @Controller('api/game-result-playing-logical')
 export class GameResultPlayingLogicalController extends BaseController {
   constructor(
     private readonly gameResultService: GameResultService,
-    private readonly gameService: GameService,
-    private readonly logicalGameResultService: LogicalGameResultService,
+    private readonly logicalAnswerService: LogicalGameResultService,
   ) {
     super();
   }
@@ -28,34 +26,34 @@ export class GameResultPlayingLogicalController extends BaseController {
   ) {
     // get logical_game_result place hold
     const resLogicalResultPlaceHold =
-      await this.logicalGameResultService.findLogicalGameResultPlaceHold(
+      await this.logicalAnswerService.findLogicalGameResultPlaceHold(
         params.logicalGameResultId,
       );
 
     if (resLogicalResultPlaceHold.status === false) {
       return this.errorsResponse(resLogicalResultPlaceHold, res);
     }
-    const logicalAnswerPlaceHold = resLogicalResultPlaceHold.data;
 
+    const logicalAnswerPlaceHold = resLogicalResultPlaceHold.data;
     const gameResultUpdate = await this.gameResultService.findOne(
       logicalAnswerPlaceHold.game_result_id,
     );
 
     const validateGameResult =
-      await this.logicalGameResultService.validateGameResult(
+      await this.logicalAnswerService.validateGameResult(
         gameResultUpdate,
         logicalAnswerPlaceHold,
       );
 
     // have validate => end game
     if (validateGameResult.status === false) {
-      await this.gameResultService.updateGameResultFinish(gameResultUpdate.id);
+      await this.gameResultService.updateFinishGame(gameResultUpdate.id);
       return this.errorsResponse(validateGameResult, res);
     }
 
     // check logical answer is true or false
     const checkCorrectAnswer =
-      await this.logicalGameResultService.checkCorrectAnswer(
+      await this.logicalAnswerService.checkCorrectAnswer(
         logicalGameAnswerDto.answerPlay,
         gameResultUpdate.play_score,
         logicalAnswerPlaceHold,
@@ -76,7 +74,7 @@ export class GameResultPlayingLogicalController extends BaseController {
 
     // Check final logical game => compare index question with total question
     if (logicalAnswerPlaceHold.index >= 20) {
-      await this.gameResultService.updateGameResultFinish(gameResultUpdate.id);
+      await this.gameResultService.updateFinishGame(gameResultUpdate.id);
       return this.successResponse(
         {
           message: `You answered all question. Game over.`,
@@ -86,8 +84,8 @@ export class GameResultPlayingLogicalController extends BaseController {
     }
 
     const logicalQuestionNext =
-      await this.logicalGameResultService.getNextLogicalQuestion(
-        logicalAnswerPlaceHold,
+      await this.logicalAnswerService.getNextLogicalQuestion(
+        logicalAnswerPlaceHold.index,
         gameResultUpdate.id,
       );
     return this.successResponse(

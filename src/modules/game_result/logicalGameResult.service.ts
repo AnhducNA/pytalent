@@ -6,7 +6,6 @@ import { GameService } from '@modules/game/game.service';
 import { Repository } from 'typeorm';
 import { StatusGameResultEnum } from '@common/enum/status-game-result.enum';
 import { StatusLogicalGameResultEnum } from '@common/enum/status-logical-game-result.enum';
-import { GameResult } from '@entities/gameResult.entity';
 
 @Injectable()
 export class LogicalGameResultService {
@@ -124,10 +123,7 @@ export class LogicalGameResultService {
     };
   }
 
-  async getNextLogicalQuestion(
-    logicalGameResult: LogicalGameResult,
-    gameResultId: number,
-  ) {
+  async getNextLogicalQuestion(indexQuestion: number, gameResultId: number) {
     // getLogicalGameResultByGameResult
     const logicalGameResultHistory: LogicalGameResult[] =
       await this.getHistoryAnswered(gameResultId);
@@ -148,8 +144,8 @@ export class LogicalGameResultService {
       );
     const logicalGameResultRenderNext =
       await this.gameResultService.createLogicalGameResult({
-        index: logicalGameResult.index + 1,
-        game_result_id: logicalGameResult.game_result_id,
+        index: indexQuestion + 1,
+        game_result_id: gameResultId,
         logical_question_id: logicalQuestionRenderNext.id,
         status: StatusLogicalGameResultEnum.NO_ANSWER,
         answer_play: null,

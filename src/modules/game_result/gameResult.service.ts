@@ -218,24 +218,6 @@ export class GameResultService {
       .getMany();
   }
 
-  async getLogicalGameResultAllByGameResult(gameResultId: number) {
-    return this.logicalGameResultRepository
-      .createQueryBuilder('logical_game_result')
-      .select([
-        'logical_game_result.id',
-        'logical_game_result.index',
-        'logical_game_result.game_result_id',
-        'logical_game_result.logical_question_id',
-        'logical_game_result.status',
-        'logical_game_result.answer_play',
-        'logical_game_result.is_correct',
-      ])
-      .addSelect('logical_question.correct_answer')
-      .innerJoin('logical_game_result.logical_question', 'logical_question')
-      .where(`logical_game_result.game_result_id = ${gameResultId}`)
-      .getMany();
-  }
-
   async getLogicalGameResultItem(logical_game_result_id: number) {
     return this.logicalGameResultRepository
       .createQueryBuilder('logical_game_result')
@@ -389,7 +371,7 @@ export class GameResultService {
       .where('id = :id', { id: id })
       .execute();
   }
-  async updateGameResultFinish(gameResultId: number) {
+  async updateFinishGame(gameResultId: number) {
     return this.gameResultRepository
       .createQueryBuilder()
       .update(GameResult)
