@@ -23,25 +23,28 @@ export class LogicalGameResultService {
   ): Promise<ResponseInterface> {
     // get logical_game_result place hold
     const logicalAnswerPlaceHold = await this.findLogicalAnswerPlaceHold(id);
-    const gameResultUpdate = await this.gameResultService.findOne(
+    const gameResultUpdate = await this.gameResultService.getGameResultUpdate(
       logicalAnswerPlaceHold.game_result_id,
     );
-    const validateGameResult = await this.validateGameResult(
-      gameResultUpdate,
-      logicalAnswerPlaceHold,
+    const validateResponse = await this.validateGameResult(
+      gameResultUpdate.id,
+      gameResultUpdate.time_start,
+      gameResultUpdate.status,
+      logicalAnswerPlaceHold.index,
     );
 
     // have validate => end game
-    if (validateGameResult.status === false) {
+    if (validateResponse.status === false) {
       await this.gameResultService.updateFinishGame(gameResultUpdate.id);
-      return { message: validateGameResult.message };
+      return { message: validateResponse.message };
     }
 
     // check logical answer is true or false
     const checkCorrectAnswer = await this.checkCorrectAnswer(
       answerPlay,
       gameResultUpdate.play_score,
-      logicalAnswerPlaceHold,
+      logicalAnswerPlaceHold.logical_question.correct_answer,
+      logicalAnswerPlaceHold.logical_question.score,
     );
     // update new playScore and new playTime
     await this.gameResultService.updateGameResultPlayTimeAndScore({
@@ -89,21 +92,26 @@ export class LogicalGameResultService {
   }
 
   async validateGameResult(
-    gameResultUpdate,
-    logicalGameResult: LogicalGameResult,
+    gameResultId: number,
+    timeStart: Date,
+    gameResultStatus: StatusGameResultEnum,
+    indexQuestion: number,
   ) {
     // validate check gameResult finished or paused
-    if (gameResultUpdate.status === StatusGameResultEnum.FINISHED) {
+    if (gameResultStatus === StatusGameResultEnum.FINISHED) {
       return { status: false, message: 'Game over' };
     }
-    if (gameResultUpdate.status === StatusGameResultEnum.PAUSED) {
+    if (gameResultStatus === StatusGameResultEnum.PAUSED) {
       return {
         status: false,
         message: 'Game was paused. You need to continue to play',
       };
     }
     // validate check play_time > total_game_time
-    const validatePlayTime = await this.validatePlayTime(gameResultUpdate);
+    const validatePlayTime = await this.validatePlayTime(
+      gameResultId,
+      timeStart,
+    );
 
     if (!validatePlayTime) {
       return {
@@ -113,13 +121,10 @@ export class LogicalGameResultService {
     }
     // validate check index_question_answer > total_question in game
     const totalQuestionGameLogical = parseInt(
-      (
-        await this.gameResultService.getGameInfoByGameResult(
-          gameResultUpdate.id,
-        )
-      ).game.total_question,
+      (await this.gameResultService.getGameInfoByGameResult(gameResultId)).game
+        .total_question,
     );
-    if (logicalGameResult.index > totalQuestionGameLogical) {
+    if (indexQuestion > totalQuestionGameLogical) {
       return {
         status: false,
         message: 'You have completed the game. End game.',
@@ -130,10 +135,10 @@ export class LogicalGameResultService {
     };
   }
 
-  private async validatePlayTime(gameResultUpdate) {
-    const newPlayTime = Date.now() - gameResultUpdate.time_start.getTime();
+  private async validatePlayTime(gameResultId: number, timeStart: Date) {
+    const newPlayTime = Date.now() - timeStart.getTime();
     const totalGameTime = (
-      await this.gameResultService.getGameInfoByGameResult(gameResultUpdate.id)
+      await this.gameResultService.getGameInfoByGameResult(gameResultId)
     ).game.total_time;
     if (newPlayTime > totalGameTime) {
       // when the game time is up, set done for game_result
@@ -155,12 +160,12 @@ export class LogicalGameResultService {
   async checkCorrectAnswer(
     answerPlay: boolean,
     play_score: number,
-    logicalGameResult: LogicalGameResult,
+    correctAnswer: boolean,
+    scoreQuestion: number,
   ) {
-    const isCorrectAnswer: boolean =
-      answerPlay === logicalGameResult.logical_question.correct_answer;
+    const isCorrectAnswer: boolean = answerPlay === correctAnswer;
     const newPlayScore = !!isCorrectAnswer
-      ? play_score + logicalGameResult.logical_question.score
+      ? play_score + scoreQuestion
       : play_score;
 
     return {

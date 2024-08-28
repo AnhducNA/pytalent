@@ -38,6 +38,13 @@ export class GameResultService {
     return await this.gameResultRepository.findOneBy({ id: id });
   }
 
+  async getGameResultUpdate(id: number): Promise<GameResult> {
+    return await this.gameResultRepository.findOne({
+      select: ['id', 'status', 'time_start', 'play_score', 'play_time'],
+      where: { id },
+    });
+  }
+
   async findOneAssessmentCandidate(
     assessment_id: number,
     candidate_id: number,
