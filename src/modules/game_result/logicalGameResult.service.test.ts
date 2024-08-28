@@ -26,7 +26,7 @@ describe('LogicalGameResultService', () => {
         {
           provide: GameResultService,
           useValue: {
-            findOne: jest.fn(),
+            getGameResultUpdate: jest.fn(),
             updateFinishGame: jest.fn(),
             updateGameResultPlayTimeAndScore: jest.fn(),
             updateLogicalAnswered: jest.fn(),
@@ -55,23 +55,6 @@ describe('LogicalGameResultService', () => {
     expect(service).toBeDefined();
   });
 
-  describe('caculatePlayingLogical', () => {
-    it('should return game over if the game is finished', async () => {
-      jest.spyOn(service, 'findLogicalAnswerPlaceHold').mockResolvedValue({
-        game_result_id: 1,
-        index: 20,
-      } as LogicalGameResult);
-      jest
-        .spyOn(gameResultService, 'findOne')
-        .mockResolvedValue(new GameResult());
-
-      const result = await service.caculatePlayingLogical(183, true);
-      console.log(result, 123456);
-
-      expect(result.message).toBe('Game over');
-    });
-  });
-
   describe('findLogicalAnswerPlaceHold', () => {
     it('should throw BadRequestException if logicalGameResult does not exist', async () => {
       jest.spyOn(service, 'findLogicalGameResult').mockResolvedValue(null);
@@ -83,52 +66,94 @@ describe('LogicalGameResultService', () => {
 
     it('should return logicalGameResult if it exists', async () => {
       const logicalGameResult = new LogicalGameResult();
-      console.log(logicalGameResult);
-
       jest
         .spyOn(service, 'findLogicalGameResult')
         .mockResolvedValue(logicalGameResult);
 
-      const result = await service.findLogicalAnswerPlaceHold(1);
+      const result = await service.findLogicalAnswerPlaceHold(183);
       expect(result).toBe(logicalGameResult);
+    });
+  });
+
+  describe('validateGameResult', () => {
+    it('should return game over message if game result is finished', async () => {
+      const gameResultStatus = StatusGameResultEnum.FINISHED;
+
+      const result = await service.validateGameResult(
+        73,
+        new Date(),
+        gameResultStatus,
+        1,
+      );
+      expect(result.status).toBe(false);
+      expect(result.message).toBe('Game over');
+    });
+
+    it('should return paused message if game result is paused', async () => {
+      const gameResultStatus = StatusGameResultEnum.PAUSED;
+
+      const result = await service.validateGameResult(
+        73,
+        new Date(),
+        gameResultStatus,
+        1,
+      );
+      expect(result.status).toBe(false);
+      expect(result.message).toBe(
+        'Game was paused. You need to continue to play',
+      );
+    });
+
+    it('should return game over message if play time exceeds total time', async () => {
+      jest.spyOn(service as any, 'validatePlayTime').mockResolvedValue(false);
+
+      const gameResultStatus = StatusGameResultEnum.STARTED;
+
+      const result = await service.validateGameResult(
+        1,
+        new Date(),
+        gameResultStatus,
+        1,
+      );
+      expect(result.status).toBe(false);
+      expect(result.message).toBe('Gaming time is over. End game.');
+    });
+
+    it('should return true if game is still valid', async () => {
+      jest.spyOn(service as any, 'validatePlayTime').mockResolvedValue(true);
+
+      const gameResultStatus = StatusGameResultEnum.STARTED;
+      jest
+        .spyOn(gameResultService, 'getGameInfoByGameResult')
+        .mockResolvedValue({
+          game: { total_question: '10' },
+        });
+
+      const result = await service.validateGameResult(
+        1,
+        new Date(),
+        gameResultStatus,
+        1,
+      );
+      expect(result.status).toBe(true);
     });
   });
 
   describe('checkCorrectAnswer', () => {
     it('should return correct answer message and updated play score', async () => {
-      const logicalGameResult = {
-        logical_question: {
-          correct_answer: true,
-          score: 10,
-        },
-      } as LogicalGameResult;
+      const result = await service.checkCorrectAnswer(true, 15, true, 2);
+      console.log(12456, result);
 
-      const result = await service.checkCorrectAnswer(
-        true,
-        0,
-        logicalGameResult,
-      );
       expect(result.isCorrect).toBe(true);
       expect(result.message).toBe('Your answer is true');
-      expect(result.data.newPlayScore).toBe(10);
+      expect(result.data.newPlayScore).toBe(17);
     });
 
     it('should return incorrect answer message and same play score', async () => {
-      const logicalGameResult = {
-        logical_question: {
-          correct_answer: true,
-          score: 10,
-        },
-      } as LogicalGameResult;
-
-      const result = await service.checkCorrectAnswer(
-        false,
-        0,
-        logicalGameResult,
-      );
+      const result = await service.checkCorrectAnswer(false, 18, true, 1);
       expect(result.isCorrect).toBe(false);
       expect(result.message).toBe('Your answer is false');
-      expect(result.data.newPlayScore).toBe(0);
+      expect(result.data.newPlayScore).toBe(18);
     });
   });
 });
