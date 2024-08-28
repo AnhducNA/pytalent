@@ -44,7 +44,13 @@ export class GameService {
   async getMemoryGame() {
     return await this.memoryDataRepository.find();
   }
-
+  async getTotalQuestionGameLogical() {
+    const gameLogical = await this.gameRepository.findOne({
+      select: ['total_question'],
+      where: { id: 1 },
+    });
+    return parseInt(gameLogical.total_question);
+  }
   async getLogicalQuestionRender(id_except: any[], check_identical: any[]) {
     // const id_except = [
     //   1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17,

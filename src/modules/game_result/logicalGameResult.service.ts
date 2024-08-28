@@ -120,11 +120,8 @@ export class LogicalGameResultService {
       };
     }
     // validate check index_question_answer > total_question in game
-    const totalQuestionGameLogical = parseInt(
-      (await this.gameResultService.getGameInfoByGameResult(gameResultId)).game
-        .total_question,
-    );
-    if (indexQuestion > totalQuestionGameLogical) {
+    const totalQuestion = await this.gameService.getTotalQuestionGameLogical();
+    if (indexQuestion > totalQuestion) {
       return {
         status: false,
         message: 'You have completed the game. End game.',
