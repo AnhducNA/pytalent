@@ -16,4 +16,10 @@ export interface createUserInterface extends FindUserInterface {
   role: RoleEnum;
 }
 
+export interface IUserLogin {
+  id: number;
+  email: string;
+  role: string;
+}
+
 export type UserGetResponse = Omit<UserModel, 'userId' | 'password'>;

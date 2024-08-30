@@ -45,6 +45,21 @@ export class GameResultService {
     });
   }
 
+  async getGameResultOfCandidate(candidateId: number) {
+    const gameResultList = await this.gameResultRepository.find({
+      where: { candidate_id: candidateId },
+    });
+    await Promise.all(
+      gameResultList.map(async (gameResult) => {
+        gameResult.play_score = await this.get_total_play_score_by_game_result(
+          gameResult.id,
+          gameResult.game_id,
+        );
+      }),
+    );
+    return gameResultList;
+  }
+
   async findOneAssessmentCandidate(
     assessment_id: number,
     candidate_id: number,

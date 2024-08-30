@@ -5,7 +5,7 @@ import { Response } from 'express';
 import { GameResultService } from '@modules/game_result/gameResult.service';
 import { LogicalGameResultService } from '../logicalGameResult.service';
 
-@Controller('api/game-result-playing-logical')
+@Controller('api/playing-logical')
 export class GameResultPlayingLogicalController extends BaseController {
   constructor(
     private readonly gameResultService: GameResultService,
@@ -14,7 +14,7 @@ export class GameResultPlayingLogicalController extends BaseController {
     super();
   }
 
-  @Patch('logical-game-answer/:logicalAnswerId')
+  @Patch('logical-answer/:logicalAnswerId')
   @UseGuards(JwtAuthGuard)
   async playingLogicalGame(
     @Param() params: { logicalAnswerId: number },
