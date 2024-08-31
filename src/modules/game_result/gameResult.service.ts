@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { BadRequestException, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { DeleteResult, Repository } from 'typeorm';
 import { GameResult } from '@entities/gameResult.entity';
@@ -38,11 +38,46 @@ export class GameResultService {
     return await this.gameResultRepository.findOneBy({ id: id });
   }
 
-  async getGameResultUpdate(id: number): Promise<GameResult> {
-    return await this.gameResultRepository.findOne({
+  async findAndValidateGameResult(id: number): Promise<GameResult> {
+    if (!id) {
+      throw new BadRequestException('GameResult does not exit');
+    }
+    const gameResult = await this.gameResultRepository.findOne({
       select: ['id', 'status', 'time_start', 'play_score', 'play_time'],
       where: { id },
     });
+    // validate check gameResult finished or paused
+    if (gameResult.status === StatusGameResultEnum.FINISHED) {
+      throw new BadRequestException('Game completed');
+    }
+    if (gameResult.status === StatusGameResultEnum.PAUSED) {
+      throw new BadRequestException(
+        'Game was paused. You need to continue to play',
+      );
+    }
+
+    // validate check play_time > total_game_time
+    const validatePlayTime = await this.validatePlayTime(
+      id,
+      gameResult.time_start,
+    );
+
+    if (!validatePlayTime) {
+      throw new BadRequestException(`Game's time is over.`);
+    }
+
+    return gameResult;
+  }
+
+  private async validatePlayTime(gameResultId: number, timeStart: Date) {
+    const newPlayTime = Date.now() - timeStart.getTime();
+    const totalGameTime = (await this.getGameInfoByGameResult(gameResultId))
+      .game.total_time;
+    if (newPlayTime > totalGameTime) {
+      // when the game time is up, set done for game_result
+      return false;
+    }
+    return true;
   }
 
   async getGameResultOfCandidate(candidateId: number) {
