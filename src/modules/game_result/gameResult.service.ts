@@ -42,7 +42,7 @@ export class GameResultService {
     if (!id) {
       throw new BadRequestException('GameResult does not exit');
     }
-    const gameResult = await this.gameResultRepository.findOne({
+    const gameResult: GameResult = await this.gameResultRepository.findOne({
       select: ['id', 'status', 'time_start', 'play_score', 'play_time'],
       where: { id },
     });
@@ -57,7 +57,7 @@ export class GameResultService {
     }
 
     // validate check play_time > total_game_time
-    const validatePlayTime = await this.validatePlayTime(
+    const validatePlayTime: boolean = await this.validatePlayTime(
       id,
       gameResult.time_start,
     );
