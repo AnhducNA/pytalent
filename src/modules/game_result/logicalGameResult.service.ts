@@ -6,6 +6,7 @@ import { GameService } from '@modules/game/game.service';
 import { Repository } from 'typeorm';
 import { StatusLogicalGameResultEnum } from '@common/enum/status-logical-game-result.enum';
 import { ResponseInterface } from '@shared/interfaces/response.interface';
+import { GameResult } from '@entities/gameResult.entity';
 
 @Injectable()
 export class LogicalGameResultService {
@@ -23,7 +24,7 @@ export class LogicalGameResultService {
     // get logical_game_result place hold
     const logicalAnswerPlaceHold = await this.findLogicalAnswerPlaceHold(id);
 
-    const gameResultUpdate =
+    const gameResultUpdate: GameResult =
       await this.gameResultService.findAndValidateGameResult(
         logicalAnswerPlaceHold.game_result_id,
       );
@@ -102,16 +103,6 @@ export class LogicalGameResultService {
     };
   }
 
-  async updateCorrectAnswer(gameResultUpdate, logicalResultPlaceHold) {
-    const newPlayScore =
-      gameResultUpdate.play_score +
-      logicalResultPlaceHold.logical_question.score;
-    await this.gameResultService.updateGameResultWithPlayScore(
-      gameResultUpdate.id,
-      newPlayScore,
-    );
-  }
-
   async updateFinalQuestion(indexQuestion: number, gameResultId: number) {
     // Check final logical game ==> compare index question with total question
     const totalQuestion: number =
@@ -184,17 +175,20 @@ export class LogicalGameResultService {
   }
 
   async findLogicalGameResult(logicalGameResultId: number) {
-    const data = await this.logicalGameResultRepository.findOne({
-      where: { id: logicalGameResultId },
-      relations: ['logical_question'],
-    });
-    return data;
+    const result: LogicalGameResult =
+      await this.logicalGameResultRepository.findOne({
+        where: { id: logicalGameResultId },
+        relations: ['logical_question'],
+      });
+    return result;
   }
 
   async getHistoryAnswered(gameResultId: number) {
-    return await this.logicalGameResultRepository.find({
-      relations: ['logical_question'],
-      where: { game_result_id: gameResultId },
-    });
+    const result: LogicalGameResult[] =
+      await this.logicalGameResultRepository.find({
+        relations: ['logical_question'],
+        where: { game_result_id: gameResultId },
+      });
+    return result;
   }
 }
