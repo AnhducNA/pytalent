@@ -4,8 +4,6 @@ import { DeleteResult, Repository } from 'typeorm';
 import { GameResult } from '@entities/gameResult.entity';
 import { LogicalGameResult } from '@entities/logicalGameResult.entity';
 import { MemoryGameResult } from '@entities/memoryGameResult.entity';
-import { AssessmentCandidate } from '@entities/assessmentCandidate.entity';
-import { Assessment } from '@entities/assessment.entity';
 import { createLogicalGameResultInterface } from '@interfaces/logicalGameResult.interface';
 import {
   createGameResultInterface,
@@ -24,10 +22,6 @@ export class GameResultService {
     private logicalGameResultRepository: Repository<LogicalGameResult>,
     @InjectRepository(MemoryGameResult)
     private memoryGameResultRepository: Repository<MemoryGameResult>,
-    @InjectRepository(Assessment)
-    private assessmentRepository: Repository<Assessment>,
-    @InjectRepository(AssessmentCandidate)
-    private assessmentCandidateRepository: Repository<AssessmentCandidate>,
   ) {}
 
   async findAll() {
@@ -93,16 +87,6 @@ export class GameResultService {
       }),
     );
     return gameResultList;
-  }
-
-  async findOneAssessmentCandidate(
-    assessment_id: number,
-    candidate_id: number,
-  ) {
-    return await this.assessmentCandidateRepository.findOneBy({
-      assessment_id: assessment_id,
-      candidate_id: candidate_id,
-    });
   }
 
   async create(payloadGameResult: createGameResultInterface) {
@@ -241,15 +225,6 @@ export class GameResultService {
     return this.gameResultRepository.find({
       where: { candidate_id: candidateId },
     });
-  }
-
-  async get_assessment_by_id(assessment_id: number) {
-    return await this.assessmentRepository
-      .createQueryBuilder('assessment')
-      .select('assessment.id')
-      .addSelect('assessment.time_end')
-      .where('assessment.id = :id', { id: assessment_id })
-      .getOne();
   }
 
   async getGameInfoByGameResult(game_result_id: number) {
