@@ -16,12 +16,14 @@ import { Response } from 'express';
 import { CreateGameResultDto } from '@modules/game_result/createGameResult.dto';
 import { StatusLogicalGameResultEnum } from '@enum/status-logical-game-result.enum';
 import { StatusGameResultEnum } from '@enum/status-game-result.enum';
+import { AssessmentService } from '@modules/assessment/assessment.service';
 
 @Controller('api/game-result-playing')
 export class GameResultPlayingController extends BaseController {
   constructor(
     private readonly gameResultService: GameResultService,
     private readonly gameService: GameService,
+    private readonly assessmentService: AssessmentService,
   ) {
     super();
   }
@@ -40,9 +42,7 @@ export class GameResultPlayingController extends BaseController {
     gameResultDto.candidate_id = userLogin.id;
     // validate check assessment time_end
     const assessment_time_end = (
-      await this.gameResultService.get_assessment_by_id(
-        gameResultDto.assessment_id,
-      )
+      await this.assessmentService.getOne(gameResultDto.assessment_id)
     ).time_end;
     if (Date.now() - assessment_time_end.getTime() > 0) {
       return this.errorsResponse(
@@ -54,7 +54,7 @@ export class GameResultPlayingController extends BaseController {
     }
     // validate check assessment contain Candidate?
     const assessmentCheckCandidate =
-      await this.gameResultService.findOneAssessmentCandidate(
+      await this.assessmentService.getOneAssessmentCandidate(
         gameResultDto.assessment_id,
         userLogin.id,
       );

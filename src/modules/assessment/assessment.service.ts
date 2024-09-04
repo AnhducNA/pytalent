@@ -24,6 +24,19 @@ export class AssessmentService {
     return this.assessmentRepository.find();
   }
 
+  async getOne(id: number): Promise<Assessment> {
+    return await this.assessmentRepository.findOne({
+      select: ['id', 'time_end'],
+      where: { id },
+    });
+  }
+
+  async getOneAssessmentCandidate(assessmentId: number, candidateId: number) {
+    return this.assessmentCandidateRepository.findOne({
+      where: { assessment_id: assessmentId, candidate_id: candidateId },
+    });
+  }
+
   async getAssessmentByHrId(hr_id: number) {
     return this.assessmentRepository
       .createQueryBuilder('assessment')

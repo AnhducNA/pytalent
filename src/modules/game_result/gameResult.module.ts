@@ -16,6 +16,7 @@ import { GameResultPlayingLogicalController } from '@modules/game_result/control
 import { GameResultPlayingMemoryController } from '@modules/game_result/controllers/gameResult.playingMemory.controller';
 import { LogicalGameResultService } from './logicalGameResult.service';
 import { GameModule } from '@modules/game/game.module';
+import { AssessmentModule } from '@modules/assessment/assessment.module';
 
 @Module({
   imports: [
@@ -30,6 +31,7 @@ import { GameModule } from '@modules/game/game.module';
       AssessmentCandidate,
     ]),
     GameModule,
+    AssessmentModule,
   ],
   controllers: [
     GameResultController,

@@ -15,8 +15,6 @@ describe('GameResultService', () => {
   let gameResultRepository: Repository<GameResult>;
   let logicalGameResultRepository: Repository<LogicalGameResult>;
   let memoryGameResultRepository: Repository<MemoryGameResult>;
-  let assessmentRepository: Repository<Assessment>;
-  let assessmentCandidateRepository: Repository<AssessmentCandidate>;
 
   beforeEach(async () => {
     const mockGameResultRepository = {
@@ -84,12 +82,6 @@ describe('GameResultService', () => {
     );
     memoryGameResultRepository = module.get<Repository<MemoryGameResult>>(
       getRepositoryToken(MemoryGameResult),
-    );
-    assessmentRepository = module.get<Repository<Assessment>>(
-      getRepositoryToken(Assessment),
-    );
-    assessmentCandidateRepository = module.get<Repository<AssessmentCandidate>>(
-      getRepositoryToken(AssessmentCandidate),
     );
   });
 
