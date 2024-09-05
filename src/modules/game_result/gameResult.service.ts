@@ -2,25 +2,23 @@ import { BadRequestException, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { DeleteResult, Repository } from 'typeorm';
 import { GameResult } from '@entities/gameResult.entity';
-import { LogicalGameResult } from '@entities/logicalGameResult.entity';
 import { MemoryGameResult } from '@entities/memoryGameResult.entity';
 import {
   createGameResultInterface,
   gameResultModel,
 } from '@interfaces/gameResult.interface';
-import { StatusLogicalGameResultEnum } from '@enum/status-logical-game-result.enum';
 import { createMemoryGameResultInterface } from '@interfaces/memoryGameResult.interface';
 import { StatusGameResultEnum } from '@enum/status-game-result.enum';
+import { LogicalGameResultService } from './logicalGameResult.service';
 
 @Injectable()
 export class GameResultService {
   constructor(
     @InjectRepository(GameResult)
     private gameResultRepository: Repository<GameResult>,
-    @InjectRepository(LogicalGameResult)
-    private logicalGameResultRepository: Repository<LogicalGameResult>,
     @InjectRepository(MemoryGameResult)
     private memoryGameResultRepository: Repository<MemoryGameResult>,
+    private logicalGameResultService: LogicalGameResultService,
   ) {}
 
   async findAll() {
@@ -62,7 +60,7 @@ export class GameResultService {
     return gameResult;
   }
 
-  private async validatePlayTime(gameResultId: number, timeStart: Date) {
+  async validatePlayTime(gameResultId: number, timeStart: Date) {
     const newPlayTime = Date.now() - timeStart.getTime();
     const totalGameTime = (await this.getGameInfoByGameResult(gameResultId))
       .game.total_time;
@@ -166,14 +164,10 @@ export class GameResultService {
     let game_result_play_score = 0;
     switch (game_id) {
       case 1:
-        const logical_game_result_list = await this.logicalGameResultRepository
-          .createQueryBuilder('logical_game_result')
-          .select('logical_game_result.id')
-          .addSelect('logical_question.score')
-          .innerJoin('logical_game_result.logical_question', 'logical_question')
-          .where(`logical_game_result.game_result_id = ${game_result_id}`)
-          .andWhere(`logical_game_result.is_correct = 1`)
-          .getMany();
+        const logical_game_result_list =
+          await this.logicalGameResultService.getLogicalAnswerCorrectByGameResult(
+            game_result_id,
+          );
         logical_game_result_list.map((item) => {
           game_result_play_score += item.logical_question.score;
         });
@@ -234,27 +228,6 @@ export class GameResultService {
       .innerJoin('game_result.game', 'game')
       .where('game_result.id = :id', { id: game_result_id })
       .getOne();
-  }
-
-  async getLogicalGameResultByGameResultIdAndCandidateId(
-    game_result_id: number,
-    candidate_id: number,
-  ) {
-    return this.logicalGameResultRepository
-      .createQueryBuilder('logical_game_result')
-      .innerJoin('logical_game_result.game_result', 'game_result')
-      .orderBy('logical_game_result.id', 'DESC')
-      .where(`logical_game_result.game_result_id = ${game_result_id}`)
-      .andWhere(`game_result.candidate_id = ${candidate_id}`)
-      .getMany();
-  }
-
-  async getLogicalGameResultFinalByGameResult(gameResultId: number) {
-    return this.logicalGameResultRepository.findOne({
-      relations: ['logical_game_result'],
-      where: { game_result_id: gameResultId },
-      order: { game_result_id: 'DESC' },
-    });
   }
 
   async getMemoryGameResultByGameResultIdAndCandidateId(
@@ -422,41 +395,6 @@ export class GameResultService {
       .update(GameResult)
       .set({ play_time: payload.play_time, play_score: payload.play_score })
       .where('id = :id', { id: payload.id })
-      .execute();
-  }
-
-  async updateLogicalAnswered(
-    logical_game_result_id: number,
-    answer_play: boolean,
-    is_correct: boolean,
-  ) {
-    return await this.logicalGameResultRepository
-      .createQueryBuilder()
-      .update(LogicalGameResult)
-      .set({
-        status: StatusLogicalGameResultEnum.ANSWERED,
-        answer_play: answer_play,
-        is_correct: is_correct,
-      })
-      .where('id = :id', { id: logical_game_result_id })
-      .execute();
-  }
-
-  async updateAnswerPlayLogicalGameResult(
-    logical_game_result_id: number,
-    status: StatusLogicalGameResultEnum,
-    answer_play: boolean,
-    is_correct: boolean,
-  ) {
-    return await this.logicalGameResultRepository
-      .createQueryBuilder()
-      .update(LogicalGameResult)
-      .set({
-        status: status,
-        answer_play: answer_play,
-        is_correct: is_correct,
-      })
-      .where('id = :id', { id: logical_game_result_id })
       .execute();
   }
 

@@ -1,11 +1,13 @@
+import { Test, TestingModule } from '@nestjs/testing';
+import { LogicalGameResultService } from './logicalGameResult.service';
+import { GameResultService } from './gameResult.service';
+import { GameService } from '@modules/game/game.service';
 import { Repository } from 'typeorm';
 import { getRepositoryToken } from '@nestjs/typeorm';
-import { Test, TestingModule } from '@nestjs/testing';
-import { GameService } from '@modules/game/game.service';
-import { GameResultService } from './gameResult.service';
-import { LogicalGameResultService } from './logicalGameResult.service';
 import { LogicalGameResult } from '@entities/logicalGameResult.entity';
 import { BadRequestException } from '@nestjs/common';
+import { StatusLogicalGameResultEnum } from '@common/enum/status-logical-game-result.enum';
+import { IcreateLogicalGameResult } from '@shared/interfaces/logicalGameResult.interface';
 
 describe('LogicalGameResultService', () => {
   let service: LogicalGameResultService;
@@ -14,17 +16,10 @@ describe('LogicalGameResultService', () => {
   let logicalGameResultRepository: Repository<LogicalGameResult>;
 
   beforeEach(async () => {
-    const mockLogicalGameResultRepository = {
-      findOne: jest.fn(),
-      find: jest.fn(),
-      create: jest.fn(),
-    } as any;
     const mockGameResultService = {
       findAndValidateGameResult: jest.fn(),
       updateFinishGame: jest.fn(),
       updateGameResultPlayTimeAndScore: jest.fn(),
-      updateLogicalAnswered: jest.fn(),
-      createLogicalGameResult: jest.fn(),
     };
     const mockGameService = {
       getTotalQuestionGameLogical: jest.fn(),
@@ -34,16 +29,26 @@ describe('LogicalGameResultService', () => {
       providers: [
         LogicalGameResultService,
         {
-          provide: getRepositoryToken(LogicalGameResult),
-          useValue: mockLogicalGameResultRepository,
-        },
-        {
           provide: GameResultService,
-          useValue: mockGameResultService,
+          useValue: mockGameResultService, // Mock GameResultService
         },
         {
           provide: GameService,
-          useValue: mockGameService,
+          useValue: mockGameService, // Mock GameService
+        },
+        {
+          provide: getRepositoryToken(LogicalGameResult),
+          useValue: {
+            findOne: jest.fn(),
+            save: jest.fn(),
+            find: jest.fn(),
+            createQueryBuilder: jest.fn(() => ({
+              update: jest.fn().mockReturnThis(),
+              set: jest.fn().mockReturnThis(),
+              where: jest.fn().mockReturnThis(),
+              execute: jest.fn(),
+            })),
+          },
         },
       ],
     }).compile();
@@ -72,7 +77,7 @@ describe('LogicalGameResultService', () => {
       const logicalAnswerId = 190;
       const mockLogicalGameResult = new LogicalGameResult();
       jest
-        .spyOn(logicalGameResultRepository, 'findOne')
+        .spyOn(service, 'findLogicalGameResult')
         .mockResolvedValue(mockLogicalGameResult);
 
       const result = await service.findLogicalAnswerPlaceHold(logicalAnswerId);
@@ -169,9 +174,8 @@ describe('LogicalGameResultService', () => {
         score: 10,
       } as any);
       jest
-        .spyOn(gameResultService, 'createLogicalGameResult')
+        .spyOn(service, 'createLogicalAnswer')
         .mockResolvedValue({ id: 2, index: 2 } as any);
-
       const result = await service.getNextLogicalQuestion(
         indexQuestion,
         gameResultId,
@@ -224,7 +228,6 @@ describe('LogicalGameResultService', () => {
       expect(result).toBeNull();
     });
   });
-
   describe('getHistoryAnswered', () => {
     it('should return an array of logical game results by gameResultId', async () => {
       const gameResultId = 1;
@@ -258,6 +261,49 @@ describe('LogicalGameResultService', () => {
         where: { game_result_id: gameResultId },
       });
       expect(result).toEqual([]);
+    });
+  });
+  describe('updateLogicalAnswered', () => {
+    it('should update logical answer with correct values', async () => {
+      const id = 1;
+      const answer_play = true;
+      const is_correct = true;
+
+      await service.updateLogicalAnswered(id, answer_play, is_correct);
+
+      expect(
+        logicalGameResultRepository
+          .createQueryBuilder()
+          .update(LogicalGameResult)
+          .set({
+            status: StatusLogicalGameResultEnum.ANSWERED,
+            answer_play,
+            is_correct,
+          })
+          .where('id = :id', { id: id })
+          .execute(),
+      );
+    });
+  });
+  describe('createLogicalAnswer', () => {
+    it('should create and return a new logical answer', async () => {
+      const payload: IcreateLogicalGameResult = {
+        index: 1,
+        game_result_id: 1,
+        logical_question_id: 1,
+        status: StatusLogicalGameResultEnum.NO_ANSWER,
+        answer_play: null,
+        is_correct: null,
+      };
+      const savedLogicalAnswer = { id: 1, ...payload };
+      jest
+        .spyOn(logicalGameResultRepository, 'save')
+        .mockResolvedValue(savedLogicalAnswer as LogicalGameResult);
+
+      const result = await service.createLogicalAnswer(payload);
+
+      expect(result).toBe(savedLogicalAnswer);
+      expect(logicalGameResultRepository.save).toHaveBeenCalledWith(payload);
     });
   });
 });

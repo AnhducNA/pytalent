@@ -70,7 +70,7 @@ export class GameResultController extends BaseController {
     switch (game_result.game_id) {
       case 1:
         const logicalGameResultList =
-          await this.gameResultService.getLogicalGameResultByGameResultIdAndCandidateId(
+          await this.logicalGameResultService.getLogicalAnswerByGameResultAndCandidate(
             gameResultDetailDto.game_result_id,
             userLogin.id,
           );
