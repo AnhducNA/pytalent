@@ -1,10 +1,7 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { GameResult } from '@entities/gameResult.entity';
 import { GameResultService } from './gameResult.service';
-import { LogicalGameResult } from '@entities/logicalGameResult.entity';
 import { MemoryGameResult } from '@entities/memoryGameResult.entity';
-import { Assessment } from '@entities/assessment.entity';
-import { AssessmentCandidate } from '@entities/assessmentCandidate.entity';
 import { getRepositoryToken } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { BadRequestException } from '@nestjs/common';

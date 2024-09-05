@@ -5,7 +5,6 @@ import { GameService } from '@modules/game/game.service';
 import { Repository } from 'typeorm';
 import { getRepositoryToken } from '@nestjs/typeorm';
 import { LogicalGameResult } from '@entities/logicalGameResult.entity';
-import { GameResult } from '@entities/gameResult.entity';
 import { BadRequestException } from '@nestjs/common';
 import { StatusLogicalGameResultEnum } from '@common/enum/status-logical-game-result.enum';
 import { IcreateLogicalGameResult } from '@shared/interfaces/logicalGameResult.interface';
