@@ -14,7 +14,7 @@ export interface IlogicalGameResult {
   logical_question: LogicalQuestion;
 }
 
-export interface createLogicalGameResultInterface {
+export interface IcreateLogicalGameResult {
   index: number;
   game_result_id: number;
   logical_question_id: number;

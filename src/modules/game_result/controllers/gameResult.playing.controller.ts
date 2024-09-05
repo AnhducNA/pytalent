@@ -17,6 +17,7 @@ import { CreateGameResultDto } from '@modules/game_result/createGameResult.dto';
 import { StatusLogicalGameResultEnum } from '@enum/status-logical-game-result.enum';
 import { StatusGameResultEnum } from '@enum/status-game-result.enum';
 import { AssessmentService } from '@modules/assessment/assessment.service';
+import { LogicalGameResultService } from '../logicalGameResult.service';
 
 @Controller('api/game-result-playing')
 export class GameResultPlayingController extends BaseController {
@@ -24,6 +25,7 @@ export class GameResultPlayingController extends BaseController {
     private readonly gameResultService: GameResultService,
     private readonly gameService: GameService,
     private readonly assessmentService: AssessmentService,
+    private readonly logicalGameResultService: LogicalGameResultService,
   ) {
     super();
   }
@@ -254,7 +256,7 @@ export class GameResultPlayingController extends BaseController {
               await this.gameService.getLogicalQuestionRender([], []);
             // create logical_game_result
             const logical_game_result_new =
-              await this.gameResultService.createLogicalGameResult({
+              await this.logicalGameResultService.createLogicalAnswer({
                 index: 1,
                 game_result_id: game_result_new.id,
                 logical_question_id: logical_question_render_next.id,

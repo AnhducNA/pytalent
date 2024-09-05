@@ -4,7 +4,6 @@ import { DeleteResult, Repository } from 'typeorm';
 import { GameResult } from '@entities/gameResult.entity';
 import { LogicalGameResult } from '@entities/logicalGameResult.entity';
 import { MemoryGameResult } from '@entities/memoryGameResult.entity';
-import { createLogicalGameResultInterface } from '@interfaces/logicalGameResult.interface';
 import {
   createGameResultInterface,
   gameResultModel,
@@ -443,10 +442,6 @@ export class GameResultService {
       .execute();
   }
 
-  async createLogicalGameResult(payload: createLogicalGameResultInterface) {
-    return await this.logicalGameResultRepository.save(payload);
-  }
-
   async updateAnswerPlayLogicalGameResult(
     logical_game_result_id: number,
     status: StatusLogicalGameResultEnum,
@@ -474,7 +469,7 @@ export class GameResultService {
     answer_play: string,
     is_correct: boolean,
   ) {
-    return await this.logicalGameResultRepository
+    return await this.memoryGameResultRepository
       .createQueryBuilder()
       .update(MemoryGameResult)
       .set({
