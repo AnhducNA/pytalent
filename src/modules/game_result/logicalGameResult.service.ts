@@ -7,6 +7,7 @@ import { Repository } from 'typeorm';
 import { StatusLogicalGameResultEnum } from '@common/enum/status-logical-game-result.enum';
 import { ResponseInterface } from '@shared/interfaces/response.interface';
 import { GameResult } from '@entities/gameResult.entity';
+import { IcreateLogicalGameResult } from '@shared/interfaces/logicalGameResult.interface';
 
 @Injectable()
 export class LogicalGameResultService {
@@ -152,15 +153,15 @@ export class LogicalGameResultService {
         logicalExceptAndCheckIdenticalAnswer.idLogicalListExcept,
         logicalExceptAndCheckIdenticalAnswer.checkIdenticalAnswer,
       );
-    const logicalGameResultRenderNext =
-      await this.gameResultService.createLogicalGameResult({
-        index: indexQuestion + 1,
-        game_result_id: gameResultId,
-        logical_question_id: logicalQuestionRenderNext.id,
-        status: StatusLogicalGameResultEnum.NO_ANSWER,
-        answer_play: null,
-        is_correct: null,
-      });
+    const logicalGameResultRenderNext = await this.createLogicalAnswer({
+      index: indexQuestion + 1,
+      game_result_id: gameResultId,
+      logical_question_id: logicalQuestionRenderNext.id,
+      status: StatusLogicalGameResultEnum.NO_ANSWER,
+      answer_play: null,
+      is_correct: null,
+    });
+
     return {
       logicalQuestionRenderNext: {
         logicalGameResultId: logicalGameResultRenderNext.id,
@@ -190,5 +191,9 @@ export class LogicalGameResultService {
         where: { game_result_id: gameResultId },
       });
     return result;
+  }
+
+  async createLogicalAnswer(payload: IcreateLogicalGameResult) {
+    return await this.logicalGameResultRepository.save(payload);
   }
 }
