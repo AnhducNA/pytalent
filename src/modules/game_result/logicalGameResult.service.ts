@@ -54,7 +54,7 @@ export class LogicalGameResultService {
     });
 
     // update answer in LogicalGameResult
-    await this.gameResultService.updateLogicalAnswered(
+    await this.updateLogicalAnswered(
       logicalAnswerPlaceHold.id,
       answerPlay,
       checkCorrectAnswer.isCorrect,
@@ -193,7 +193,56 @@ export class LogicalGameResultService {
     return result;
   }
 
+  async updateLogicalAnswered(
+    logical_game_result_id: number,
+    answer_play: boolean,
+    is_correct: boolean,
+  ) {
+    return await this.logicalGameResultRepository
+      .createQueryBuilder()
+      .update(LogicalGameResult)
+      .set({
+        status: StatusLogicalGameResultEnum.ANSWERED,
+        answer_play: answer_play,
+        is_correct: is_correct,
+      })
+      .where('id = :id', { id: logical_game_result_id })
+      .execute();
+  }
+
   async createLogicalAnswer(payload: IcreateLogicalGameResult) {
     return await this.logicalGameResultRepository.save(payload);
+  }
+
+  async getLogicalAnswerByGameResultAndCandidate(
+    gameResultId: number,
+    candidateId: number,
+  ) {
+    return this.logicalGameResultRepository
+      .createQueryBuilder('logical_game_result')
+      .innerJoin('logical_game_result.game_result', 'game_result')
+      .orderBy('logical_game_result.id', 'DESC')
+      .where(`logical_game_result.game_result_id = ${gameResultId}`)
+      .andWhere(`game_result.candidate_id = ${candidateId}`)
+      .getMany();
+  }
+
+  async getLogicalAnswerCorrectByGameResult(gameResultId: number) {
+    return await this.logicalGameResultRepository
+      .createQueryBuilder('logical_game_result')
+      .select('logical_game_result.id')
+      .addSelect('logical_question.score')
+      .innerJoin('logical_game_result.logical_question', 'logical_question')
+      .where(`logical_game_result.game_result_id = ${gameResultId}`)
+      .andWhere(`logical_game_result.is_correct = 1`)
+      .getMany();
+  }
+
+  async getLogicalAnswerFinalByGameResult(gameResultId: number) {
+    return this.logicalGameResultRepository.findOne({
+      relations: ['logical_game_result'],
+      where: { game_result_id: gameResultId },
+      order: { game_result_id: 'DESC' },
+    });
   }
 }

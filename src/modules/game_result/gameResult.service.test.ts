@@ -9,66 +9,28 @@ import { getRepositoryToken } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { BadRequestException } from '@nestjs/common';
 import { StatusGameResultEnum } from '@common/enum/status-game-result.enum';
+import { LogicalGameResultService } from './logicalGameResult.service';
 
 describe('GameResultService', () => {
   let service: GameResultService;
   let gameResultRepository: Repository<GameResult>;
-  let logicalGameResultRepository: Repository<LogicalGameResult>;
-  let memoryGameResultRepository: Repository<MemoryGameResult>;
+  let logicalGameResultService: LogicalGameResultService;
 
   beforeEach(async () => {
-    const mockGameResultRepository = {
-      findOne: jest.fn(),
-      findAll: jest.fn(),
-      create: jest.fn(),
-    };
-
-    const mockLogicalGameResultRepository = {
-      find: jest.fn(),
-      findOne: jest.fn(),
-      save: jest.fn(),
-    };
-
-    const mockMemoryGameResultRepository = {
-      find: jest.fn(),
-      findOne: jest.fn(),
-      save: jest.fn(),
-    };
-
-    const mockAssessmentRepository = {
-      find: jest.fn(),
-      findOne: jest.fn(),
-      save: jest.fn(),
-    };
-
-    const mockAssessmentCandidateRepository = {
-      find: jest.fn(),
-      findOne: jest.fn(),
-      save: jest.fn(),
-    };
-
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         GameResultService,
         {
           provide: getRepositoryToken(GameResult),
-          useValue: mockGameResultRepository,
-        },
-        {
-          provide: getRepositoryToken(LogicalGameResult),
-          useValue: mockLogicalGameResultRepository,
+          useClass: Repository,
         },
         {
           provide: getRepositoryToken(MemoryGameResult),
-          useValue: mockMemoryGameResultRepository,
+          useValue: Repository,
         },
         {
-          provide: getRepositoryToken(Assessment),
-          useValue: mockAssessmentRepository,
-        },
-        {
-          provide: getRepositoryToken(AssessmentCandidate),
-          useValue: mockAssessmentCandidateRepository,
+          provide: LogicalGameResultService,
+          useValue: {},
         },
       ],
     }).compile();
@@ -77,16 +39,18 @@ describe('GameResultService', () => {
     gameResultRepository = module.get<Repository<GameResult>>(
       getRepositoryToken(GameResult),
     );
-    logicalGameResultRepository = module.get<Repository<LogicalGameResult>>(
-      getRepositoryToken(LogicalGameResult),
-    );
-    memoryGameResultRepository = module.get<Repository<MemoryGameResult>>(
-      getRepositoryToken(MemoryGameResult),
+    logicalGameResultService = module.get<LogicalGameResultService>(
+      LogicalGameResultService,
     );
   });
 
-  it('should be defined', () => {
-    expect(service).toBeDefined();
+  describe('findAll', () => {
+    it('should return an array of game results', async () => {
+      const gameResults = [new GameResult(), new GameResult()];
+      jest.spyOn(gameResultRepository, 'find').mockResolvedValue(gameResults);
+
+      expect(await service.findAll()).toBe(gameResults);
+    });
   });
 
   describe('findAndValidateGameResult', () => {
@@ -158,7 +122,7 @@ describe('GameResultService', () => {
         game: { total_time: totalGameTime },
       });
 
-      const result = await (service as any).validatePlayTime(
+      const result = await service.validatePlayTime(
         gameResult.id,
         gameResult.time_start,
       );
