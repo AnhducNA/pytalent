@@ -1,6 +1,5 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { GameResultService } from './gameResult.service';
 import { LogicalGameResult } from '@entities/logicalGameResult.entity';
 import { GameService } from '@modules/game/game.service';
 import { Repository } from 'typeorm';
@@ -8,13 +7,14 @@ import { StatusLogicalGameResultEnum } from '@common/enum/status-logical-game-re
 import { ResponseInterface } from '@shared/interfaces/response.interface';
 import { GameResult } from '@entities/gameResult.entity';
 import { IcreateLogicalGameResult } from '@shared/interfaces/logicalGameResult.interface';
+import { GameResultRepository } from './repositories/gameResult.repository';
 
 @Injectable()
 export class LogicalGameResultService {
   constructor(
     @InjectRepository(LogicalGameResult)
     private readonly logicalGameResultRepository: Repository<LogicalGameResult>,
-    private readonly gameResultService: GameResultService,
+    private gameResultRepository: GameResultRepository,
     private readonly gameService: GameService,
   ) {}
 
@@ -26,7 +26,7 @@ export class LogicalGameResultService {
     const logicalAnswerPlaceHold = await this.findLogicalAnswerPlaceHold(id);
 
     const gameResultUpdate: GameResult =
-      await this.gameResultService.findAndValidateGameResult(
+      await this.gameResultRepository.findAndValidateGameResult(
         logicalAnswerPlaceHold.game_result_id,
       );
 
@@ -35,7 +35,7 @@ export class LogicalGameResultService {
     );
     // have validate => end game
     if (validateResponse.status === false) {
-      await this.gameResultService.updateFinishGame(gameResultUpdate.id);
+      await this.gameResultRepository.updateFinishGame(gameResultUpdate.id);
       return { message: validateResponse.message };
     }
 
@@ -47,7 +47,7 @@ export class LogicalGameResultService {
       logicalAnswerPlaceHold.logical_question.score,
     );
     // update new playScore and new playTime
-    await this.gameResultService.updateGameResultPlayTimeAndScore({
+    await this.gameResultRepository.updatePlayTimeAndScore({
       id: gameResultUpdate.id,
       playTime: Date.now() - gameResultUpdate.time_start.getTime(),
       playScore: checkCorrectAnswer.data.newPlayScore,
@@ -109,7 +109,7 @@ export class LogicalGameResultService {
     const totalQuestion: number =
       await this.gameService.getTotalQuestionGameLogical();
     if (indexQuestion === totalQuestion) {
-      await this.gameResultService.updateFinishGame(gameResultId);
+      await this.gameResultRepository.updateFinishGame(gameResultId);
       return {
         message: 'End Game',
       };
@@ -226,17 +226,6 @@ export class LogicalGameResultService {
       },
       order: { id: 'DESC' },
     });
-  }
-
-  async getLogicalAnswerCorrectByGameResult(gameResultId: number) {
-    return await this.logicalGameResultRepository
-      .createQueryBuilder('logical_game_result')
-      .select('logical_game_result.id')
-      .addSelect('logical_question.score')
-      .innerJoin('logical_game_result.logical_question', 'logical_question')
-      .where(`logical_game_result.game_result_id = ${gameResultId}`)
-      .andWhere(`logical_game_result.is_correct = 1`)
-      .getMany();
   }
 
   async getLogicalAnswerFinalByGameResult(gameResultId: number) {

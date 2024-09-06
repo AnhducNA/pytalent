@@ -19,6 +19,8 @@ import { UserService } from '@modules/users/services/user.service';
 import { User } from '@entities/user.entity';
 import { HrGame } from '@entities/hrGame.entity';
 import { MailServerService } from '@modules/mail_server/mail_server.service';
+import { LogicalGameResultRepository } from '@modules/game_result/repositories/logicalGameResult.repository';
+import { MemoryGameResultService } from '@modules/game_result/memoryGameResult.service';
 
 @Module({
   imports: [
@@ -39,6 +41,8 @@ import { MailServerService } from '@modules/mail_server/mail_server.service';
     GameResultService,
     UserService,
     MailServerService,
+    LogicalGameResultRepository,
+    MemoryGameResultService,
   ],
   exports: [
     AssessmentService,

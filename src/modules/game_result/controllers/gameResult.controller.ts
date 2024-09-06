@@ -132,9 +132,7 @@ export class GameResultController extends BaseController {
   @Delete(':id')
   @UseGuards(AuthGuard)
   async delete(@Req() req: any, @Res() res: any) {
-    const result = await this.gameResultService.delete_game_result_by_id(
-      req.params.id,
-    );
+    const result = await this.gameResultService.delete(req.params.id);
     return this.successResponse(
       {
         message: 'success',
