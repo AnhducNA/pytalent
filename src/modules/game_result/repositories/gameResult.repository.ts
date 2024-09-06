@@ -75,4 +75,24 @@ export class GameResultRepository extends Repository<GameResult> {
       },
     );
   }
+
+  async getByCandidateAndGame(
+    candidateId: number,
+    assessmentId: number,
+    gameId: number,
+  ): Promise<GameResult> {
+    const gameResult = await this.findOne({
+      where: {
+        candidate_id: candidateId,
+        assessment_id: assessmentId,
+        game_id: gameId,
+      },
+    });
+    if (!gameResult) {
+      throw new BadRequestException(
+        'Game result with candidate and assessment does not exit',
+      );
+    }
+    return gameResult;
+  }
 }

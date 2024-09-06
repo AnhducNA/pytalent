@@ -37,13 +37,20 @@ export class GameResultPlayingController extends BaseController {
   @UseGuards(JwtAuthGuard)
   async startPlayingGame(
     @Req() req: any,
-    @Body()
-    gameResultDto: CreateGameResultDto,
+    @Body() gameResultDto: CreateGameResultDto,
     @Res() res: Response,
   ) {
-    // set candidate_id for gameResultDto
     const userLogin = req['userLogin'];
+    // set candidate_id for gameResultDto
     gameResultDto.candidate_id = userLogin.id;
+    const response = await this.gameResultService.startPlayGame(
+      userLogin.id,
+      gameResultDto,
+    );
+    console.log(response);
+
+    return this.successResponse(response, res);
+
     // validate check assessment time_end
     const assessment_time_end = (
       await this.assessmentService.getOne(gameResultDto.assessment_id)

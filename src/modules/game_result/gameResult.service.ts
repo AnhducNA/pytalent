@@ -8,6 +8,8 @@ import { StatusGameResultEnum } from '@enum/status-game-result.enum';
 import { MemoryGameResultService } from './memoryGameResult.service';
 import { LogicalGameResultRepository } from './repositories/logicalGameResult.repository';
 import { GameResultRepository } from './repositories/gameResult.repository';
+import { CreateGameResultDto } from './createGameResult.dto';
+import { AssessmentService } from '@modules/assessment/assessment.service';
 
 @Injectable()
 export class GameResultService {
@@ -17,6 +19,7 @@ export class GameResultService {
     private memoryGameResultRepository: Repository<MemoryGameResult>,
     private logicalAnswerRepository: LogicalGameResultRepository,
     private memoryAnswerService: MemoryGameResultService,
+    private readonly assessmentService: AssessmentService,
   ) {}
 
   async findAll() {
@@ -306,5 +309,67 @@ export class GameResultService {
       answer_play: answerPlay,
       is_correct: isCorrect,
     });
+  }
+
+  async startPlayGame(userId: number, gameResultParams: CreateGameResultDto) {
+    // validate check assessment time_end
+    const timeEndOfAssessment = (
+      await this.assessmentService.getOne(gameResultParams.assessment_id)
+    ).time_end;
+
+    if (timeEndOfAssessment.getTime() - Date.now() < 0) {
+      return {
+        status: false,
+        message: `Assessment has expired. Time end: ${timeEndOfAssessment}.`,
+      };
+    }
+
+    // validate check assessment contain Candidate?
+    const assessmentCheckCandidate =
+      await this.assessmentService.getOneAssessmentCandidate(
+        gameResultParams.assessment_id,
+        userId,
+      );
+    if (!assessmentCheckCandidate) {
+      return {
+        status: false,
+        message: 'Assessment does not have candidate .',
+      };
+    }
+
+    // check start/ continue/ end of game_result
+    const gameResult = await this.gameResultRepository.getByCandidateAndGame(
+      userId,
+      gameResultParams.assessment_id,
+      gameResultParams.game_id,
+    );
+    console.log(gameResult);
+
+    // Nếu có game_result => Kết thúc/ Tiếp tục.
+    // Nếu không có game_result => Tạo mới trò chơi.
+    switch (gameResult.status) {
+      case StatusGameResultEnum.FINISHED:
+        return {
+          status: true,
+          message: 'Game Completed.',
+        };
+        break;
+      case StatusGameResultEnum.STARTED:
+      case StatusGameResultEnum.PAUSED:
+        // continue play game_result
+        const timeStart = new Date(Date.now() - gameResult.play_time);
+        await this.updateTimeStartGameResult(gameResult.id, timeStart);
+        gameResult.status = StatusGameResultEnum.STARTED;
+        await this.updateGameResultWithStatus(
+          gameResult.id,
+          StatusGameResultEnum.STARTED,
+        );
+
+        break;
+      default:
+        break;
+    }
+
+    return { status: true, message: 'success' };
   }
 }
