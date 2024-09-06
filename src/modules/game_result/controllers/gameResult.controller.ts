@@ -19,12 +19,14 @@ import { RoleEnum } from '@enum/role.enum';
 import { JwtAuthGuard } from '@guards/jwt-auth.guard';
 import { LogicalGameResultService } from '../logicalGameResult.service';
 import { IUserLogin } from '@shared/interfaces/user.interface';
+import { MemoryGameResultService } from '../memoryGameResult.service';
 
 @Controller('api/game-result')
 export class GameResultController extends BaseController {
   constructor(
     private readonly gameResultService: GameResultService,
     private readonly logicalGameResultService: LogicalGameResultService,
+    private readonly memoryAnswerService: MemoryGameResultService,
   ) {
     super();
   }
@@ -55,7 +57,7 @@ export class GameResultController extends BaseController {
     @Res() res: any,
   ) {
     const userLogin = req['userLogin'];
-    const game_result = await this.gameResultService.findOne(
+    const game_result = await this.gameResultService.getOne(
       gameResultDetailDto.game_result_id,
     );
     // validate check game_result?.candidate_id
@@ -83,7 +85,7 @@ export class GameResultController extends BaseController {
         });
       case 2:
         const memoryGameResultList =
-          await this.gameResultService.getMemoryGameResultByGameResultIdAndCandidateId(
+          await this.memoryAnswerService.getByGameResultIdAndCandidateId(
             gameResultDetailDto.game_result_id,
             userLogin.id,
           );

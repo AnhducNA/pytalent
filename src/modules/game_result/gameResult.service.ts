@@ -4,16 +4,15 @@ import { DeleteResult, Repository } from 'typeorm';
 import { GameResult } from '@entities/gameResult.entity';
 import { MemoryGameResult } from '@entities/memoryGameResult.entity';
 import { createGameResultInterface } from '@interfaces/gameResult.interface';
-import { createMemoryGameResultInterface } from '@interfaces/memoryGameResult.interface';
 import { StatusGameResultEnum } from '@enum/status-game-result.enum';
 import { MemoryGameResultService } from './memoryGameResult.service';
 import { LogicalGameResultRepository } from './repositories/logicalGameResult.repository';
+import { GameResultRepository } from './repositories/gameResult.repository';
 
 @Injectable()
 export class GameResultService {
   constructor(
-    @InjectRepository(GameResult)
-    private gameResultRepository: Repository<GameResult>,
+    private gameResultRepository: GameResultRepository,
     @InjectRepository(MemoryGameResult)
     private memoryGameResultRepository: Repository<MemoryGameResult>,
     private logicalAnswerRepository: LogicalGameResultRepository,
@@ -25,6 +24,10 @@ export class GameResultService {
   }
 
   async findOne(id: number): Promise<GameResult> {
+    return await this.gameResultRepository.findOneBy({ id: id });
+  }
+
+  async getOne(id: number): Promise<GameResult> {
     return await this.gameResultRepository.findOneBy({ id: id });
   }
 
@@ -210,19 +213,6 @@ export class GameResultService {
       .getOne();
   }
 
-  async getMemoryGameResultByGameResultIdAndCandidateId(
-    gameResultId: number,
-    candidateId: number,
-  ) {
-    return this.memoryGameResultRepository.find({
-      where: {
-        game_result_id: gameResultId,
-        game_result: { candidate_id: candidateId },
-      },
-      order: { id: 'DESC' },
-    });
-  }
-
   async get_memory_game_result_by_game_result_id(gameResulttId: number) {
     return await this.memoryGameResultRepository.find({
       select: [
@@ -233,23 +223,6 @@ export class GameResultService {
         'is_correct',
       ],
       where: { game_result_id: gameResulttId },
-    });
-  }
-
-  async get_memory_game_result_by_id(id: number) {
-    return this.memoryGameResultRepository.findOne({
-      select: [
-        'id',
-        'game_result_id',
-        'memory_game_id',
-        'correct_answer',
-        'answer_play',
-        'is_correct',
-        'time_start_play_level',
-        'memory_game',
-      ],
-      relations: ['memory_game'],
-      where: { id },
     });
   }
 
@@ -322,10 +295,6 @@ export class GameResultService {
         play_score: payload.playScore,
       },
     );
-  }
-
-  async createMemoryGameResult(payload: createMemoryGameResultInterface) {
-    return await this.memoryGameResultRepository.save(payload);
   }
 
   async update_answer_play_memory_game_result(

@@ -33,9 +33,9 @@ export class GameResultRepository extends Repository<GameResult> {
     if (!validatePlayTime) {
       throw new BadRequestException(`Game's time is over.`);
     }
-
     return gameResult;
   }
+
   async validatePlayTime(gameResultId: number, timeStart: Date) {
     const newPlayTime = Date.now() - timeStart.getTime();
     const totalGameTime = await this.getTotalGameTime(gameResultId);

@@ -17,4 +17,15 @@ export class LogicalGameResultRepository extends Repository<LogicalGameResult> {
       .andWhere(`logical_game_result.is_correct = 1`)
       .getMany();
   }
+
+  async getByGameResultAndCandidate(gameResultId: number, candidateId: number) {
+    return await this.find({
+      relations: ['game_result'],
+      where: {
+        game_result_id: gameResultId,
+        game_result: { candidate_id: candidateId },
+      },
+      order: { id: 'DESC' },
+    });
+  }
 }

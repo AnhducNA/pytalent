@@ -5,12 +5,14 @@ import { GameResultService } from '@modules/game_result/gameResult.service';
 import { GameService } from '@modules/game/game.service';
 import { Response } from 'express';
 import { StatusGameResultEnum } from '@enum/status-game-result.enum';
+import { MemoryGameResultService } from '../memoryGameResult.service';
 
 @Controller('api/game-result-playing-memory')
 export class GameResultPlayingMemoryController extends BaseController {
   constructor(
     private readonly gameResultService: GameResultService,
     private readonly gameService: GameService,
+    private readonly memoryAnswerService: MemoryGameResultService,
   ) {
     super();
   }
@@ -28,9 +30,7 @@ export class GameResultPlayingMemoryController extends BaseController {
   ) {
     const memory_game_result_id = req.params.memory_game_result_id;
     const memory_game_result_playing =
-      await this.gameResultService.get_memory_game_result_by_id(
-        memory_game_result_id,
-      );
+      await this.memoryAnswerService.getOneMemoryAnswer(memory_game_result_id);
     // validate check memory_game_result_playing exist
     if (!memory_game_result_playing) {
       return this.errorsResponse(
@@ -134,7 +134,7 @@ export class GameResultPlayingMemoryController extends BaseController {
         playScore: game_result_update.play_score,
       });
       // update memoryGameResult
-      await this.gameResultService.update_answer_play_memory_game_result(
+      await this.memoryAnswerService.updateAnswerPlay(
         memory_game_result_id,
         JSON.stringify(memoryGameResultDto.answer_play),
         memoryGameResultDto.is_correct,
@@ -199,7 +199,7 @@ export class GameResultPlayingMemoryController extends BaseController {
             res,
           );
         }
-        await this.gameResultService.createMemoryGameResult({
+        await this.memoryAnswerService.create({
           game_result_id: game_result_update.id,
           memory_game_id: memory_data_render_next.id,
           answer_play: null,
