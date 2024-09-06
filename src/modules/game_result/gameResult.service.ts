@@ -3,22 +3,23 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { DeleteResult, Repository } from 'typeorm';
 import { GameResult } from '@entities/gameResult.entity';
 import { MemoryGameResult } from '@entities/memoryGameResult.entity';
-import {
-  createGameResultInterface,
-  gameResultModel,
-} from '@interfaces/gameResult.interface';
-import { createMemoryGameResultInterface } from '@interfaces/memoryGameResult.interface';
+import { createGameResultInterface } from '@interfaces/gameResult.interface';
 import { StatusGameResultEnum } from '@enum/status-game-result.enum';
-import { LogicalGameResultService } from './logicalGameResult.service';
+import { MemoryGameResultService } from './memoryGameResult.service';
+import { LogicalGameResultRepository } from './repositories/logicalGameResult.repository';
+import { GameResultRepository } from './repositories/gameResult.repository';
+import { CreateGameResultDto } from './createGameResult.dto';
+import { AssessmentService } from '@modules/assessment/assessment.service';
 
 @Injectable()
 export class GameResultService {
   constructor(
-    @InjectRepository(GameResult)
-    private gameResultRepository: Repository<GameResult>,
+    private gameResultRepository: GameResultRepository,
     @InjectRepository(MemoryGameResult)
     private memoryGameResultRepository: Repository<MemoryGameResult>,
-    private logicalGameResultService: LogicalGameResultService,
+    private logicalAnswerRepository: LogicalGameResultRepository,
+    private memoryAnswerService: MemoryGameResultService,
+    private readonly assessmentService: AssessmentService,
   ) {}
 
   async findAll() {
@@ -29,14 +30,19 @@ export class GameResultService {
     return await this.gameResultRepository.findOneBy({ id: id });
   }
 
+  async getOne(id: number): Promise<GameResult> {
+    return await this.gameResultRepository.findOneBy({ id: id });
+  }
+
+  async delete(id: number) {
+    return this.gameResultRepository.delete(id);
+  }
+
   async findAndValidateGameResult(id: number): Promise<GameResult> {
     if (!id) {
       throw new BadRequestException('GameResult does not exit');
     }
-    const gameResult: GameResult = await this.gameResultRepository.findOne({
-      select: ['id', 'status', 'time_start', 'play_score', 'play_time'],
-      where: { id },
-    });
+    const gameResult: GameResult = await this.findOne(id);
     // validate check gameResult finished or paused
     if (gameResult.status === StatusGameResultEnum.FINISHED) {
       throw new BadRequestException('Game completed');
@@ -77,7 +83,7 @@ export class GameResultService {
     });
     await Promise.all(
       gameResultList.map(async (gameResult) => {
-        gameResult.play_score = await this.get_total_play_score_by_game_result(
+        gameResult.play_score = await this.getTotalPlayScoreByGameResult(
           gameResult.id,
           gameResult.game_id,
         );
@@ -132,14 +138,14 @@ export class GameResultService {
         ],
       })
       .getMany();
-    game_result_playing_list.map((game_result_playing) => {
+    game_result_playing_list.map(async (game_result_playing) => {
       switch (game_result_playing.game_id) {
         case 1:
           if (
             Date.now() - game_result_playing.time_start.getTime() >
             game_result_playing.game.total_time
           ) {
-            this.updateGameResultWithStatus(
+            await this.updateGameResultWithStatus(
               game_result_playing.id,
               StatusGameResultEnum.FINISHED,
             );
@@ -147,7 +153,7 @@ export class GameResultService {
           break;
         case 2:
           if (Date.now() - game_result_playing.time_start.getTime() > 100000) {
-            this.updateGameResultWithStatus(
+            await this.updateGameResultWithStatus(
               game_result_playing.id,
               StatusGameResultEnum.FINISHED,
             );
@@ -157,61 +163,41 @@ export class GameResultService {
     });
   }
 
-  async get_total_play_score_by_game_result(
-    game_result_id: number,
-    game_id: number,
-  ) {
-    let game_result_play_score = 0;
-    switch (game_id) {
+  async getTotalPlayScoreByGameResult(gameResultId: number, gameId: number) {
+    let totalPlayScore = 0;
+    switch (gameId) {
       case 1:
-        const logical_game_result_list =
-          await this.logicalGameResultService.getLogicalAnswerCorrectByGameResult(
-            game_result_id,
+        const logicalAnswerList =
+          await this.logicalAnswerRepository.getLogicalAnswerCorrectByGameResult(
+            gameResultId,
           );
-        logical_game_result_list.map((item) => {
-          game_result_play_score += item.logical_question.score;
+        logicalAnswerList.map((item) => {
+          totalPlayScore += item.logical_question.score;
         });
+        return totalPlayScore;
         break;
       case 2:
-        const memory_game_result_list = await this.memoryGameResultRepository
-          .createQueryBuilder('memory_game_result')
-          .select('memory_game_result.id')
-          .addSelect('memory_game.score')
-          .innerJoin('memory_game_result.memory_game', 'memory_game')
-          .where(`memory_game_result.game_result_id = ${game_result_id}`)
-          .andWhere(`memory_game_result.is_correct = 1`)
-          .getMany();
-        memory_game_result_list.map((item) => {
-          game_result_play_score += item.memory_game.score;
+        const memoryAnswerList =
+          await this.memoryAnswerService.getAnswerCorrectByGameResult(
+            gameResultId,
+          );
+        memoryAnswerList.map((item) => {
+          totalPlayScore += item.memory_game.score;
         });
+        return totalPlayScore;
         break;
+      default: {
+        return totalPlayScore;
+        break;
+      }
     }
-    return game_result_play_score;
   }
 
-  async get_history_type_game_result_by_game_result(game_result_id: number) {
-    return this.gameResultRepository
-      .createQueryBuilder('game_result')
-      .select([
-        'game_result.id',
-        'game_result.candidate_id',
-        'game_result.assessment_id',
-        'game_result.game_id',
-        'game_result.play_time',
-        'game_result.play_score',
-        'game_result.status',
-        'game_result.time_start',
-      ])
-      .leftJoinAndSelect(
-        'game_result.logical_game_result_list',
-        'logical_game_result',
-      )
-      .leftJoinAndSelect(
-        'game_result.memory_game_result_list',
-        'memory_game_result',
-      )
-      .where('game_result.id = :id', { id: game_result_id })
-      .getMany();
+  async get_history_type_game_result_by_game_result(id: number) {
+    return this.gameResultRepository.find({
+      relations: ['logical_game_result_list', 'memory_game_result_list'],
+      where: { id },
+    });
   }
 
   async getGameResultByCandidateId(candidateId: number) {
@@ -230,51 +216,17 @@ export class GameResultService {
       .getOne();
   }
 
-  async getMemoryGameResultByGameResultIdAndCandidateId(
-    gameResultId: number,
-    candidate_id: number,
-  ) {
-    return this.memoryGameResultRepository
-      .createQueryBuilder('memory_game_result')
-      .innerJoin('memory_game_result.game_result', 'game_result')
-      .orderBy('memory_game_result.id', 'DESC')
-      .where(`memory_game_result.game_result_id = ${gameResultId}`)
-      .andWhere(`game_result.candidate_id = ${candidate_id}`)
-      .getMany();
-  }
-
-  async get_memory_game_result_by_game_result_id(game_result_id: number) {
-    return this.memoryGameResultRepository
-      .createQueryBuilder('memory_game_result')
-      .select('memory_game_result.id')
-      .addSelect('memory_game_result.memory_game_id')
-      .addSelect('memory_game_result.correct_answer')
-      .addSelect('memory_game_result.answer_play')
-      .addSelect('memory_game_result.is_correct')
-      .where(`memory_game_result.game_result_id = ${game_result_id}`)
-      .getMany();
-  }
-
-  async get_memory_game_result_by_id(memory_game_result_id: number) {
-    return this.memoryGameResultRepository
-      .createQueryBuilder('memory_game_result')
-      .select([
-        'memory_game_result.id',
-        'memory_game_result.game_result_id',
-        'memory_game_result.memory_game_id',
-        'memory_game_result.correct_answer',
-        'memory_game_result.answer_play',
-        'memory_game_result.is_correct',
-        'memory_game_result.time_start_play_level',
-      ])
-      .addSelect([
-        'memory_game.level',
-        'memory_game.score',
-        'memory_game.time_limit',
-      ])
-      .innerJoin('memory_game_result.memory_game', 'memory_game')
-      .where(`memory_game_result.id = ${memory_game_result_id}`)
-      .getOne();
+  async get_memory_game_result_by_game_result_id(gameResulttId: number) {
+    return await this.memoryGameResultRepository.find({
+      select: [
+        'id',
+        'memory_game_id',
+        'correct_answer',
+        'answer_play',
+        'is_correct',
+      ],
+      where: { game_result_id: gameResulttId },
+    });
   }
 
   async get_memory_game_result_final_by_game_result(game_result_id: number) {
@@ -299,126 +251,125 @@ export class GameResultService {
   }
 
   async update_memory_game_result_time_start_play_level_final_by_id(
-    memory_game_result_id: number,
+    id: number,
   ) {
-    return this.memoryGameResultRepository
-      .createQueryBuilder('memory_game_result')
-      .update(MemoryGameResult)
-      .set({ time_start_play_level: new Date(Date.now()) })
-      .where(`memory_game_result.id = ${memory_game_result_id}`)
-      .execute();
+    return await this.memoryGameResultRepository.update(id, {
+      time_start_play_level: new Date(Date.now()),
+    });
   }
 
-  async update_memory_game_result_correct_answer_by_id(
-    memory_game_result_id: number,
-    correct_answer: string,
+  async updateMemoryGameResultWithCorrectAnswer(
+    id: number,
+    correctAnswer: string,
   ) {
-    return this.memoryGameResultRepository
-      .createQueryBuilder('memory_game_result')
-      .update(MemoryGameResult)
-      .set({ correct_answer: correct_answer })
-      .where(`memory_game_result.id = ${memory_game_result_id}`)
-      .execute();
-  }
-
-  async updateGameResult(payload: gameResultModel) {
-    return this.gameResultRepository
-      .createQueryBuilder()
-      .update(GameResult)
-      .set(payload)
-      .where('id = :id', { id: payload.id })
-      .execute();
+    return await this.memoryGameResultRepository.update(id, {
+      correct_answer: correctAnswer,
+    });
   }
 
   async updateTimeStartGameResult(id: number, timeStart: Date) {
-    return this.gameResultRepository
-      .createQueryBuilder()
-      .update(GameResult)
-      .set({
-        time_start: timeStart,
-      })
-      .where('id = :id', { id: id })
-      .execute();
-  }
-  async updateFinishGame(gameResultId: number) {
-    return this.gameResultRepository
-      .createQueryBuilder()
-      .update(GameResult)
-      .set({
-        status: StatusGameResultEnum.FINISHED,
-      })
-      .where('id = :id', { id: gameResultId })
-      .execute();
-  }
-
-  async updateGameResultWithStatus(
-    game_result_id: number,
-    status: StatusGameResultEnum,
-  ) {
-    return this.gameResultRepository
-      .createQueryBuilder()
-      .update(GameResult)
-      .set({
-        status: status,
-      })
-      .where('id = :id', { id: game_result_id })
-      .execute();
-  }
-
-  async updateGameResultWithPlayTime(
-    game_result_id: number,
-    play_time: number,
-  ) {
-    return this.gameResultRepository
-      .createQueryBuilder()
-      .update(GameResult)
-      .set({
-        play_time: play_time,
-      })
-      .where('id = :id', { id: game_result_id })
-      .execute();
-  }
-  async updateGameResultWithPlayScore(gameResultId: number, playScore: number) {
-    return this.gameResultRepository.save({
-      id: gameResultId,
-      play_score: playScore,
+    return await this.gameResultRepository.update(id, {
+      time_start: timeStart,
     });
+  }
+  async updateFinishGame(id: number) {
+    return await this.gameResultRepository.update(id, {
+      status: StatusGameResultEnum.FINISHED,
+    });
+  }
+
+  async updateGameResultWithStatus(id: number, status: StatusGameResultEnum) {
+    return await this.gameResultRepository.update(id, { status });
+  }
+
+  async updateGameResultWithPlayTime(id: number, playTime: number) {
+    return await this.gameResultRepository.update(id, { play_time: playTime });
   }
 
   async updateGameResultPlayTimeAndScore(payload: {
     id: number;
-    play_time: number;
-    play_score: number;
+    playTime: number;
+    playScore: number;
   }) {
-    return this.gameResultRepository
-      .createQueryBuilder()
-      .update(GameResult)
-      .set({ play_time: payload.play_time, play_score: payload.play_score })
-      .where('id = :id', { id: payload.id })
-      .execute();
-  }
-
-  async createMemoryGameResult(payload: createMemoryGameResultInterface) {
-    return await this.memoryGameResultRepository.save(payload);
+    return await this.gameResultRepository.update(
+      { id: payload.id },
+      {
+        play_time: payload.playTime,
+        play_score: payload.playScore,
+      },
+    );
   }
 
   async update_answer_play_memory_game_result(
-    memory_game_result_id: number,
-    answer_play: string,
-    is_correct: boolean,
+    id: number,
+    answerPlay: string,
+    isCorrect: boolean,
   ) {
-    return await this.memoryGameResultRepository
-      .createQueryBuilder()
-      .update(MemoryGameResult)
-      .set({
-        answer_play: answer_play,
-        is_correct: is_correct,
-      })
-      .where('id = :id', { id: memory_game_result_id })
-      .execute();
+    return await this.memoryGameResultRepository.update(id, {
+      answer_play: answerPlay,
+      is_correct: isCorrect,
+    });
   }
 
-  async delete_game_result_by_id(game_result_id: number) {
-    return this.gameResultRepository.delete(game_result_id);
+  async startPlayGame(userId: number, gameResultParams: CreateGameResultDto) {
+    // validate check assessment time_end
+    const timeEndOfAssessment = (
+      await this.assessmentService.getOne(gameResultParams.assessment_id)
+    ).time_end;
+
+    if (timeEndOfAssessment.getTime() - Date.now() < 0) {
+      return {
+        status: false,
+        message: `Assessment has expired. Time end: ${timeEndOfAssessment}.`,
+      };
+    }
+
+    // validate check assessment contain Candidate?
+    const assessmentCheckCandidate =
+      await this.assessmentService.getOneAssessmentCandidate(
+        gameResultParams.assessment_id,
+        userId,
+      );
+    if (!assessmentCheckCandidate) {
+      return {
+        status: false,
+        message: 'Assessment does not have candidate .',
+      };
+    }
+
+    // check start/ continue/ end of game_result
+    const gameResult = await this.gameResultRepository.getByCandidateAndGame(
+      userId,
+      gameResultParams.assessment_id,
+      gameResultParams.game_id,
+    );
+    console.log(gameResult);
+
+    // Nếu có game_result => Kết thúc/ Tiếp tục.
+    // Nếu không có game_result => Tạo mới trò chơi.
+    switch (gameResult.status) {
+      case StatusGameResultEnum.FINISHED:
+        return {
+          status: true,
+          message: 'Game Completed.',
+        };
+        break;
+      case StatusGameResultEnum.STARTED:
+      case StatusGameResultEnum.PAUSED:
+        // continue play game_result
+        const timeStart = new Date(Date.now() - gameResult.play_time);
+        await this.updateTimeStartGameResult(gameResult.id, timeStart);
+        gameResult.status = StatusGameResultEnum.STARTED;
+        await this.updateGameResultWithStatus(
+          gameResult.id,
+          StatusGameResultEnum.STARTED,
+        );
+
+        break;
+      default:
+        break;
+    }
+
+    return { status: true, message: 'success' };
   }
 }

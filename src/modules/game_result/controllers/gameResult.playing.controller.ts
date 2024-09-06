@@ -18,6 +18,7 @@ import { StatusLogicalGameResultEnum } from '@enum/status-logical-game-result.en
 import { StatusGameResultEnum } from '@enum/status-game-result.enum';
 import { AssessmentService } from '@modules/assessment/assessment.service';
 import { LogicalGameResultService } from '../logicalGameResult.service';
+import { MemoryGameResultService } from '../memoryGameResult.service';
 
 @Controller('api/game-result-playing')
 export class GameResultPlayingController extends BaseController {
@@ -26,6 +27,7 @@ export class GameResultPlayingController extends BaseController {
     private readonly gameService: GameService,
     private readonly assessmentService: AssessmentService,
     private readonly logicalGameResultService: LogicalGameResultService,
+    private readonly memoryAnswerService: MemoryGameResultService,
   ) {
     super();
   }
@@ -35,13 +37,20 @@ export class GameResultPlayingController extends BaseController {
   @UseGuards(JwtAuthGuard)
   async startPlayingGame(
     @Req() req: any,
-    @Body()
-    gameResultDto: CreateGameResultDto,
+    @Body() gameResultDto: CreateGameResultDto,
     @Res() res: Response,
   ) {
-    // set candidate_id for gameResultDto
     const userLogin = req['userLogin'];
+    // set candidate_id for gameResultDto
     gameResultDto.candidate_id = userLogin.id;
+    const response = await this.gameResultService.startPlayGame(
+      userLogin.id,
+      gameResultDto,
+    );
+    console.log(response);
+
+    return this.successResponse(response, res);
+
     // validate check assessment time_end
     const assessment_time_end = (
       await this.assessmentService.getOne(gameResultDto.assessment_id)
@@ -187,7 +196,7 @@ export class GameResultPlayingController extends BaseController {
                 ],
               ];
             }
-            await this.gameResultService.update_memory_game_result_correct_answer_by_id(
+            await this.gameResultService.updateMemoryGameResultWithCorrectAnswer(
               memory_game_result_final.id,
               JSON.stringify(correct_answer),
             );
@@ -305,7 +314,7 @@ export class GameResultPlayingController extends BaseController {
                 Math.floor(Math.random() * ['left', 'right'].length)
               ],
             ];
-            await this.gameResultService.createMemoryGameResult({
+            await this.memoryAnswerService.create({
               game_result_id: game_result_new.id,
               memory_game_id: (
                 await this.gameService.getMemoryDataByLevel(1)

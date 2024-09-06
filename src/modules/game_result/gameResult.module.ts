@@ -17,6 +17,9 @@ import { GameResultPlayingMemoryController } from '@modules/game_result/controll
 import { LogicalGameResultService } from './logicalGameResult.service';
 import { GameModule } from '@modules/game/game.module';
 import { AssessmentModule } from '@modules/assessment/assessment.module';
+import { MemoryGameResultService } from './memoryGameResult.service';
+import { GameResultRepository } from './repositories/gameResult.repository';
+import { LogicalGameResultRepository } from './repositories/logicalGameResult.repository';
 
 @Module({
   imports: [
@@ -39,7 +42,14 @@ import { AssessmentModule } from '@modules/assessment/assessment.module';
     GameResultPlayingMemoryController,
     GameResultPlayingLogicalController,
   ],
-  providers: [GameResultService, GameService, LogicalGameResultService],
+  providers: [
+    GameService,
+    GameResultService,
+    LogicalGameResultService,
+    MemoryGameResultService,
+    GameResultRepository,
+    LogicalGameResultRepository,
+  ],
   exports: [GameResultService],
 })
 export class GameResultModule {}
