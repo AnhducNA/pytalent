@@ -187,7 +187,7 @@ export class GameResultPlayingController extends BaseController {
                 ],
               ];
             }
-            await this.gameResultService.update_memory_game_result_correct_answer_by_id(
+            await this.gameResultService.updateMemoryGameResultWithCorrectAnswer(
               memory_game_result_final.id,
               JSON.stringify(correct_answer),
             );

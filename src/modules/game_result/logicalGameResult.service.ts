@@ -49,8 +49,8 @@ export class LogicalGameResultService {
     // update new playScore and new playTime
     await this.gameResultService.updateGameResultPlayTimeAndScore({
       id: gameResultUpdate.id,
-      play_time: Date.now() - gameResultUpdate.time_start.getTime(),
-      play_score: checkCorrectAnswer.data.newPlayScore,
+      playTime: Date.now() - gameResultUpdate.time_start.getTime(),
+      playScore: checkCorrectAnswer.data.newPlayScore,
     });
 
     // update answer in LogicalGameResult
@@ -218,13 +218,14 @@ export class LogicalGameResultService {
     gameResultId: number,
     candidateId: number,
   ) {
-    return this.logicalGameResultRepository
-      .createQueryBuilder('logical_game_result')
-      .innerJoin('logical_game_result.game_result', 'game_result')
-      .orderBy('logical_game_result.id', 'DESC')
-      .where(`logical_game_result.game_result_id = ${gameResultId}`)
-      .andWhere(`game_result.candidate_id = ${candidateId}`)
-      .getMany();
+    return await this.logicalGameResultRepository.find({
+      relations: ['game_result'],
+      where: {
+        game_result_id: gameResultId,
+        game_result: { candidate_id: candidateId },
+      },
+      order: { id: 'DESC' },
+    });
   }
 
   async getLogicalAnswerCorrectByGameResult(gameResultId: number) {

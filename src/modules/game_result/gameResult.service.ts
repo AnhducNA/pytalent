@@ -3,10 +3,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { DeleteResult, Repository } from 'typeorm';
 import { GameResult } from '@entities/gameResult.entity';
 import { MemoryGameResult } from '@entities/memoryGameResult.entity';
-import {
-  createGameResultInterface,
-  gameResultModel,
-} from '@interfaces/gameResult.interface';
+import { createGameResultInterface } from '@interfaces/gameResult.interface';
 import { createMemoryGameResultInterface } from '@interfaces/memoryGameResult.interface';
 import { StatusGameResultEnum } from '@enum/status-game-result.enum';
 import { LogicalGameResultService } from './logicalGameResult.service';
@@ -132,14 +129,14 @@ export class GameResultService {
         ],
       })
       .getMany();
-    game_result_playing_list.map((game_result_playing) => {
+    game_result_playing_list.map(async (game_result_playing) => {
       switch (game_result_playing.game_id) {
         case 1:
           if (
             Date.now() - game_result_playing.time_start.getTime() >
             game_result_playing.game.total_time
           ) {
-            this.updateGameResultWithStatus(
+            await this.updateGameResultWithStatus(
               game_result_playing.id,
               StatusGameResultEnum.FINISHED,
             );
@@ -147,7 +144,7 @@ export class GameResultService {
           break;
         case 2:
           if (Date.now() - game_result_playing.time_start.getTime() > 100000) {
-            this.updateGameResultWithStatus(
+            await this.updateGameResultWithStatus(
               game_result_playing.id,
               StatusGameResultEnum.FINISHED,
             );
@@ -232,49 +229,45 @@ export class GameResultService {
 
   async getMemoryGameResultByGameResultIdAndCandidateId(
     gameResultId: number,
-    candidate_id: number,
+    candidateId: number,
   ) {
-    return this.memoryGameResultRepository
-      .createQueryBuilder('memory_game_result')
-      .innerJoin('memory_game_result.game_result', 'game_result')
-      .orderBy('memory_game_result.id', 'DESC')
-      .where(`memory_game_result.game_result_id = ${gameResultId}`)
-      .andWhere(`game_result.candidate_id = ${candidate_id}`)
-      .getMany();
+    return this.memoryGameResultRepository.find({
+      where: {
+        game_result_id: gameResultId,
+        game_result: { candidate_id: candidateId },
+      },
+      order: { id: 'DESC' },
+    });
   }
 
-  async get_memory_game_result_by_game_result_id(game_result_id: number) {
-    return this.memoryGameResultRepository
-      .createQueryBuilder('memory_game_result')
-      .select('memory_game_result.id')
-      .addSelect('memory_game_result.memory_game_id')
-      .addSelect('memory_game_result.correct_answer')
-      .addSelect('memory_game_result.answer_play')
-      .addSelect('memory_game_result.is_correct')
-      .where(`memory_game_result.game_result_id = ${game_result_id}`)
-      .getMany();
+  async get_memory_game_result_by_game_result_id(gameResulttId: number) {
+    return await this.memoryGameResultRepository.find({
+      select: [
+        'id',
+        'memory_game_id',
+        'correct_answer',
+        'answer_play',
+        'is_correct',
+      ],
+      where: { game_result_id: gameResulttId },
+    });
   }
 
-  async get_memory_game_result_by_id(memory_game_result_id: number) {
-    return this.memoryGameResultRepository
-      .createQueryBuilder('memory_game_result')
-      .select([
-        'memory_game_result.id',
-        'memory_game_result.game_result_id',
-        'memory_game_result.memory_game_id',
-        'memory_game_result.correct_answer',
-        'memory_game_result.answer_play',
-        'memory_game_result.is_correct',
-        'memory_game_result.time_start_play_level',
-      ])
-      .addSelect([
-        'memory_game.level',
-        'memory_game.score',
-        'memory_game.time_limit',
-      ])
-      .innerJoin('memory_game_result.memory_game', 'memory_game')
-      .where(`memory_game_result.id = ${memory_game_result_id}`)
-      .getOne();
+  async get_memory_game_result_by_id(id: number) {
+    return this.memoryGameResultRepository.findOne({
+      select: [
+        'id',
+        'game_result_id',
+        'memory_game_id',
+        'correct_answer',
+        'answer_play',
+        'is_correct',
+        'time_start_play_level',
+        'memory_game',
+      ],
+      relations: ['memory_game'],
+      where: { id },
+    });
   }
 
   async get_memory_game_result_final_by_game_result(game_result_id: number) {
@@ -299,103 +292,53 @@ export class GameResultService {
   }
 
   async update_memory_game_result_time_start_play_level_final_by_id(
-    memory_game_result_id: number,
+    id: number,
   ) {
-    return this.memoryGameResultRepository
-      .createQueryBuilder('memory_game_result')
-      .update(MemoryGameResult)
-      .set({ time_start_play_level: new Date(Date.now()) })
-      .where(`memory_game_result.id = ${memory_game_result_id}`)
-      .execute();
+    return await this.memoryGameResultRepository.update(id, {
+      time_start_play_level: new Date(Date.now()),
+    });
   }
 
-  async update_memory_game_result_correct_answer_by_id(
-    memory_game_result_id: number,
-    correct_answer: string,
+  async updateMemoryGameResultWithCorrectAnswer(
+    id: number,
+    correctAnswer: string,
   ) {
-    return this.memoryGameResultRepository
-      .createQueryBuilder('memory_game_result')
-      .update(MemoryGameResult)
-      .set({ correct_answer: correct_answer })
-      .where(`memory_game_result.id = ${memory_game_result_id}`)
-      .execute();
-  }
-
-  async updateGameResult(payload: gameResultModel) {
-    return this.gameResultRepository
-      .createQueryBuilder()
-      .update(GameResult)
-      .set(payload)
-      .where('id = :id', { id: payload.id })
-      .execute();
+    return await this.memoryGameResultRepository.update(id, {
+      correct_answer: correctAnswer,
+    });
   }
 
   async updateTimeStartGameResult(id: number, timeStart: Date) {
-    return this.gameResultRepository
-      .createQueryBuilder()
-      .update(GameResult)
-      .set({
-        time_start: timeStart,
-      })
-      .where('id = :id', { id: id })
-      .execute();
-  }
-  async updateFinishGame(gameResultId: number) {
-    return this.gameResultRepository
-      .createQueryBuilder()
-      .update(GameResult)
-      .set({
-        status: StatusGameResultEnum.FINISHED,
-      })
-      .where('id = :id', { id: gameResultId })
-      .execute();
-  }
-
-  async updateGameResultWithStatus(
-    game_result_id: number,
-    status: StatusGameResultEnum,
-  ) {
-    return this.gameResultRepository
-      .createQueryBuilder()
-      .update(GameResult)
-      .set({
-        status: status,
-      })
-      .where('id = :id', { id: game_result_id })
-      .execute();
-  }
-
-  async updateGameResultWithPlayTime(
-    game_result_id: number,
-    play_time: number,
-  ) {
-    return this.gameResultRepository
-      .createQueryBuilder()
-      .update(GameResult)
-      .set({
-        play_time: play_time,
-      })
-      .where('id = :id', { id: game_result_id })
-      .execute();
-  }
-  async updateGameResultWithPlayScore(gameResultId: number, playScore: number) {
-    return this.gameResultRepository.save({
-      id: gameResultId,
-      play_score: playScore,
+    return await this.gameResultRepository.update(id, {
+      time_start: timeStart,
     });
+  }
+  async updateFinishGame(id: number) {
+    return await this.gameResultRepository.update(id, {
+      status: StatusGameResultEnum.FINISHED,
+    });
+  }
+
+  async updateGameResultWithStatus(id: number, status: StatusGameResultEnum) {
+    return await this.gameResultRepository.update(id, { status });
+  }
+
+  async updateGameResultWithPlayTime(id: number, playTime: number) {
+    return await this.gameResultRepository.update(id, { play_time: playTime });
   }
 
   async updateGameResultPlayTimeAndScore(payload: {
     id: number;
-    play_time: number;
-    play_score: number;
+    playTime: number;
+    playScore: number;
   }) {
-    return this.gameResultRepository
-      .createQueryBuilder()
-      .update(GameResult)
-      .set({ play_time: payload.play_time, play_score: payload.play_score })
-      .where('id = :id', { id: payload.id })
-      .execute();
+    return await this.gameResultRepository.update(
+      { id: payload.id },
+      {
+        play_time: payload.playTime,
+        play_score: payload.playScore,
+      },
+    );
   }
 
   async createMemoryGameResult(payload: createMemoryGameResultInterface) {
@@ -403,22 +346,17 @@ export class GameResultService {
   }
 
   async update_answer_play_memory_game_result(
-    memory_game_result_id: number,
-    answer_play: string,
-    is_correct: boolean,
+    id: number,
+    answerPlay: string,
+    isCorrect: boolean,
   ) {
-    return await this.memoryGameResultRepository
-      .createQueryBuilder()
-      .update(MemoryGameResult)
-      .set({
-        answer_play: answer_play,
-        is_correct: is_correct,
-      })
-      .where('id = :id', { id: memory_game_result_id })
-      .execute();
+    return await this.memoryGameResultRepository.update(id, {
+      answer_play: answerPlay,
+      is_correct: isCorrect,
+    });
   }
 
-  async delete_game_result_by_id(game_result_id: number) {
-    return this.gameResultRepository.delete(game_result_id);
+  async delete_game_result_by_id(id: number) {
+    return this.gameResultRepository.delete(id);
   }
 }

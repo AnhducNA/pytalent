@@ -130,8 +130,8 @@ export class GameResultPlayingMemoryController extends BaseController {
       // update GameResult
       await this.gameResultService.updateGameResultPlayTimeAndScore({
         id: game_result_update.id,
-        play_time: Date.now() - game_result_update.time_start.getTime(),
-        play_score: game_result_update.play_score,
+        playTime: Date.now() - game_result_update.time_start.getTime(),
+        playScore: game_result_update.play_score,
       });
       // update memoryGameResult
       await this.gameResultService.update_answer_play_memory_game_result(
