@@ -208,7 +208,7 @@ export class GameResultPlayingMemoryController extends BaseController {
           time_start_play_level: new Date(Date.now()),
         });
         const memory_game_result_render_next =
-          await this.gameResultService.get_memory_game_result_final_by_game_result(
+          await this.gameResultService.getFinalMemoryAnswer(
             game_result_update.id,
           );
         // END: new memoryDataRenderCurrent: next level.
