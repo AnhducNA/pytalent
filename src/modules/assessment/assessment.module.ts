@@ -27,6 +27,7 @@ import { Game } from '@entities/game.entity';
 import { LogicalQuestion } from '@entities/logicalQuestion.entity';
 import { MemoryData } from '@entities/memoryData.entity';
 import { AssessmentRepository } from './assessment.repository';
+import { MemoryGameResultRepository } from '@modules/game_result/repositories/memoryGameResult.repository';
 
 @Module({
   imports: [
@@ -53,8 +54,9 @@ import { AssessmentRepository } from './assessment.repository';
     MailServerService,
     MemoryGameResultService,
     GameService,
-    LogicalGameResultRepository,
     GameResultRepository,
+    LogicalGameResultRepository,
+    MemoryGameResultRepository,
   ],
   exports: [
     AssessmentService,

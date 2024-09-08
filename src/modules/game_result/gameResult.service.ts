@@ -3,7 +3,6 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { DeleteResult, Repository } from 'typeorm';
 import { GameResult } from '@entities/gameResult.entity';
 import { MemoryGameResult } from '@entities/memoryGameResult.entity';
-import { createGameResultInterface } from '@interfaces/gameResult.interface';
 import { StatusGameResultEnum } from '@enum/status-game-result.enum';
 import { MemoryGameResultService } from './memoryGameResult.service';
 import { LogicalGameResultRepository } from './repositories/logicalGameResult.repository';
@@ -12,6 +11,7 @@ import { CreateGameResultDto } from './createGameResult.dto';
 import { GameService } from '@modules/game/game.service';
 import { StatusLogicalGameResultEnum } from '@common/enum/status-logical-game-result.enum';
 import { AssessmentRepository } from '@modules/assessment/assessment.repository';
+import { MemoryGameResultRepository } from './repositories/memoryGameResult.repository';
 
 @Injectable()
 export class GameResultService {
@@ -20,6 +20,7 @@ export class GameResultService {
     @InjectRepository(MemoryGameResult)
     private memoryGameResultRepository: Repository<MemoryGameResult>,
     private logicalAnswerRepository: LogicalGameResultRepository,
+    private memoryAnswerRepository: MemoryGameResultRepository,
     private memoryAnswerService: MemoryGameResultService,
     private gameService: GameService,
     private readonly assessmentRepository: AssessmentRepository,
@@ -107,61 +108,6 @@ export class GameResultService {
       .execute();
   }
 
-  async get_game_result_exist_check(
-    candidate_id: number,
-    assessment_id: number,
-    game_id: number,
-  ) {
-    return this.gameResultRepository
-      .createQueryBuilder()
-      .where(`candidate_id = ${candidate_id}`)
-      .andWhere(`assessment_id = ${assessment_id}`)
-      .andWhere(`game_id = ${game_id}`)
-      .getOne();
-  }
-
-  async check_game_result_play_time_finish() {
-    const game_result_playing_list = await this.gameResultRepository
-      .createQueryBuilder('game_result')
-      .select([
-        'game_result.id',
-        'game_result.time_start',
-        'game_result.game_id',
-      ])
-      .addSelect('game.total_time')
-      .innerJoin('game_result.game', 'game')
-      .where('game_result.status IN (:...status_list)', {
-        status_list: [
-          StatusGameResultEnum.STARTED,
-          StatusGameResultEnum.PAUSED,
-        ],
-      })
-      .getMany();
-    game_result_playing_list.map(async (game_result_playing) => {
-      switch (game_result_playing.game_id) {
-        case 1:
-          if (
-            Date.now() - game_result_playing.time_start.getTime() >
-            game_result_playing.game.total_time
-          ) {
-            await this.updateGameResultWithStatus(
-              game_result_playing.id,
-              StatusGameResultEnum.FINISHED,
-            );
-          }
-          break;
-        case 2:
-          if (Date.now() - game_result_playing.time_start.getTime() > 100000) {
-            await this.updateGameResultWithStatus(
-              game_result_playing.id,
-              StatusGameResultEnum.FINISHED,
-            );
-          }
-          break;
-      }
-    });
-  }
-
   async getTotalPlayScoreByGameResult(gameResultId: number, gameId: number) {
     let totalPlayScore = 0;
     switch (gameId) {
@@ -174,7 +120,6 @@ export class GameResultService {
           totalPlayScore += item.logical_question.score;
         });
         return totalPlayScore;
-        break;
       case 2:
         const memoryAnswerList =
           await this.memoryAnswerService.getAnswerCorrectByGameResult(
@@ -184,10 +129,8 @@ export class GameResultService {
           totalPlayScore += item.memory_game.score;
         });
         return totalPlayScore;
-        break;
       default: {
         return totalPlayScore;
-        break;
       }
     }
   }
@@ -216,54 +159,11 @@ export class GameResultService {
   }
 
   async get_memory_game_result_by_game_result_id(gameResulttId: number) {
-    return await this.memoryGameResultRepository.find({
-      select: [
-        'id',
-        'memory_game_id',
-        'correct_answer',
-        'answer_play',
-        'is_correct',
-      ],
-      where: { game_result_id: gameResulttId },
-    });
+    return await this.memoryAnswerRepository.getByGameResult(gameResulttId);
   }
 
-  async get_memory_game_result_final_by_game_result(game_result_id: number) {
-    return this.memoryGameResultRepository
-      .createQueryBuilder('memory_game_result')
-      .select([
-        'memory_game_result.id',
-        'memory_game_result.memory_game_id',
-        'memory_game_result.correct_answer',
-        'memory_game_result.answer_play',
-        'memory_game_result.is_correct',
-      ])
-      .addSelect([
-        'memory_game.level',
-        'memory_game.score',
-        'memory_game.time_limit',
-      ])
-      .innerJoin('memory_game_result.memory_game', 'memory_game')
-      .where(`memory_game_result.game_result_id = ${game_result_id}`)
-      .orderBy('memory_game_result.id', 'DESC')
-      .getOne();
-  }
-
-  async update_memory_game_result_time_start_play_level_final_by_id(
-    id: number,
-  ) {
-    return await this.memoryGameResultRepository.update(id, {
-      time_start_play_level: new Date(Date.now()),
-    });
-  }
-
-  async updateMemoryGameResultWithCorrectAnswer(
-    id: number,
-    correctAnswer: string,
-  ) {
-    return await this.memoryGameResultRepository.update(id, {
-      correct_answer: correctAnswer,
-    });
+  async getFinalMemoryAnswer(gameResultId: number) {
+    return await this.memoryAnswerRepository.getFinalByGameResult(gameResultId);
   }
 
   async updateTimeStartGameResult(id: number, timeStart: Date) {
@@ -299,15 +199,42 @@ export class GameResultService {
     );
   }
 
-  async update_answer_play_memory_game_result(
-    id: number,
-    answerPlay: string,
-    isCorrect: boolean,
-  ) {
-    return await this.memoryGameResultRepository.update(id, {
-      answer_play: answerPlay,
-      is_correct: isCorrect,
-    });
+  async startPlayGame(userId: number, gameResultParams: CreateGameResultDto) {
+    await this.validateStartPlayGame(gameResultParams.assessment_id, userId);
+
+    // check start/ continue/ end of game_result
+    const gameResult = await this.gameResultRepository.getByCandidateAndGame(
+      userId,
+      gameResultParams.assessment_id,
+      gameResultParams.game_id,
+    );
+    return await this.handleGameStatus(gameResult);
+  }
+
+  async validateStartPlayGame(assessmentId: number, candidateId: number) {
+    // validate check assessment time_end
+    const timeEndOfAssessment = await this.assessmentRepository.getTimeEnd(
+      assessmentId,
+    );
+    if (timeEndOfAssessment.getTime() - Date.now() < 0) {
+      return {
+        status: false,
+        message: `Assessment has expired. Time end: ${timeEndOfAssessment}.`,
+      };
+    }
+    // validate check assessment contain Candidate?
+    const assessmentCheckCandidate =
+      await this.assessmentRepository.getOnetWithCandidate(
+        assessmentId,
+        candidateId,
+      );
+
+    if (!assessmentCheckCandidate) {
+      return {
+        status: false,
+        message: 'Assessment does not have candidate .',
+      };
+    }
   }
 
   async handleGameStatus(gameResult: GameResult) {
@@ -350,14 +277,12 @@ export class GameResultService {
       case 2:
         // Candidate continue play memoryGame
         return await this.continueMemoryGame(gameResult.id);
-        break;
       default:
         // validate check if game_id does not setting.
         return {
           status: true,
           message: `Game with id = ${gameResult.game_id} does not setting.`,
         };
-        break;
     }
   }
 
@@ -384,7 +309,7 @@ export class GameResultService {
 
   async continueMemoryGame(gameResultId: number) {
     const memory_game_result_final =
-      await this.get_memory_game_result_final_by_game_result(gameResultId);
+      await this.memoryAnswerRepository.getFinalByGameResult(gameResultId);
     let correct_answer = [];
     for (let i = 1; i <= memory_game_result_final.memory_game.level; i++) {
       correct_answer = [
@@ -392,11 +317,11 @@ export class GameResultService {
         ['left', 'right'][Math.floor(Math.random() * ['left', 'right'].length)],
       ];
     }
-    await this.updateMemoryGameResultWithCorrectAnswer(
+    await this.memoryAnswerRepository.updateCorrectAnswer(
       memory_game_result_final.id,
       JSON.stringify(correct_answer),
     );
-    await this.update_memory_game_result_time_start_play_level_final_by_id(
+    await this.memoryAnswerRepository.updateTimeStartPlayLevel(
       memory_game_result_final.id,
     );
     return {
@@ -491,7 +416,7 @@ export class GameResultService {
       time_start_play_level: new Date(Date.now()),
     });
     const memoryAnswerFinalByGameResult =
-      await this.get_memory_game_result_final_by_game_result(gameResultId);
+      await this.memoryAnswerRepository.getFinalByGameResult(gameResultId);
     return {
       message: 'Start play game memory success.',
       data: {
@@ -510,43 +435,5 @@ export class GameResultService {
         },
       },
     };
-  }
-
-  async startPlayGame(userId: number, gameResultParams: CreateGameResultDto) {
-    await this.validateStartPlayGame(gameResultParams.assessment_id, userId);
-
-    // check start/ continue/ end of game_result
-    const gameResult = await this.gameResultRepository.getByCandidateAndGame(
-      userId,
-      gameResultParams.assessment_id,
-      gameResultParams.game_id,
-    );
-    return await this.handleGameStatus(gameResult);
-  }
-
-  async validateStartPlayGame(assessmentId: number, candidateId: number) {
-    // validate check assessment time_end
-    const timeEndOfAssessment = await this.assessmentRepository.getTimeEnd(
-      assessmentId,
-    );
-    if (timeEndOfAssessment.getTime() - Date.now() < 0) {
-      return {
-        status: false,
-        message: `Assessment has expired. Time end: ${timeEndOfAssessment}.`,
-      };
-    }
-    // validate check assessment contain Candidate?
-    const assessmentCheckCandidate =
-      await this.assessmentRepository.getOnetWithCandidate(
-        assessmentId,
-        candidateId,
-      );
-
-    if (!assessmentCheckCandidate) {
-      return {
-        status: false,
-        message: 'Assessment does not have candidate .',
-      };
-    }
   }
 }
