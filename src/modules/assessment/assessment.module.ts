@@ -22,6 +22,11 @@ import { MailServerService } from '@modules/mail_server/mail_server.service';
 import { LogicalGameResultRepository } from '@modules/game_result/repositories/logicalGameResult.repository';
 import { MemoryGameResultService } from '@modules/game_result/memoryGameResult.service';
 import { GameResultRepository } from '@modules/game_result/repositories/gameResult.repository';
+import { GameService } from '@modules/game/game.service';
+import { Game } from '@entities/game.entity';
+import { LogicalQuestion } from '@entities/logicalQuestion.entity';
+import { MemoryData } from '@entities/memoryData.entity';
+import { AssessmentRepository } from './assessment.repository';
 
 @Module({
   imports: [
@@ -34,15 +39,20 @@ import { GameResultRepository } from '@modules/game_result/repositories/gameResu
       MemoryGameResult,
       HrGame,
       User,
+      Game,
+      LogicalQuestion,
+      MemoryData,
     ]),
   ],
   controllers: [AssessmentController],
   providers: [
     AssessmentService,
+    AssessmentRepository,
     GameResultService,
     UserService,
     MailServerService,
     MemoryGameResultService,
+    GameService,
     LogicalGameResultRepository,
     GameResultRepository,
   ],
