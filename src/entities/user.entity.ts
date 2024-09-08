@@ -10,6 +10,7 @@ import {
 } from 'typeorm';
 import { BaseEntity } from '@entities/base.entity';
 import { RoleEnum } from '@enum/role.enum';
+import { Assessment } from './assessment.entity';
 
 @Entity()
 export class User extends BaseEntity {
@@ -28,4 +29,7 @@ export class User extends BaseEntity {
 
   @Column()
   role: RoleEnum;
+
+  @ManyToMany(() => Assessment, (assessment) => assessment.candidates)
+  assessments: [];
 }

@@ -10,8 +10,6 @@ import { LogicalQuestion } from '@entities/logicalQuestion.entity';
 import { MemoryGameResult } from '@entities/memoryGameResult.entity';
 import { MemoryData } from '@entities/memoryData.entity';
 import { GameResultPlayingController } from '@modules/game_result/controllers/gameResult.playing.controller';
-import { AssessmentCandidate } from '@entities/assessmentCandidate.entity';
-import { Assessment } from '@entities/assessment.entity';
 import { GameResultPlayingLogicalController } from '@modules/game_result/controllers/gameResult.playingLogical.controller';
 import { GameResultPlayingMemoryController } from '@modules/game_result/controllers/gameResult.playingMemory.controller';
 import { LogicalGameResultService } from './logicalGameResult.service';
@@ -20,6 +18,7 @@ import { AssessmentModule } from '@modules/assessment/assessment.module';
 import { MemoryGameResultService } from './memoryGameResult.service';
 import { GameResultRepository } from './repositories/gameResult.repository';
 import { LogicalGameResultRepository } from './repositories/logicalGameResult.repository';
+import { AssessmentRepository } from '@modules/assessment/assessment.repository';
 
 @Module({
   imports: [
@@ -30,8 +29,6 @@ import { LogicalGameResultRepository } from './repositories/logicalGameResult.re
       Game,
       LogicalQuestion,
       MemoryData,
-      Assessment,
-      AssessmentCandidate,
     ]),
     GameModule,
     AssessmentModule,
@@ -48,6 +45,7 @@ import { LogicalGameResultRepository } from './repositories/logicalGameResult.re
     LogicalGameResultService,
     MemoryGameResultService,
     GameResultRepository,
+    AssessmentRepository,
     LogicalGameResultRepository,
   ],
   exports: [GameResultService],

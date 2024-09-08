@@ -1,5 +1,13 @@
-import { Entity, PrimaryGeneratedColumn, Column } from 'typeorm';
+import {
+  Entity,
+  PrimaryGeneratedColumn,
+  Column,
+  OneToMany,
+  ManyToMany,
+  JoinTable,
+} from 'typeorm';
 import { BaseEntity } from './base.entity';
+import { User } from './user.entity';
 
 @Entity()
 export class Assessment extends BaseEntity {
@@ -17,4 +25,18 @@ export class Assessment extends BaseEntity {
 
   @Column()
   time_end: Date;
+
+  @ManyToMany(() => User, (user) => user.assessments)
+  @JoinTable({
+    name: 'assessment_candidate',
+    joinColumn: {
+      name: 'assessment_id',
+      referencedColumnName: 'id',
+    },
+    inverseJoinColumn: {
+      name: 'candidate_id',
+      referencedColumnName: 'id',
+    },
+  })
+  candidates: User[];
 }

@@ -2,6 +2,7 @@ import { BadRequestException, Injectable } from '@nestjs/common';
 import { DataSource, Repository } from 'typeorm';
 import { GameResult } from '@entities/gameResult.entity';
 import { StatusGameResultEnum } from '@common/enum/status-game-result.enum';
+import { createGameResultInterface } from '@shared/interfaces/gameResult.interface';
 
 @Injectable()
 export class GameResultRepository extends Repository<GameResult> {
@@ -9,6 +10,9 @@ export class GameResultRepository extends Repository<GameResult> {
     super(GameResult, dataSource.createEntityManager());
   }
 
+  async createGameResult(payload: createGameResultInterface) {
+    return await this.save(payload);
+  }
   async findAndValidateGameResult(id: number): Promise<GameResult> {
     if (!id) {
       throw new BadRequestException('GameResult does not exit');
@@ -75,7 +79,9 @@ export class GameResultRepository extends Repository<GameResult> {
       },
     );
   }
-
+  async updateStatus(id: number, status: StatusGameResultEnum) {
+    return await this.update(id, { status });
+  }
   async getByCandidateAndGame(
     candidateId: number,
     assessmentId: number,
