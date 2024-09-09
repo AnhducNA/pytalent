@@ -10,6 +10,23 @@ export class GameResultRepository extends Repository<GameResult> {
     super(GameResult, dataSource.createEntityManager());
   }
 
+  async getOne(id: number) {
+    const gameResult = await this.findOneBy({ id });
+    if (!gameResult) {
+      throw new BadRequestException('Game Result does not exit');
+    }
+    return gameResult;
+  }
+
+  async getOneByCandidate(id: number, candidateId: number) {
+    const data = await this.findOne({
+      where: { id, candidate_id: candidateId },
+    });
+    if (!data) {
+      throw new BadRequestException('You cannot view this gameResult.');
+    }
+    return data;
+  }
   async createGameResult(payload: createGameResultInterface) {
     return await this.save(payload);
   }
@@ -60,28 +77,6 @@ export class GameResultRepository extends Repository<GameResult> {
     return gameResult.game.total_time;
   }
 
-  async updateFinishGame(id: number) {
-    return await this.update(id, {
-      status: StatusGameResultEnum.FINISHED,
-    });
-  }
-
-  async updatePlayTimeAndScore(payload: {
-    id: number;
-    playTime: number;
-    playScore: number;
-  }) {
-    return await this.update(
-      { id: payload.id },
-      {
-        play_time: payload.playTime,
-        play_score: payload.playScore,
-      },
-    );
-  }
-  async updateStatus(id: number, status: StatusGameResultEnum) {
-    return await this.update(id, { status });
-  }
   async getByCandidateAndGame(
     candidateId: number,
     assessmentId: number,
@@ -100,5 +95,47 @@ export class GameResultRepository extends Repository<GameResult> {
       );
     }
     return gameResult;
+  }
+
+  async updateFinishGame(id: number) {
+    return await this.update(id, {
+      status: StatusGameResultEnum.FINISHED,
+    });
+  }
+
+  async updatePlayTime(id: number, playTime: number) {
+    return await this.update(id, { play_time: playTime });
+  }
+
+  async updateStatus(id: number, status: StatusGameResultEnum) {
+    return await this.update(id, { status });
+  }
+
+  async updatePlayTimeAndStatus(
+    id: number,
+    playTime: number,
+    status: StatusGameResultEnum,
+  ) {
+    await this.update(id, { play_time: playTime, status });
+  }
+
+  async updatePlayTimeAndScore(payload: {
+    id: number;
+    playTime: number;
+    playScore: number;
+  }) {
+    return await this.update(
+      { id: payload.id },
+      {
+        play_time: payload.playTime,
+        play_score: payload.playScore,
+      },
+    );
+  }
+
+  async updateTimeStart(id: number, timeStart: Date) {
+    return await this.update(id, {
+      time_start: timeStart,
+    });
   }
 }

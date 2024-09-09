@@ -1,11 +1,11 @@
 import { Body, Controller, Patch, Req, Res, UseGuards } from '@nestjs/common';
 import { BaseController } from '@modules/app/base.controller';
 import { JwtAuthGuard } from '@guards/jwt-auth.guard';
-import { GameResultService } from '@modules/game_result/gameResult.service';
+import { GameResultService } from '@modules/game_result/services/gameResult.service';
 import { GameService } from '@modules/game/game.service';
 import { Response } from 'express';
 import { StatusGameResultEnum } from '@enum/status-game-result.enum';
-import { MemoryGameResultService } from '../memoryGameResult.service';
+import { MemoryGameResultService } from '../services/memoryGameResult.service';
 
 @Controller('api/game-result-playing-memory')
 export class GameResultPlayingMemoryController extends BaseController {
@@ -40,7 +40,7 @@ export class GameResultPlayingMemoryController extends BaseController {
         res,
       );
     }
-    const game_result_update = await this.gameResultService.findOne(
+    const game_result_update = await this.gameResultService.getOne(
       memory_game_result_playing.game_result_id,
     );
     const memory_game_result_history =

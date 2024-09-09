@@ -1,12 +1,12 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { GameResult } from '@entities/gameResult.entity';
-import { GameResultService } from './gameResult.service';
+import { GameResultService } from './services/gameResult.service';
 import { MemoryGameResult } from '@entities/memoryGameResult.entity';
 import { getRepositoryToken } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { BadRequestException } from '@nestjs/common';
 import { StatusGameResultEnum } from '@common/enum/status-game-result.enum';
-import { LogicalGameResultService } from './logicalGameResult.service';
+import { LogicalGameResultService } from './services/logicalGameResult.service';
 
 describe('GameResultService', () => {
   let service: GameResultService;
@@ -46,7 +46,7 @@ describe('GameResultService', () => {
       const gameResults = [new GameResult(), new GameResult()];
       jest.spyOn(gameResultRepository, 'find').mockResolvedValue(gameResults);
 
-      expect(await service.findAll()).toBe(gameResults);
+      expect(await service.getAll()).toBe(gameResults);
     });
   });
 

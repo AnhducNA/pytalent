@@ -1,6 +1,6 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { Cron } from '@nestjs/schedule';
-import { GameResultService } from '@modules/game_result/gameResult.service';
+import { GameResultService } from '@modules/game_result/services/gameResult.service';
 
 @Injectable()
 export class TaskService {

@@ -7,7 +7,7 @@ import { StatusLogicalGameResultEnum } from '@common/enum/status-logical-game-re
 import { ResponseInterface } from '@shared/interfaces/response.interface';
 import { GameResult } from '@entities/gameResult.entity';
 import { IcreateLogicalGameResult } from '@shared/interfaces/logicalGameResult.interface';
-import { GameResultRepository } from './repositories/gameResult.repository';
+import { GameResultRepository } from '../repositories/gameResult.repository';
 
 @Injectable()
 export class LogicalGameResultService {
@@ -212,20 +212,6 @@ export class LogicalGameResultService {
 
   async createLogicalAnswer(payload: IcreateLogicalGameResult) {
     return await this.logicalGameResultRepository.save(payload);
-  }
-
-  async getLogicalAnswerByGameResultAndCandidate(
-    gameResultId: number,
-    candidateId: number,
-  ) {
-    return await this.logicalGameResultRepository.find({
-      relations: ['game_result'],
-      where: {
-        game_result_id: gameResultId,
-        game_result: { candidate_id: candidateId },
-      },
-      order: { id: 'DESC' },
-    });
   }
 
   async getLogicalAnswerFinalByGameResult(gameResultId: number) {
