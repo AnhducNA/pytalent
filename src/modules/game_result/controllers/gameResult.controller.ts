@@ -10,15 +10,15 @@ import {
 } from '@nestjs/common';
 import { Response } from 'express';
 import { BaseController } from '@modules/app/base.controller';
-import { GameResultService } from '@modules/game_result/gameResult.service';
+import { GameResultService } from '@modules/game_result/services/gameResult.service';
 import { AuthGuard } from '@guards/auth.guard';
 import { RolesGuard } from '@guards/roles.guard';
 import { RolesDecorator } from '@shared/decorator/roles.decorator';
 import { RoleEnum } from '@enum/role.enum';
 import { JwtAuthGuard } from '@guards/jwt-auth.guard';
-import { LogicalGameResultService } from '../logicalGameResult.service';
+import { LogicalGameResultService } from '../services/logicalGameResult.service';
 import { IUserLogin } from '@shared/interfaces/user.interface';
-import { MemoryGameResultService } from '../memoryGameResult.service';
+import { MemoryGameResultService } from '../services/memoryGameResult.service';
 
 @Controller('api/game-result')
 export class GameResultController extends BaseController {

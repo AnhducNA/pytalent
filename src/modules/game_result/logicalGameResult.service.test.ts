@@ -1,6 +1,6 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { LogicalGameResultService } from './logicalGameResult.service';
-import { GameResultService } from './gameResult.service';
+import { LogicalGameResultService } from './services/logicalGameResult.service';
+import { GameResultService } from './services/gameResult.service';
 import { GameService } from '@modules/game/game.service';
 import { Repository } from 'typeorm';
 import { getRepositoryToken } from '@nestjs/typeorm';

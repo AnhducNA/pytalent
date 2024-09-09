@@ -77,6 +77,26 @@ export class GameResultRepository extends Repository<GameResult> {
     return gameResult.game.total_time;
   }
 
+  async getByCandidateAndGame(
+    candidateId: number,
+    assessmentId: number,
+    gameId: number,
+  ): Promise<GameResult> {
+    const gameResult = await this.findOne({
+      where: {
+        candidate_id: candidateId,
+        assessment_id: assessmentId,
+        game_id: gameId,
+      },
+    });
+    if (!gameResult) {
+      throw new BadRequestException(
+        'Game result with candidate and assessment does not exit',
+      );
+    }
+    return gameResult;
+  }
+
   async updateFinishGame(id: number) {
     return await this.update(id, {
       status: StatusGameResultEnum.FINISHED,
@@ -113,23 +133,9 @@ export class GameResultRepository extends Repository<GameResult> {
     );
   }
 
-  async getByCandidateAndGame(
-    candidateId: number,
-    assessmentId: number,
-    gameId: number,
-  ): Promise<GameResult> {
-    const gameResult = await this.findOne({
-      where: {
-        candidate_id: candidateId,
-        assessment_id: assessmentId,
-        game_id: gameId,
-      },
+  async updateTimeStart(id: number, timeStart: Date) {
+    return await this.update(id, {
+      time_start: timeStart,
     });
-    if (!gameResult) {
-      throw new BadRequestException(
-        'Game result with candidate and assessment does not exit',
-      );
-    }
-    return gameResult;
   }
 }

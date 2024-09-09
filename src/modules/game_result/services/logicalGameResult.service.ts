@@ -7,7 +7,7 @@ import { StatusLogicalGameResultEnum } from '@common/enum/status-logical-game-re
 import { ResponseInterface } from '@shared/interfaces/response.interface';
 import { GameResult } from '@entities/gameResult.entity';
 import { IcreateLogicalGameResult } from '@shared/interfaces/logicalGameResult.interface';
-import { GameResultRepository } from './repositories/gameResult.repository';
+import { GameResultRepository } from '../repositories/gameResult.repository';
 
 @Injectable()
 export class LogicalGameResultService {

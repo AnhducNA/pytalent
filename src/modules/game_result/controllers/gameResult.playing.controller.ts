@@ -10,13 +10,13 @@ import {
   UseGuards,
 } from '@nestjs/common';
 import { BaseController } from '@modules/app/base.controller';
-import { GameResultService } from '@modules/game_result/gameResult.service';
+import { GameResultService } from '@modules/game_result/services/gameResult.service';
 import { JwtAuthGuard } from '@guards/jwt-auth.guard';
 import { Response } from 'express';
 import { CreateGameResultDto } from '@modules/game_result/createGameResult.dto';
-import { LogicalGameResultService } from '../logicalGameResult.service';
-import { MemoryGameResultService } from '../memoryGameResult.service';
-import { GameResultPlayingService } from '../gameResult.playing.service';
+import { LogicalGameResultService } from '../services/logicalGameResult.service';
+import { MemoryGameResultService } from '../services/memoryGameResult.service';
+import { GameResultPlayingService } from '../services/gameResult.playing.service';
 
 @Controller('api/game-result-playing')
 export class GameResultPlayingController extends BaseController {
@@ -40,7 +40,7 @@ export class GameResultPlayingController extends BaseController {
     const userLogin = req['userLogin'];
     // set candidate_id for gameResultDto
     gameResultDto.candidate_id = userLogin.id;
-    const response = await this.gameResultService.startPlayGame(
+    const response = await this.gameResultPlayingService.startPlayGame(
       userLogin.id,
       gameResultDto,
     );

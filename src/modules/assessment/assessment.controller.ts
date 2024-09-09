@@ -17,7 +17,7 @@ import { BaseController } from '@modules/app/base.controller';
 import { RoleEnum } from '@enum/role.enum';
 import { JwtAuthGuard } from '@guards/jwt-auth.guard';
 import { AuthorizationGuard } from '@guards/authorization.guard';
-import { GameResultService } from '@modules/game_result/gameResult.service';
+import { GameResultService } from '@modules/game_result/services/gameResult.service';
 import { UserService } from '@modules/users/services/user.service';
 import { MailServerService } from '@modules/mail_server/mail_server.service';
 
