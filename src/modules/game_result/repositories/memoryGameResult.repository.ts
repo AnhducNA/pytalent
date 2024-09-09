@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { BadRequestException, Injectable } from '@nestjs/common';
 import { DataSource, Repository } from 'typeorm';
 import { MemoryGameResult } from '@entities/memoryGameResult.entity';
 
@@ -8,6 +8,13 @@ export class MemoryGameResultRepository extends Repository<MemoryGameResult> {
     super(MemoryGameResult, dataSource.createEntityManager());
   }
 
+  async getOne(id: number) {
+    const data = await this.findOne({ where: { id } });
+    if (!id) {
+      throw new BadRequestException('memory answer does not exit');
+    }
+    return data;
+  }
   async insertData(payload: {
     gameResultId: number;
     memoryGameId: number;
@@ -58,6 +65,13 @@ export class MemoryGameResultRepository extends Repository<MemoryGameResult> {
   async updateTimeStartPlayLevel(id: number) {
     return await this.update(id, {
       time_start_play_level: new Date(Date.now()),
+    });
+  }
+
+  async updateAnswerPlay(id: number, answerPlay: string, isCorrect: boolean) {
+    return await this.update(id, {
+      answer_play: answerPlay,
+      is_correct: isCorrect,
     });
   }
 

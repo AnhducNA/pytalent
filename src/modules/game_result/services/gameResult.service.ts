@@ -83,6 +83,33 @@ export class GameResultService {
     return gameResultList;
   }
 
+  async getTotalPlayScoreByGameResult(gameResultId: number, gameId: number) {
+    let totalPlayScore = 0;
+    switch (gameId) {
+      case 1:
+        const logicalAnswerList =
+          await this.logicalAnswerRepository.getLogicalAnswerCorrectByGameResult(
+            gameResultId,
+          );
+        logicalAnswerList.map((item) => {
+          totalPlayScore += item.logical_question.score;
+        });
+        return totalPlayScore;
+      case 2:
+        const memoryAnswerList =
+          await this.memoryAnswerRepository.getAnswerCorrectByGameResult(
+            gameResultId,
+          );
+        memoryAnswerList.map((item) => {
+          totalPlayScore += item.memory_game.score;
+        });
+        return totalPlayScore;
+      default: {
+        return totalPlayScore;
+      }
+    }
+  }
+
   async getGameResultDetailOfCandidate(
     candidateId: number,
     gameResultId: number,
@@ -121,44 +148,10 @@ export class GameResultService {
       .where(`assessment_id = ${assessment_id}`)
       .execute();
   }
-
-  async getTotalPlayScoreByGameResult(gameResultId: number, gameId: number) {
-    let totalPlayScore = 0;
-    switch (gameId) {
-      case 1:
-        const logicalAnswerList =
-          await this.logicalAnswerRepository.getLogicalAnswerCorrectByGameResult(
-            gameResultId,
-          );
-        logicalAnswerList.map((item) => {
-          totalPlayScore += item.logical_question.score;
-        });
-        return totalPlayScore;
-      case 2:
-        const memoryAnswerList =
-          await this.memoryAnswerRepository.getAnswerCorrectByGameResult(
-            gameResultId,
-          );
-        memoryAnswerList.map((item) => {
-          totalPlayScore += item.memory_game.score;
-        });
-        return totalPlayScore;
-      default: {
-        return totalPlayScore;
-      }
-    }
-  }
-
   async getDetailHistory(id: number) {
     return this.gameResultRepository.find({
       relations: ['logical_game_result_list', 'memory_game_result_list'],
       where: { id },
-    });
-  }
-
-  async getGameResultByCandidateId(candidateId: number) {
-    return this.gameResultRepository.find({
-      where: { candidate_id: candidateId },
     });
   }
 
@@ -178,12 +171,6 @@ export class GameResultService {
 
   async getFinalMemoryAnswer(gameResultId: number) {
     return await this.memoryAnswerRepository.getFinalByGameResult(gameResultId);
-  }
-
-  async updateFinishGame(id: number) {
-    return await this.gameResultRepository.update(id, {
-      status: StatusGameResultEnum.FINISHED,
-    });
   }
 
   async updateGameResultWithStatus(id: number, status: StatusGameResultEnum) {

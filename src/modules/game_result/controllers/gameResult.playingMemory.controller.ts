@@ -17,18 +17,23 @@ export class GameResultPlayingMemoryController extends BaseController {
     super();
   }
 
-  @Patch('memory-game-answer/:memory_game_result_id')
+  @Patch('memory-game-answer/:memoryAnswerId')
   @UseGuards(JwtAuthGuard)
   async playingMemoryGame(
     @Req() req: any,
     @Body()
     memoryGameResultDto: {
-      answer_play: any[];
+      answer_play: string[];
       is_correct: boolean;
     },
     @Res() res: Response,
   ) {
-    const memory_game_result_id = req.params.memory_game_result_id;
+    const memory_game_result_id = req.params.memoryAnswerId;
+    const memoryAnswerId = req.params.memoryAnswerId;
+    return await this.memoryAnswerService.calculatePlayingMemory(
+      memoryAnswerId,
+      memoryGameResultDto.answer_play,
+    );
     const memory_game_result_playing =
       await this.memoryAnswerService.getOneMemoryAnswer(memory_game_result_id);
     // validate check memory_game_result_playing exist
@@ -86,6 +91,7 @@ export class GameResultPlayingMemoryController extends BaseController {
         res,
       );
     }
+
     // validate check play_time > time_limit_render's level
     const play_time =
       Date.now() - memory_game_result_playing.time_start_play_level.getTime();
@@ -105,6 +111,7 @@ export class GameResultPlayingMemoryController extends BaseController {
         res,
       );
     }
+
     try {
       // Check answer_play is true or false?
       let message_res: string;
