@@ -10,6 +10,14 @@ export class GameResultRepository extends Repository<GameResult> {
     super(GameResult, dataSource.createEntityManager());
   }
 
+  async getOne(id: number) {
+    const gameResult = await this.findOneBy({ id });
+    if (!gameResult) {
+      throw new BadRequestException('Game Result does not exit');
+    }
+    return gameResult;
+  }
+
   async getOneByCandidate(id: number, candidateId: number) {
     const data = await this.findOne({
       where: { id, candidate_id: candidateId },
@@ -75,6 +83,22 @@ export class GameResultRepository extends Repository<GameResult> {
     });
   }
 
+  async updatePlayTime(id: number, playTime: number) {
+    return await this.update(id, { play_time: playTime });
+  }
+
+  async updateStatus(id: number, status: StatusGameResultEnum) {
+    return await this.update(id, { status });
+  }
+
+  async updatePlayTimeAndStatus(
+    id: number,
+    playTime: number,
+    status: StatusGameResultEnum,
+  ) {
+    await this.update(id, { play_time: playTime, status });
+  }
+
   async updatePlayTimeAndScore(payload: {
     id: number;
     playTime: number;
@@ -88,9 +112,7 @@ export class GameResultRepository extends Repository<GameResult> {
       },
     );
   }
-  async updateStatus(id: number, status: StatusGameResultEnum) {
-    return await this.update(id, { status });
-  }
+
   async getByCandidateAndGame(
     candidateId: number,
     assessmentId: number,

@@ -8,6 +8,7 @@ import {
   Res,
   UseGuards,
 } from '@nestjs/common';
+import { Response } from 'express';
 import { BaseController } from '@modules/app/base.controller';
 import { GameResultService } from '@modules/game_result/gameResult.service';
 import { AuthGuard } from '@guards/auth.guard';
@@ -18,7 +19,6 @@ import { JwtAuthGuard } from '@guards/jwt-auth.guard';
 import { LogicalGameResultService } from '../logicalGameResult.service';
 import { IUserLogin } from '@shared/interfaces/user.interface';
 import { MemoryGameResultService } from '../memoryGameResult.service';
-import { Response } from 'express';
 
 @Controller('api/game-result')
 export class GameResultController extends BaseController {

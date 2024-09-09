@@ -1,10 +1,9 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { DeleteResult, Repository } from 'typeorm';
+import { DeleteResult } from 'typeorm';
 import { GameResult } from '@entities/gameResult.entity';
 import { MemoryGameResult } from '@entities/memoryGameResult.entity';
 import { StatusGameResultEnum } from '@enum/status-game-result.enum';
-import { MemoryGameResultService } from './memoryGameResult.service';
 import { LogicalGameResultRepository } from './repositories/logicalGameResult.repository';
 import { GameResultRepository } from './repositories/gameResult.repository';
 import { CreateGameResultDto } from './createGameResult.dto';
@@ -18,10 +17,8 @@ export class GameResultService {
   constructor(
     private gameResultRepository: GameResultRepository,
     @InjectRepository(MemoryGameResult)
-    private memoryGameResultRepository: Repository<MemoryGameResult>,
     private logicalAnswerRepository: LogicalGameResultRepository,
     private memoryAnswerRepository: MemoryGameResultRepository,
-    private memoryAnswerService: MemoryGameResultService,
     private gameService: GameService,
     private readonly assessmentRepository: AssessmentRepository,
   ) {}
@@ -31,11 +28,7 @@ export class GameResultService {
   }
 
   async getOne(id: number): Promise<GameResult> {
-    const gameResult = await this.gameResultRepository.findOneBy({ id: id });
-    if (!gameResult) {
-      throw new BadRequestException('Game Result does not exit');
-    }
-    return gameResult;
+    return await this.gameResultRepository.getOne(id);
   }
 
   async delete(id: number) {
@@ -149,7 +142,7 @@ export class GameResultService {
         return totalPlayScore;
       case 2:
         const memoryAnswerList =
-          await this.memoryAnswerService.getAnswerCorrectByGameResult(
+          await this.memoryAnswerRepository.getAnswerCorrectByGameResult(
             gameResultId,
           );
         memoryAnswerList.map((item) => {
@@ -162,7 +155,7 @@ export class GameResultService {
     }
   }
 
-  async get_history_type_game_result_by_game_result(id: number) {
+  async getDetailHistory(id: number) {
     return this.gameResultRepository.find({
       relations: ['logical_game_result_list', 'memory_game_result_list'],
       where: { id },
@@ -206,10 +199,6 @@ export class GameResultService {
 
   async updateGameResultWithStatus(id: number, status: StatusGameResultEnum) {
     return await this.gameResultRepository.update(id, { status });
-  }
-
-  async updateGameResultWithPlayTime(id: number, playTime: number) {
-    return await this.gameResultRepository.update(id, { play_time: playTime });
   }
 
   async updateGameResultPlayTimeAndScore(payload: {
@@ -434,13 +423,10 @@ export class GameResultService {
     const correct_answer = [
       ['left', 'right'][Math.floor(Math.random() * ['left', 'right'].length)],
     ];
-    await this.memoryAnswerService.create({
-      game_result_id: gameResultId,
-      memory_game_id: (await this.gameService.getMemoryDataByLevel(1)).id,
-      correct_answer: JSON.stringify(correct_answer),
-      answer_play: null,
-      is_correct: null,
-      time_start_play_level: new Date(Date.now()),
+    await this.memoryAnswerRepository.insertData({
+      gameResultId,
+      memoryGameId: (await this.gameService.getMemoryDataByLevel(1)).id,
+      correctAnswer: JSON.stringify(correct_answer),
     });
     const memoryAnswerFinalByGameResult =
       await this.memoryAnswerRepository.getFinalByGameResult(gameResultId);

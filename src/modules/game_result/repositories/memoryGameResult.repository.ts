@@ -8,6 +8,20 @@ export class MemoryGameResultRepository extends Repository<MemoryGameResult> {
     super(MemoryGameResult, dataSource.createEntityManager());
   }
 
+  async insertData(payload: {
+    gameResultId: number;
+    memoryGameId: number;
+    correctAnswer: string;
+  }) {
+    return await this.save({
+      game_result_id: payload.gameResultId,
+      memory_game_id: payload.memoryGameId,
+      correct_answer: payload.correctAnswer,
+      answer_play: null,
+      is_correct: null,
+      time_start_play_level: new Date(Date.now()),
+    });
+  }
   async getByGameResult(gameResultId: number) {
     return await this.find({
       select: [
@@ -29,6 +43,16 @@ export class MemoryGameResultRepository extends Repository<MemoryGameResult> {
       },
       order: { id: 'DESC' },
     });
+  }
+
+  async getAnswerCorrectByGameResult(gameResultId: number) {
+    return await this.createQueryBuilder('memory_game_result')
+      .select('memory_game_result.id')
+      .addSelect('memory_game.score')
+      .innerJoin('memory_game_result.memory_game', 'memory_game')
+      .where(`memory_game_result.game_result_id = ${gameResultId}`)
+      .andWhere(`memory_game_result.is_correct = 1`)
+      .getMany();
   }
 
   async updateTimeStartPlayLevel(id: number) {
