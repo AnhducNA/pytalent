@@ -20,6 +20,7 @@ import { JwtAuthGuard } from '@guards/jwt-auth.guard';
 import { LogicalGameResultService } from '../logicalGameResult.service';
 import { IUserLogin } from '@shared/interfaces/user.interface';
 import { MemoryGameResultService } from '../memoryGameResult.service';
+import { Response } from 'express';
 
 @Controller('api/game-result')
 export class GameResultController extends BaseController {
@@ -104,15 +105,17 @@ export class GameResultController extends BaseController {
   //get all game_result
   @Get()
   @UseGuards(JwtAuthGuard)
-  getAll() {
-    return this.gameResultService.findAll();
+  async getAll(@Res() res: Response) {
+    const data = await this.gameResultService.getAll();
+    return this.successResponse({ data }, res);
   }
 
   @Get(':id')
   @UseGuards(AuthGuard, RolesGuard)
   @RolesDecorator(RoleEnum.HR)
-  getOne(@Param() params: { id: number }) {
-    return this.gameResultService.findOne(params.id);
+  async getOne(@Param() params: { id: number }, @Res() res: Response) {
+    const data = await this.gameResultService.getOne(params.id);
+    return this.successResponse({ data }, res);
   }
 
   @Get('logical-game-result-item/:logicalGameResultId')
@@ -120,15 +123,10 @@ export class GameResultController extends BaseController {
     @Param() params: { logicalGameResultId: number },
     @Res() res: any,
   ) {
-    const result = await this.logicalGameResultService.findLogicalGameResult(
+    const data = await this.logicalGameResultService.findLogicalGameResult(
       params.logicalGameResultId,
     );
-    return this.successResponse(
-      {
-        data: result,
-      },
-      res,
-    );
+    return this.successResponse({ data }, res);
   }
 
   @Delete(':id')

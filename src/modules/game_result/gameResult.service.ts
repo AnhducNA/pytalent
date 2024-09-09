@@ -26,12 +26,8 @@ export class GameResultService {
     private readonly assessmentRepository: AssessmentRepository,
   ) {}
 
-  async findAll() {
+  async getAll() {
     return await this.gameResultRepository.find();
-  }
-
-  async findOne(id: number): Promise<GameResult> {
-    return await this.gameResultRepository.findOneBy({ id: id });
   }
 
   async getOne(id: number): Promise<GameResult> {
@@ -46,7 +42,7 @@ export class GameResultService {
     if (!id) {
       throw new BadRequestException('GameResult does not exit');
     }
-    const gameResult: GameResult = await this.findOne(id);
+    const gameResult: GameResult = await this.getOne(id);
     // validate check gameResult finished or paused
     if (gameResult.status === StatusGameResultEnum.FINISHED) {
       throw new BadRequestException('Game completed');

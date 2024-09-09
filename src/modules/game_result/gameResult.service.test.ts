@@ -46,7 +46,7 @@ describe('GameResultService', () => {
       const gameResults = [new GameResult(), new GameResult()];
       jest.spyOn(gameResultRepository, 'find').mockResolvedValue(gameResults);
 
-      expect(await service.findAll()).toBe(gameResults);
+      expect(await service.getAll()).toBe(gameResults);
     });
   });
 

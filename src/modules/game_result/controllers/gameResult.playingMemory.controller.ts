@@ -40,7 +40,7 @@ export class GameResultPlayingMemoryController extends BaseController {
         res,
       );
     }
-    const game_result_update = await this.gameResultService.findOne(
+    const game_result_update = await this.gameResultService.getOne(
       memory_game_result_playing.game_result_id,
     );
     const memory_game_result_history =
