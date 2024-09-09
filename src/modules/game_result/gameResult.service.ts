@@ -31,7 +31,11 @@ export class GameResultService {
   }
 
   async getOne(id: number): Promise<GameResult> {
-    return await this.gameResultRepository.findOneBy({ id: id });
+    const gameResult = await this.gameResultRepository.findOneBy({ id: id });
+    if (!gameResult) {
+      throw new BadRequestException('Game Result does not exit');
+    }
+    return gameResult;
   }
 
   async delete(id: number) {
@@ -77,7 +81,7 @@ export class GameResultService {
     return true;
   }
 
-  async getGameResultOfCandidate(candidateId: number) {
+  async getListGameResultOfCandidate(candidateId: number) {
     const gameResultList = await this.gameResultRepository.find({
       where: { candidate_id: candidateId },
     });
@@ -90,6 +94,33 @@ export class GameResultService {
       }),
     );
     return gameResultList;
+  }
+
+  async getGameResultDetailOfCandidate(
+    candidateId: number,
+    gameResultId: number,
+  ) {
+    const gameResult = await this.gameResultRepository.getOneByCandidate(
+      gameResultId,
+      candidateId,
+    );
+    switch (gameResult.game_id) {
+      case 1:
+        const logicalAnswerHistory =
+          await this.logicalAnswerRepository.getByGameResultAndCandidate(
+            gameResultId,
+            candidateId,
+          );
+        return { gameResult, logicalAnswerHistory };
+      case 2:
+        const memoryAnswerHistory =
+          await this.memoryAnswerRepository.getByGameResultAndCandidate(
+            gameResultId,
+            candidateId,
+          );
+        return { gameResult, memoryAnswerHistory };
+    }
+    return { candidateId, gameResultId };
   }
 
   async deleteGameResultByAssessmentId(

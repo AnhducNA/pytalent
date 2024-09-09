@@ -1,11 +1,9 @@
 import {
-  Body,
   Controller,
   Delete,
   Get,
   HttpStatus,
   Param,
-  Post,
   Req,
   Res,
   UseGuards,
@@ -36,7 +34,7 @@ export class GameResultController extends BaseController {
   @Get('/by-candidate')
   async getGameResultByCandidate(@Req() req: any, @Res() res: any) {
     const userLogin: IUserLogin = req['userLogin'];
-    const data = await this.gameResultService.getGameResultOfCandidate(
+    const data = await this.gameResultService.getListGameResultOfCandidate(
       userLogin.id,
     );
     return res.status(HttpStatus.OK).json({
@@ -47,59 +45,19 @@ export class GameResultController extends BaseController {
     });
   }
 
+  // detail history play game
   @UseGuards(JwtAuthGuard)
-  @Post('/game-result-detail/candidate')
+  @Get('/:gameResultId/history-detail-play')
   async getGameResultDetailByGameResultIdAndCandidateId(
     @Req() req: any,
-    @Body()
-    gameResultDetailDto: {
-      game_result_id: number;
-    },
+    @Param() params: { gameResultId: number },
     @Res() res: any,
   ) {
-    const userLogin = req['userLogin'];
-    const game_result = await this.gameResultService.getOne(
-      gameResultDetailDto.game_result_id,
+    const data = await this.gameResultService.getGameResultDetailOfCandidate(
+      req['userLogin'].id,
+      params.gameResultId,
     );
-    // validate check game_result?.candidate_id
-    if (!game_result || game_result.candidate_id !== userLogin.id) {
-      return this.errorsResponse(
-        {
-          message: `You cannot view the game_result.`,
-        },
-        res,
-      );
-    }
-    switch (game_result.game_id) {
-      case 1:
-        const logicalGameResultList =
-          await this.logicalGameResultService.getLogicalAnswerByGameResultAndCandidate(
-            gameResultDetailDto.game_result_id,
-            userLogin.id,
-          );
-        return res.status(HttpStatus.OK).json({
-          success: true,
-          data: {
-            game_result: game_result,
-            logical_game_result_history: logicalGameResultList,
-          },
-        });
-      case 2:
-        const memoryGameResultList =
-          await this.memoryAnswerService.getByGameResultIdAndCandidateId(
-            gameResultDetailDto.game_result_id,
-            userLogin.id,
-          );
-        return res.status(HttpStatus.OK).json({
-          success: true,
-          data: {
-            game_result: game_result,
-            memory_game_result_history: memoryGameResultList,
-          },
-        });
-      default:
-        break;
-    }
+    return this.successResponse({ data }, res);
   }
 
   //get all game_result

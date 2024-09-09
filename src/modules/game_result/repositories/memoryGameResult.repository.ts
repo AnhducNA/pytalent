@@ -20,6 +20,17 @@ export class MemoryGameResultRepository extends Repository<MemoryGameResult> {
       where: { game_result_id: gameResultId },
     });
   }
+
+  async getByGameResultAndCandidate(gameResultId: number, candidateId: number) {
+    return await this.find({
+      where: {
+        game_result_id: gameResultId,
+        game_result: { candidate_id: candidateId },
+      },
+      order: { id: 'DESC' },
+    });
+  }
+
   async updateTimeStartPlayLevel(id: number) {
     return await this.update(id, {
       time_start_play_level: new Date(Date.now()),

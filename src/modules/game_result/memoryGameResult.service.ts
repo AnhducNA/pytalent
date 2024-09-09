@@ -33,19 +33,6 @@ export class MemoryGameResultService {
       .getMany();
   }
 
-  async getByGameResultIdAndCandidateId(
-    gameResultId: number,
-    candidateId: number,
-  ) {
-    return await this.memoryGameResultRepository.find({
-      where: {
-        game_result_id: gameResultId,
-        game_result: { candidate_id: candidateId },
-      },
-      order: { id: 'DESC' },
-    });
-  }
-
   async updateAnswerPlay(id: number, answerPlay: string, isCorrect: boolean) {
     return await this.memoryGameResultRepository.update(id, {
       answer_play: answerPlay,

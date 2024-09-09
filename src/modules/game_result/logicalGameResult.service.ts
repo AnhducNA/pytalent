@@ -214,20 +214,6 @@ export class LogicalGameResultService {
     return await this.logicalGameResultRepository.save(payload);
   }
 
-  async getLogicalAnswerByGameResultAndCandidate(
-    gameResultId: number,
-    candidateId: number,
-  ) {
-    return await this.logicalGameResultRepository.find({
-      relations: ['game_result'],
-      where: {
-        game_result_id: gameResultId,
-        game_result: { candidate_id: candidateId },
-      },
-      order: { id: 'DESC' },
-    });
-  }
-
   async getLogicalAnswerFinalByGameResult(gameResultId: number) {
     return this.logicalGameResultRepository.findOne({
       relations: ['logical_game_result'],

@@ -10,6 +10,15 @@ export class GameResultRepository extends Repository<GameResult> {
     super(GameResult, dataSource.createEntityManager());
   }
 
+  async getOneByCandidate(id: number, candidateId: number) {
+    const data = await this.findOne({
+      where: { id, candidate_id: candidateId },
+    });
+    if (!data) {
+      throw new BadRequestException('You cannot view this gameResult.');
+    }
+    return data;
+  }
   async createGameResult(payload: createGameResultInterface) {
     return await this.save(payload);
   }
