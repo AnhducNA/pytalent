@@ -79,7 +79,7 @@ export class GameResultPlayingController extends BaseController {
     },
     @Res() res: Response,
   ) {
-    const resData = await this.logicalAnswerService.caculatePlayingLogical(
+    const resData = await this.logicalAnswerService.calculatePlayingLogical(
       params.logicalAnswerId,
       logicalGameAnswerDto.answerPlay,
     );
