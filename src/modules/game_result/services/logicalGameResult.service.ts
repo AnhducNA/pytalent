@@ -22,10 +22,13 @@ export class LogicalGameResultService {
     // find PlaceHold in LogicalGameResult
     const answerPlaceHold = await this.logicalAnswerRepository.getOne(id);
 
-    const gameResultUpdate: GameResult =
-      await this.gameResultRepository.findAndValidateGameResult(
-        answerPlaceHold.game_result_id,
-      );
+    const gameResultUpdate: GameResult = await this.gameResultRepository.getOne(
+      answerPlaceHold.game_result_id,
+    );
+
+    await this.gameResultRepository.validateGameResult(
+      answerPlaceHold.game_result_id,
+    );
 
     const validateResponse = await this.validateLogicalQuestion(
       answerPlaceHold.index,
@@ -57,7 +60,14 @@ export class LogicalGameResultService {
       checkCorrectAnswer.isCorrect,
     );
 
-    await this.updateFinalQuestion(answerPlaceHold.index, gameResultUpdate.id);
+    // check final
+    const isFinalQuestion = await this.isFinalQuestion(answerPlaceHold.index);
+    if (isFinalQuestion) {
+      await this.gameResultRepository.updateFinishGame(gameResultUpdate.id);
+      return {
+        message: 'End Game',
+      };
+    }
 
     const logicalQuestionNext = await this.getNextLogicalQuestion(
       answerPlaceHold.index,
@@ -83,6 +93,15 @@ export class LogicalGameResultService {
       status: true,
       message: 'success',
     };
+  }
+  async isFinalQuestion(indexQuestion: number): Promise<boolean> {
+    // Check final logical game ==> compare index question with total question
+    const totalQuestion: number =
+      await this.gameService.getTotalQuestionGameLogical();
+    if (indexQuestion === totalQuestion) {
+      return true;
+    }
+    return false;
   }
 
   async updateFinalQuestion(indexQuestion: number, gameResultId: number) {
