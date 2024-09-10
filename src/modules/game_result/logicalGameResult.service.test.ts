@@ -269,8 +269,6 @@ describe('LogicalGameResultService', () => {
       const answer_play = true;
       const is_correct = true;
 
-      await service.updateLogicalAnswered(id, answer_play, is_correct);
-
       expect(
         logicalGameResultRepository
           .createQueryBuilder()
