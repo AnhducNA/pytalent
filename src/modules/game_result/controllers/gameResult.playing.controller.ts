@@ -10,7 +10,6 @@ import {
   UseGuards,
 } from '@nestjs/common';
 import { BaseController } from '@modules/app/base.controller';
-import { GameResultService } from '@modules/game_result/services/gameResult.service';
 import { JwtAuthGuard } from '@guards/jwt-auth.guard';
 import { Response } from 'express';
 import { CreateGameResultDto } from '@modules/game_result/createGameResult.dto';
@@ -21,7 +20,6 @@ import { GameResultPlayingService } from '../services/gameResult.playing.service
 @Controller('api/game-result-playing')
 export class GameResultPlayingController extends BaseController {
   constructor(
-    private readonly gameResultService: GameResultService,
     private readonly gameResultPlayingService: GameResultPlayingService,
     private readonly logicalAnswerService: LogicalGameResultService,
     private readonly memoryAnswerService: MemoryGameResultService,

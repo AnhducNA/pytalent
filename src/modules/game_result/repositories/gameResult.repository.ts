@@ -30,7 +30,7 @@ export class GameResultRepository extends Repository<GameResult> {
   async createGameResult(payload: createGameResultInterface) {
     return await this.save(payload);
   }
-  async findAndValidateGameResult(id: number): Promise<GameResult> {
+  async validateGameResult(id: number) {
     if (!id) {
       throw new BadRequestException('GameResult does not exit');
     }
@@ -50,11 +50,9 @@ export class GameResultRepository extends Repository<GameResult> {
       id,
       gameResult.time_start,
     );
-
     if (!validatePlayTime) {
       throw new BadRequestException(`Game's time is over.`);
     }
-    return gameResult;
   }
 
   async validatePlayTime(gameResultId: number, timeStart: Date) {

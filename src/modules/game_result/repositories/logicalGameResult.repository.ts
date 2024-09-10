@@ -1,5 +1,6 @@
+import { StatusLogicalGameResultEnum } from '@common/enum/status-logical-game-result.enum';
 import { LogicalGameResult } from '@entities/logicalGameResult.entity';
-import { Injectable } from '@nestjs/common';
+import { BadRequestException, Injectable } from '@nestjs/common';
 import { IcreateLogicalGameResult } from '@shared/interfaces/logicalGameResult.interface';
 import { DataSource, Repository } from 'typeorm';
 
@@ -9,6 +10,16 @@ export class LogicalGameResultRepository extends Repository<LogicalGameResult> {
     super(LogicalGameResult, dataSource.createEntityManager());
   }
 
+  async getOne(id: number): Promise<LogicalGameResult> {
+    const data = await this.findOne({
+      where: { id },
+      relations: ['logical_question'],
+    });
+    if (!data) {
+      throw new BadRequestException('Logical answer does not exit');
+    }
+    return data;
+  }
   async createLogicalAnswer(payload: IcreateLogicalGameResult) {
     return await this.save(payload);
   }
@@ -39,6 +50,18 @@ export class LogicalGameResultRepository extends Repository<LogicalGameResult> {
       relations: ['logical_game_result'],
       where: { game_result_id: gameResultId },
       order: { game_result_id: 'DESC' },
+    });
+  }
+
+  async updateStatusAnswered(
+    id: number,
+    answerPlay: boolean,
+    isCorrect: boolean,
+  ) {
+    return await this.update(id, {
+      status: StatusLogicalGameResultEnum.ANSWERED,
+      answer_play: answerPlay,
+      is_correct: isCorrect,
     });
   }
 }
