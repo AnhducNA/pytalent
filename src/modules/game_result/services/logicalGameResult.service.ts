@@ -15,13 +15,12 @@ export class LogicalGameResultService {
     private readonly gameService: GameService,
   ) {}
 
-  async caculatePlayingLogical(
+  async calculatePlayingLogical(
     id: number,
     answerPlay: boolean,
   ): Promise<{ message: string; data?: object }> {
     // find PlaceHold in LogicalGameResult
     const answerPlaceHold = await this.logicalAnswerRepository.getOne(id);
-
     const gameResultUpdate: GameResult = await this.gameResultRepository.getOne(
       answerPlaceHold.game_result_id,
     );
@@ -52,7 +51,6 @@ export class LogicalGameResultService {
       playTime: Date.now() - gameResultUpdate.time_start.getTime(),
       playScore: checkCorrectAnswer.data.newPlayScore,
     });
-
     // update answer in LogicalGameResult
     await this.logicalAnswerRepository.updateStatusAnswered(
       answerPlaceHold.id,
@@ -80,7 +78,7 @@ export class LogicalGameResultService {
   }
 
   async validateLogicalQuestion(indexQuestion: number) {
-    // validate check index_question_answer > total_question in game
+    // validate check index of question answer > total's question in game
     const totalQuestion: number =
       await this.gameService.getTotalQuestionGameLogical();
     if (indexQuestion > totalQuestion) {
@@ -102,18 +100,6 @@ export class LogicalGameResultService {
       return true;
     }
     return false;
-  }
-
-  async updateFinalQuestion(indexQuestion: number, gameResultId: number) {
-    // Check final logical game ==> compare index question with total question
-    const totalQuestion: number =
-      await this.gameService.getTotalQuestionGameLogical();
-    if (indexQuestion === totalQuestion) {
-      await this.gameResultRepository.updateFinishGame(gameResultId);
-      return {
-        message: 'End Game',
-      };
-    }
   }
 
   async checkCorrectAnswer(
