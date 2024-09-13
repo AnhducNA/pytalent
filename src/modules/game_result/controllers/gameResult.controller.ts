@@ -16,7 +16,7 @@ import { RolesGuard } from '@guards/roles.guard';
 import { RolesDecorator } from '@shared/decorator/roles.decorator';
 import { RoleEnum } from '@enum/role.enum';
 import { JwtAuthGuard } from '@guards/jwt-auth.guard';
-import { LogicalGameResultService } from '../services/logicalGameResult.service';
+import { LogicalGameResultService } from '../services/logicalAnswer.service';
 import { IUserLogin } from '@shared/interfaces/user.interface';
 import { MemoryGameResultService } from '../services/memoryGameResult.service';
 

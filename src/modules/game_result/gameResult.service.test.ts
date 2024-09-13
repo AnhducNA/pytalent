@@ -6,7 +6,7 @@ import { getRepositoryToken } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { BadRequestException } from '@nestjs/common';
 import { StatusGameResultEnum } from '@common/enum/status-game-result.enum';
-import { LogicalGameResultService } from './services/logicalGameResult.service';
+import { LogicalGameResultService } from './services/logicalAnswer.service';
 
 describe('GameResultService', () => {
   let service: GameResultService;

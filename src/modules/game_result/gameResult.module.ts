@@ -11,7 +11,7 @@ import { MemoryGameResult } from '@entities/memoryGameResult.entity';
 import { MemoryData } from '@entities/memoryData.entity';
 import { GameResultPlayingController } from '@modules/game_result/controllers/gameResult.playing.controller';
 import { GameResultPlayingMemoryController } from '@modules/game_result/controllers/gameResult.playingMemory.controller';
-import { LogicalGameResultService } from './services/logicalGameResult.service';
+import { LogicalGameResultService } from './services/logicalAnswer.service';
 import { GameModule } from '@modules/game/game.module';
 import { AssessmentModule } from '@modules/assessment/assessment.module';
 import { MemoryGameResultService } from './services/memoryGameResult.service';
