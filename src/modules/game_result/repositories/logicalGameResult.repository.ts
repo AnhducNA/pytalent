@@ -24,14 +24,17 @@ export class LogicalGameResultRepository extends Repository<LogicalGameResult> {
     return await this.save(payload);
   }
 
-  async getLogicalAnswerCorrectByGameResult(gameResultId: number) {
-    return await this.createQueryBuilder('logical_game_result')
+  async getScoresOfCorrectAnswer(gameResultId: number): Promise<number[]> {
+    const logicalAnswers = await this.createQueryBuilder('logical_game_result')
       .select('logical_game_result.id')
       .addSelect('logical_question.score')
       .innerJoin('logical_game_result.logical_question', 'logical_question')
       .where(`logical_game_result.game_result_id = ${gameResultId}`)
       .andWhere(`logical_game_result.is_correct = 1`)
       .getMany();
+    return logicalAnswers.map((item) => {
+      return item.logical_question.score;
+    });
   }
 
   async getByGameResultAndCandidate(gameResultId: number, candidateId: number) {

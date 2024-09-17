@@ -7,10 +7,10 @@ import { GameResultRepository } from '@modules/game_result/repositories/gameResu
 export class TaskService {
   private readonly logger = new Logger(TaskService.name);
 
-  constructor(
-    private readonly gameResultService: GameResultService,
-    private gameResultRepository: GameResultRepository,
-  ) {}
+  // constructor(
+  //   private readonly gameResultService: GameResultService,
+  //   private gameResultRepository: GameResultRepository,
+  // ) {}
 
   // @Cron('*/5 * * * * *')
   // async handleCron() {

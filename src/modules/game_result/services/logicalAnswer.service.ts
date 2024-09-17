@@ -1,4 +1,4 @@
-import { BadRequestException, Injectable } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { LogicalGameResult } from '@entities/logicalGameResult.entity';
 import { GameService } from '@modules/game/game.service';
 import { StatusLogicalGameResultEnum } from '@common/enum/status-logical-game-result.enum';
@@ -6,6 +6,7 @@ import { GameResult } from '@entities/gameResult.entity';
 import { IcreateLogicalGameResult } from '@shared/interfaces/logicalGameResult.interface';
 import { GameResultRepository } from '../repositories/gameResult.repository';
 import { LogicalGameResultRepository } from '../repositories/logicalGameResult.repository';
+import { IgetHistoryAnswered } from '@shared/interfaces/gameResult.interface';
 
 @Injectable()
 export class LogicalGameResultService {
@@ -71,6 +72,7 @@ export class LogicalGameResultService {
       answerPlaceHold.index,
       gameResultUpdate.id,
     );
+
     return {
       message: checkCorrectAnswer.message,
       data: { logicalQuestionNext },
@@ -92,6 +94,7 @@ export class LogicalGameResultService {
       message: 'success',
     };
   }
+
   async isFinalQuestion(indexQuestion: number): Promise<boolean> {
     // Check final logical game ==> compare index question with total question
     const totalQuestion: number =
@@ -122,16 +125,16 @@ export class LogicalGameResultService {
 
   async getNextLogicalQuestion(indexQuestion: number, gameResultId: number) {
     // getLogicalGameResultByGameResult
-    const logicalGameResultHistory: LogicalGameResult[] =
-      await this.getHistoryAnswered(gameResultId);
+    const logicalAnsweredHistory = await this.getHistoryAnswered(gameResultId);
+    console.log('logicalGameResultHistory: ', logicalAnsweredHistory);
 
     // validate except logical played and avoid 3 identical answer to get next logical_question
     const logicalExceptAndCheckIdenticalAnswer = {
-      idLogicalListExcept: Object.values(logicalGameResultHistory).map(
-        (obj) => obj.logical_question_id,
+      idLogicalListExcept: Object.values(logicalAnsweredHistory).map(
+        (obj) => obj.logicalQuestionId,
       ),
-      checkIdenticalAnswer: Object.values(logicalGameResultHistory).map(
-        (obj) => obj.logical_question.correct_answer,
+      checkIdenticalAnswer: Object.values(logicalAnsweredHistory).map(
+        (obj) => obj.correctAnswer,
       ),
     };
     const logicalQuestionRenderNext =
@@ -165,20 +168,22 @@ export class LogicalGameResultService {
         where: { id: logicalGameResultId },
         relations: ['logical_question'],
       });
-    if (!result) {
-      throw new BadRequestException('Logical game result does not exit');
-    }
     return result;
   }
 
-  async getHistoryAnswered(gameResultId: number) {
+  async getHistoryAnswered(
+    gameResultId: number,
+  ): Promise<IgetHistoryAnswered[]> {
     const result: LogicalGameResult[] = await this.logicalAnswerRepository.find(
       {
         relations: ['logical_question'],
         where: { game_result_id: gameResultId },
       },
     );
-    return result;
+    return result.map((answer) => ({
+      logicalQuestionId: answer.logical_question_id,
+      correctAnswer: answer.logical_question.correct_answer,
+    }));
   }
 
   async createLogicalAnswer(payload: IcreateLogicalGameResult) {

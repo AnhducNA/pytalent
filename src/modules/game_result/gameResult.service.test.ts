@@ -1,143 +1,72 @@
-import { Test, TestingModule } from '@nestjs/testing';
-import { GameResult } from '@entities/gameResult.entity';
+import { LogicalGameResultRepository } from './repositories/logicalGameResult.repository';
+import { MemoryGameResultRepository } from './repositories/memoryGameResult.repository';
 import { GameResultService } from './services/gameResult.service';
-import { MemoryGameResult } from '@entities/memoryGameResult.entity';
-import { getRepositoryToken } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
-import { BadRequestException } from '@nestjs/common';
-import { StatusGameResultEnum } from '@common/enum/status-game-result.enum';
-import { LogicalGameResultService } from './services/logicalAnswer.service';
 
 describe('GameResultService', () => {
-  let service: GameResultService;
-  let gameResultRepository: Repository<GameResult>;
-  let logicalGameResultService: LogicalGameResultService;
+  describe('#getTotalPlayScoreByGameResult()', () => {
+    const table = [
+      {
+        params: { gameResultId: 1, gameId: 1 },
+        logicalScores: [10, 20],
+        memoryScores: [],
+        expected: 30,
+      },
+      {
+        params: { gameResultId: 2, gameId: 2 },
+        logicalScores: [],
+        memoryScores: [15, 25],
+        expected: 40,
+      },
+      {
+        params: { gameResultId: 3, gameId: 3 },
+        logicalScores: [],
+        memoryScores: [],
+        expected: 0,
+      },
+    ];
 
-  beforeEach(async () => {
-    const module: TestingModule = await Test.createTestingModule({
-      providers: [
-        GameResultService,
-        {
-          provide: getRepositoryToken(GameResult),
-          useClass: Repository,
-        },
-        {
-          provide: getRepositoryToken(MemoryGameResult),
-          useValue: Repository,
-        },
-        {
-          provide: LogicalGameResultService,
-          useValue: {},
-        },
-      ],
-    }).compile();
+    test.each(table)(
+      'params: $params',
+      async ({ params, logicalScores, memoryScores, expected }) => {
+        const logicalAnswerRepository = {
+          getScoresOfCorrectAnswer: jest.fn().mockResolvedValue(logicalScores),
+        } as unknown as LogicalGameResultRepository;
 
-    service = module.get<GameResultService>(GameResultService);
-    gameResultRepository = module.get<Repository<GameResult>>(
-      getRepositoryToken(GameResult),
+        const memoryAnswerRepository = {
+          getScoresOfCorrectAnswer: jest.fn().mockResolvedValue(memoryScores),
+        } as unknown as MemoryGameResultRepository;
+        const service = new GameResultService(
+          {} as any, // No need to mock gameResultRepository for this test
+          logicalAnswerRepository,
+          memoryAnswerRepository,
+        );
+
+        // Spy on the private method calls indirectly by using `jest.spyOn`
+        const logicalSpy = jest.spyOn(
+          logicalAnswerRepository,
+          'getScoresOfCorrectAnswer',
+        );
+        const memorySpy = jest.spyOn(
+          memoryAnswerRepository,
+          'getScoresOfCorrectAnswer',
+        );
+
+        const result = await service.getTotalPlayScoreByGameResult(
+          params.gameResultId,
+          params.gameId,
+        );
+
+        expect(result).toEqual(expected);
+
+        if (params.gameId === 1) {
+          expect(logicalSpy).toHaveBeenCalledWith(params.gameResultId);
+        } else if (params.gameId === 2) {
+          expect(memorySpy).toHaveBeenCalledWith(params.gameResultId);
+        } else {
+          expect(logicalSpy).not.toHaveBeenCalled();
+          expect(memorySpy).not.toHaveBeenCalled();
+        }
+      },
     );
-    logicalGameResultService = module.get<LogicalGameResultService>(
-      LogicalGameResultService,
-    );
-  });
-
-  describe('findAll', () => {
-    it('should return an array of game results', async () => {
-      const gameResults = [new GameResult(), new GameResult()];
-      jest.spyOn(gameResultRepository, 'find').mockResolvedValue(gameResults);
-
-      expect(await service.getAll()).toBe(gameResults);
-    });
-  });
-
-  describe('findAndValidateGameResult', () => {
-    it('should throw BadRequestException if ID is not provided', async () => {
-      await expect(service.findAndValidateGameResult(null)).rejects.toThrow(
-        BadRequestException,
-      );
-    });
-
-    it('should throw BadRequestException if the game is finished', async () => {
-      const gameResult = { id: 1, status: StatusGameResultEnum.FINISHED };
-      jest
-        .spyOn(gameResultRepository, 'findOne')
-        .mockResolvedValue(gameResult as GameResult);
-
-      await expect(service.findAndValidateGameResult(1000)).rejects.toThrow(
-        BadRequestException,
-      );
-    });
-
-    it('should throw BadRequestException if the game is paused', async () => {
-      const gameResult = { id: 1, status: StatusGameResultEnum.PAUSED };
-      jest
-        .spyOn(gameResultRepository, 'findOne')
-        .mockResolvedValue(gameResult as GameResult);
-
-      await expect(service.findAndValidateGameResult(78)).rejects.toThrow(
-        BadRequestException,
-      );
-    });
-
-    it('should throw BadRequestException if the game time is over', async () => {
-      const gameResult = {
-        id: 1,
-        status: StatusGameResultEnum.STARTED,
-        time_start: new Date(),
-      };
-      jest
-        .spyOn(gameResultRepository, 'findOne')
-        .mockResolvedValue(gameResult as GameResult);
-      jest.spyOn(service as any, 'validatePlayTime').mockResolvedValue(false);
-
-      await expect(service.findAndValidateGameResult(1)).rejects.toThrow(
-        BadRequestException,
-      );
-    });
-
-    it('should return the game result if all validations pass', async () => {
-      const gameResult = {
-        id: 1,
-        status: StatusGameResultEnum.STARTED,
-        time_start: new Date(),
-      };
-      jest
-        .spyOn(gameResultRepository, 'findOne')
-        .mockResolvedValue(gameResult as GameResult);
-      jest.spyOn(service as any, 'validatePlayTime').mockResolvedValue(true);
-
-      const result = await service.findAndValidateGameResult(1);
-      expect(result).toBe(gameResult);
-    });
-  });
-
-  describe('validatePlayTime', () => {
-    it('should return false if play time exceeds total game time', async () => {
-      const gameResult = { id: 1, time_start: new Date(Date.now() - 91000) };
-      const totalGameTime = 90000; // 90 seconds
-      jest.spyOn(service as any, 'getGameInfoByGameResult').mockResolvedValue({
-        game: { total_time: totalGameTime },
-      });
-
-      const result = await service.validatePlayTime(
-        gameResult.id,
-        gameResult.time_start,
-      );
-      expect(result).toBe(false);
-    });
-
-    it('should return true if play time is within total game time', async () => {
-      const gameResult = { id: 1, time_start: new Date(Date.now() - 80000) };
-      const totalGameTime = 90000; // 90 seconds
-      jest.spyOn(service as any, 'getGameInfoByGameResult').mockResolvedValue({
-        game: { total_time: totalGameTime },
-      });
-
-      const result = await (service as any).validatePlayTime(
-        gameResult.id,
-        gameResult.time_start,
-      );
-      expect(result).toBe(true);
-    });
   });
 });

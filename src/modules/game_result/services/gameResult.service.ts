@@ -1,8 +1,6 @@
-import { BadRequestException, Injectable } from '@nestjs/common';
-import { InjectRepository } from '@nestjs/typeorm';
+import { Injectable } from '@nestjs/common';
 import { DeleteResult } from 'typeorm';
 import { GameResult } from '@entities/gameResult.entity';
-import { MemoryGameResult } from '@entities/memoryGameResult.entity';
 import { StatusGameResultEnum } from '@enum/status-game-result.enum';
 import { LogicalGameResultRepository } from '../repositories/logicalGameResult.repository';
 import { GameResultRepository } from '../repositories/gameResult.repository';
@@ -12,7 +10,6 @@ import { MemoryGameResultRepository } from '../repositories/memoryGameResult.rep
 export class GameResultService {
   constructor(
     private gameResultRepository: GameResultRepository,
-    @InjectRepository(MemoryGameResult)
     private logicalAnswerRepository: LogicalGameResultRepository,
     private memoryAnswerRepository: MemoryGameResultRepository,
   ) {}
@@ -27,45 +24,6 @@ export class GameResultService {
 
   async delete(id: number) {
     return this.gameResultRepository.delete(id);
-  }
-
-  async findAndValidateGameResult(id: number): Promise<GameResult> {
-    if (!id) {
-      throw new BadRequestException('GameResult does not exit');
-    }
-    const gameResult: GameResult = await this.getOne(id);
-    // validate check gameResult finished or paused
-    if (gameResult.status === StatusGameResultEnum.FINISHED) {
-      throw new BadRequestException('Game completed');
-    }
-    if (gameResult.status === StatusGameResultEnum.PAUSED) {
-      throw new BadRequestException(
-        'Game was paused. You need to continue to play',
-      );
-    }
-
-    // validate check play_time > total_game_time
-    const validatePlayTime: boolean = await this.validatePlayTime(
-      id,
-      gameResult.time_start,
-    );
-
-    if (!validatePlayTime) {
-      throw new BadRequestException(`Game's time is over.`);
-    }
-
-    return gameResult;
-  }
-
-  async validatePlayTime(gameResultId: number, timeStart: Date) {
-    const newPlayTime = Date.now() - timeStart.getTime();
-    const totalGameTime = (await this.getGameInfoByGameResult(gameResultId))
-      .game.total_time;
-    if (newPlayTime > totalGameTime) {
-      // when the game time is up, set done for game_result
-      return false;
-    }
-    return true;
   }
 
   async getListGameResultOfCandidate(candidateId: number) {
@@ -84,28 +42,25 @@ export class GameResultService {
   }
 
   async getTotalPlayScoreByGameResult(gameResultId: number, gameId: number) {
-    let totalPlayScore = 0;
     switch (gameId) {
       case 1:
-        const logicalAnswerList =
-          await this.logicalAnswerRepository.getLogicalAnswerCorrectByGameResult(
+        const scoresOfCorrectAnswerInLogical: number[] =
+          await this.logicalAnswerRepository.getScoresOfCorrectAnswer(
             gameResultId,
           );
-        logicalAnswerList.map((item) => {
-          totalPlayScore += item.logical_question.score;
-        });
-        return totalPlayScore;
+        return scoresOfCorrectAnswerInLogical.reduce((acc, item) => {
+          return acc + item;
+        }, 0);
       case 2:
-        const memoryAnswerList =
-          await this.memoryAnswerRepository.getAnswerCorrectByGameResult(
+        const scoresOfCorrectAnswerInMemory: number[] =
+          await this.memoryAnswerRepository.getScoresOfCorrectAnswer(
             gameResultId,
           );
-        memoryAnswerList.map((item) => {
-          totalPlayScore += item.memory_game.score;
-        });
-        return totalPlayScore;
+        return scoresOfCorrectAnswerInMemory.reduce((acc, item) => {
+          return acc + item;
+        }, 0);
       default: {
-        return totalPlayScore;
+        return 0;
       }
     }
   }

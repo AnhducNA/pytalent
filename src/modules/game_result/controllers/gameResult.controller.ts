@@ -1,4 +1,5 @@
 import {
+  BadRequestException,
   Controller,
   Delete,
   Get,
@@ -84,6 +85,9 @@ export class GameResultController extends BaseController {
     const data = await this.logicalGameResultService.findLogicalGameResult(
       params.logicalGameResultId,
     );
+    if (!data) {
+      throw new BadRequestException('Logical game result does not exit');
+    }
     return this.successResponse({ data }, res);
   }
 
