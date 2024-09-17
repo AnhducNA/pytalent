@@ -52,14 +52,17 @@ export class MemoryGameResultRepository extends Repository<MemoryGameResult> {
     });
   }
 
-  async getAnswerCorrectByGameResult(gameResultId: number) {
-    return await this.createQueryBuilder('memory_game_result')
+  async getScoresOfCorrectAnswer(gameResultId: number) {
+    const memoryAnswers = await this.createQueryBuilder('memory_game_result')
       .select('memory_game_result.id')
       .addSelect('memory_game.score')
       .innerJoin('memory_game_result.memory_game', 'memory_game')
       .where(`memory_game_result.game_result_id = ${gameResultId}`)
       .andWhere(`memory_game_result.is_correct = 1`)
       .getMany();
+    return memoryAnswers.map((item) => {
+      return item.memory_game.score;
+    });
   }
 
   async updateTimeStartPlayLevel(id: number) {

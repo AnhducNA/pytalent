@@ -20,3 +20,8 @@ export interface createGameResultInterface {
   status: StatusGameResultEnum;
   time_start: Date;
 }
+
+export interface IgetHistoryAnswered {
+  logicalQuestionId: number;
+  correctAnswer: boolean;
+}

@@ -1,4 +1,5 @@
 import {
+  BadRequestException,
   Controller,
   Delete,
   Get,
@@ -16,7 +17,7 @@ import { RolesGuard } from '@guards/roles.guard';
 import { RolesDecorator } from '@shared/decorator/roles.decorator';
 import { RoleEnum } from '@enum/role.enum';
 import { JwtAuthGuard } from '@guards/jwt-auth.guard';
-import { LogicalGameResultService } from '../services/logicalGameResult.service';
+import { LogicalGameResultService } from '../services/logicalAnswer.service';
 import { IUserLogin } from '@shared/interfaces/user.interface';
 import { MemoryGameResultService } from '../services/memoryGameResult.service';
 
@@ -84,6 +85,9 @@ export class GameResultController extends BaseController {
     const data = await this.logicalGameResultService.findLogicalGameResult(
       params.logicalGameResultId,
     );
+    if (!data) {
+      throw new BadRequestException('Logical game result does not exit');
+    }
     return this.successResponse({ data }, res);
   }
 

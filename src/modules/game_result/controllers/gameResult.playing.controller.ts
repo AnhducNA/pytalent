@@ -13,7 +13,7 @@ import { BaseController } from '@modules/app/base.controller';
 import { JwtAuthGuard } from '@guards/jwt-auth.guard';
 import { Response } from 'express';
 import { CreateGameResultDto } from '@modules/game_result/createGameResult.dto';
-import { LogicalGameResultService } from '../services/logicalGameResult.service';
+import { LogicalGameResultService } from '../services/logicalAnswer.service';
 import { MemoryGameResultService } from '../services/memoryGameResult.service';
 import { GameResultPlayingService } from '../services/gameResult.playing.service';
 

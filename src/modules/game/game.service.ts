@@ -51,6 +51,7 @@ export class GameService {
     });
     return parseInt(gameLogical.total_question);
   }
+
   async getLogicalQuestionRender(id_except: any[], check_identical: any[]) {
     // const id_except = [
     //   1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17,

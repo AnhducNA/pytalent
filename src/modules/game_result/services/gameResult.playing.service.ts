@@ -82,6 +82,7 @@ export class GameResultPlayingService {
         return {
           status: true,
           message: 'Game completed.',
+          data: gameResult,
         };
       case StatusGameResultEnum.STARTED:
       case StatusGameResultEnum.PAUSED:
