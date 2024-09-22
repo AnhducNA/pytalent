@@ -7,13 +7,14 @@ import { LogicalQuestion } from '@entities/logicalQuestion.entity';
 import { MemoryData } from '@entities/memoryData.entity';
 import { GameLogicalController } from '@modules/game/game.logical.controller';
 import { GameMemoryController } from '@modules/game/game.memory.controller';
+import { GameRepository } from './game.repository';
 
 @Module({
   imports: [
     TypeOrmModule.forFeature([Game, LogicalQuestion, MemoryData, MemoryData]),
   ],
   controllers: [GameController, GameLogicalController, GameMemoryController],
-  providers: [GameService],
+  providers: [GameService, GameRepository],
   exports: [GameService],
 })
 export class GameModule {}

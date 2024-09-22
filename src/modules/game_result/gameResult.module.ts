@@ -20,6 +20,7 @@ import { LogicalGameResultRepository } from './repositories/logicalGameResult.re
 import { AssessmentRepository } from '@modules/assessment/assessment.repository';
 import { MemoryGameResultRepository } from './repositories/memoryGameResult.repository';
 import { GameResultPlayingService } from './services/gameResult.playing.service';
+import { GameRepository } from '@modules/game/game.repository';
 
 @Module({
   imports: [
@@ -45,6 +46,7 @@ import { GameResultPlayingService } from './services/gameResult.playing.service'
     LogicalGameResultService,
     MemoryGameResultService,
     GameResultPlayingService,
+    GameRepository,
     AssessmentRepository,
     GameResultRepository,
     LogicalGameResultRepository,

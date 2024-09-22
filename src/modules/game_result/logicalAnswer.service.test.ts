@@ -1,123 +1,95 @@
-import { Test, TestingModule } from '@nestjs/testing';
 import { GameService } from '@modules/game/game.service';
 import { LogicalGameResultService } from './services/logicalAnswer.service';
 import { LogicalGameResultRepository } from './repositories/logicalGameResult.repository';
 import { GameResultRepository } from './repositories/gameResult.repository';
-import { LogicalGameResult } from '@entities/logicalGameResult.entity';
 
 describe('LogicalGameResultService', () => {
-  let service: LogicalGameResultService;
-  let logicalAnswerRepository: jest.Mocked<LogicalGameResultRepository>;
-  let gameService: jest.Mocked<GameService>;
-
-  beforeEach(async () => {
-    const module: TestingModule = await Test.createTestingModule({
-      providers: [
-        LogicalGameResultService,
-        {
-          provide: LogicalGameResultRepository,
-          useValue: {
-            getOne: jest.fn(),
-            updateStatusAnswered: jest.fn(),
-            findOne: jest.fn(),
-            find: jest.fn(),
-            save: jest.fn(),
-          },
-        },
-        {
-          provide: GameResultRepository,
-          useValue: {
-            getOne: jest.fn(),
-            validateGameResult: jest.fn(),
-            updateFinishGame: jest.fn(),
-            updatePlayTimeAndScore: jest.fn(),
-          },
-        },
-        {
-          provide: GameService,
-          useValue: {
-            getTotalQuestionGameLogical: jest.fn(),
-            getLogicalQuestionRender: jest.fn(),
-          },
-        },
-      ],
-    }).compile();
-
-    service = module.get<LogicalGameResultService>(LogicalGameResultService);
-    logicalAnswerRepository = module.get<LogicalGameResultRepository>(
-      LogicalGameResultRepository,
-    ) as jest.Mocked<LogicalGameResultRepository>;
-    gameService = module.get<GameService>(
-      GameService,
-    ) as jest.Mocked<GameService>;
-  });
-
-  describe('#validateLogicalQuestion()', () => {
-    const testCases = [
+  describe('#validateLogicalAnswer()', () => {
+    const table = [
       {
-        params: { indexQuestion: 5 },
-        setup: async () => {
-          gameService.getTotalQuestionGameLogical.mockResolvedValue(20);
-        },
-        expected: {
-          status: true,
-          message: 'success',
-        },
-      },
-      {
-        params: { indexQuestion: 50 },
-        setup: async () => {
-          gameService.getTotalQuestionGameLogical.mockResolvedValue(20);
-        },
+        idLogicalAnswer: 1,
+        indexQuestion: 5,
+        totalQuestion: 4,
         expected: {
           status: false,
           message: 'You have completed the game. End game.',
         },
       },
+      {
+        idLogicalAnswer: 1,
+        indexQuestion: 3,
+        totalQuestion: 5,
+        expected: {
+          status: true,
+          message: 'success',
+        },
+      },
     ];
 
-    test.each(testCases)(
-      'params: $params',
-      async ({ params, setup, expected }) => {
-        await setup(); // Mock data setup
-        const result = await service.validateLogicalQuestion(
-          params.indexQuestion,
+    test.each(table)(
+      'indexQuestion: $indexQuestion and totalQuestion: $totalQuestion',
+      async ({ idLogicalAnswer, indexQuestion, totalQuestion, expected }) => {
+        const gameService = {
+          getTotalQuestionGameLogical: jest
+            .fn()
+            .mockResolvedValue(totalQuestion),
+        } as unknown as GameService;
+
+        const service = new LogicalGameResultService(
+          {} as any, // Not used in this test
+          {} as any, // Not used in this test
+          gameService,
+        );
+
+        const result = await service.validateLogicalAnswer(
+          idLogicalAnswer,
+          indexQuestion,
         );
         expect(result).toEqual(expected);
+        expect(gameService.getTotalQuestionGameLogical).toHaveBeenCalled();
       },
     );
   });
 
   describe('#isFinalQuestion()', () => {
-    const testCases = [
+    const table = [
       {
-        params: { indexQuestion: 20 },
-        setup: async () => {
-          gameService.getTotalQuestionGameLogical.mockResolvedValue(20);
-        },
+        indexQuestion: 5,
+        totalQuestion: 5,
         expected: true,
       },
       {
-        params: { indexQuestion: 15 },
-        setup: async () => {
-          gameService.getTotalQuestionGameLogical.mockResolvedValue(20);
-        },
+        indexQuestion: 3,
+        totalQuestion: 5,
         expected: false,
       },
     ];
 
-    test.each(testCases)(
-      'params: $params',
-      async ({ params, setup, expected }) => {
-        await setup(); // Mock setup
-        const result = await service.isFinalQuestion(params.indexQuestion);
-        expect(result).toEqual(expected);
+    test.each(table)(
+      'indexQuestion: $indexQuestion and totalQuestion: $totalQuestion',
+      async ({ indexQuestion, totalQuestion, expected }) => {
+        const gameService = {
+          getTotalQuestionGameLogical: jest
+            .fn()
+            .mockResolvedValue(totalQuestion),
+        } as unknown as GameService;
+
+        const service = new LogicalGameResultService(
+          {} as any, // Not needed for this test
+          {} as any, // Not needed for this test
+          gameService,
+        );
+
+        const result = await service.isFinalQuestion(indexQuestion);
+        expect(result).toBe(expected);
+        expect(gameService.getTotalQuestionGameLogical).toHaveBeenCalled();
       },
     );
   });
 
+  // Test for checkCorrectAnswer function
   describe('#checkCorrectAnswer()', () => {
-    const testCases = [
+    const table = [
       {
         params: {
           answerPlay: true,
@@ -128,74 +100,109 @@ describe('LogicalGameResultService', () => {
         expected: {
           isCorrect: true,
           message: 'Your answer is true',
-          data: { newPlayScore: 60 }, // Score should increase by 10
+          data: { newPlayScore: 60 },
         },
       },
       {
         params: {
           answerPlay: false,
-          play_score: 50,
+          play_score: 40,
           correctAnswer: true,
           scoreQuestion: 10,
         },
         expected: {
           isCorrect: false,
           message: 'Your answer is false',
-          data: { newPlayScore: 50 }, // Score remains unchanged
+          data: { newPlayScore: 40 },
+        },
+      },
+      {
+        params: {
+          answerPlay: true,
+          play_score: 30,
+          correctAnswer: false,
+          scoreQuestion: 5,
+        },
+        expected: {
+          isCorrect: false,
+          message: 'Your answer is false',
+          data: { newPlayScore: 30 },
         },
       },
     ];
 
-    test.each(testCases)('params: $params', async ({ params, expected }) => {
+    test.each(table)('params: $params', async ({ params, expected }) => {
+      const service = new LogicalGameResultService(
+        {} as any, // Not needed for this test
+        {} as any, // Not needed for this test
+        {} as any, // Not needed for this test
+      );
+
       const result = await service.checkCorrectAnswer(
         params.answerPlay,
         params.play_score,
         params.correctAnswer,
         params.scoreQuestion,
-      ); // Call the method being tested
-      expect(result).toEqual(expected); // Assert the result
+      );
+      expect(result).toEqual(expected);
     });
   });
+
   describe('#getHistoryAnswered()', () => {
-    const testCases = [
+    const table = [
       {
-        params: { gameResultId: 1 },
-        setup: async () => {
-          logicalAnswerRepository.find.mockResolvedValue([
-            {
-              id: 101,
-              game_result_id: 1,
-              logical_question_id: 201,
-              logical_question: { correct_answer: true },
-            },
-            {
-              id: 102,
-              game_result_id: 1,
-              logical_question_id: 202,
-              logical_question: { correct_answer: false },
-            },
-          ] as LogicalGameResult[]);
-        },
+        gameResultId: 1,
+        findResult: [
+          {
+            logical_question_id: 101,
+            logical_question: { correct_answer: true },
+          },
+          {
+            logical_question_id: 102,
+            logical_question: { correct_answer: false },
+          },
+        ],
         expected: [
-          { logicalQuestionId: 201, correctAnswer: true },
-          { logicalQuestionId: 202, correctAnswer: false },
+          { logicalQuestionId: 101, correctAnswer: true },
+          { logicalQuestionId: 102, correctAnswer: false },
         ],
       },
       {
-        params: { gameResultId: 2 },
-        setup: async () => {
-          logicalAnswerRepository.find.mockResolvedValue([]);
-        },
+        gameResultId: 2,
+        findResult: [
+          {
+            logical_question_id: 201,
+            logical_question: { correct_answer: false },
+          },
+        ],
+        expected: [{ logicalQuestionId: 201, correctAnswer: false }],
+      },
+      {
+        gameResultId: 3,
+        findResult: [],
         expected: [],
       },
     ];
 
-    test.each(testCases)(
-      'params: $params',
-      async ({ params, setup, expected }) => {
-        await setup();
-        const result = await service.getHistoryAnswered(params.gameResultId);
+    test.each(table)(
+      'gameResultId: $gameResultId',
+      async ({ gameResultId, findResult, expected }) => {
+        const logicalAnswerRepository = {
+          find: jest.fn().mockResolvedValue(findResult),
+        } as unknown as LogicalGameResultRepository;
+
+        const service = new LogicalGameResultService(
+          logicalAnswerRepository,
+          {} as any, // No need to mock other repositories for this test
+          {} as any, // No need to mock gameService for this test
+        );
+
+        const result = await service.getHistoryAnswered(gameResultId);
         expect(result).toEqual(expected);
+        expect(logicalAnswerRepository.find).toHaveBeenCalledWith({
+          relations: ['logical_question'],
+          where: { game_result_id: gameResultId },
+        });
       },
     );
   });

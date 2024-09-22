@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { BadRequestException, Injectable } from '@nestjs/common';
 import { LogicalGameResult } from '@entities/logicalGameResult.entity';
 import { GameService } from '@modules/game/game.service';
 import { StatusLogicalGameResultEnum } from '@common/enum/status-logical-game-result.enum';
@@ -30,7 +30,8 @@ export class LogicalGameResultService {
       answerPlaceHold.game_result_id,
     );
 
-    const validateResponse = await this.validateLogicalQuestion(
+    const validateResponse = await this.validateLogicalAnswer(
+      answerPlaceHold.id,
       answerPlaceHold.index,
     );
     // have validate => end game
@@ -79,7 +80,10 @@ export class LogicalGameResultService {
     };
   }
 
-  async validateLogicalQuestion(indexQuestion: number) {
+  async validateLogicalAnswer(id: number, indexQuestion: number) {
+    if (!id) {
+      throw new BadRequestException('Logical answer does not exit');
+    }
     // validate check index of question answer > total's question in game
     const totalQuestion: number =
       await this.gameService.getTotalQuestionGameLogical();

@@ -4,7 +4,7 @@ import { GameResultService } from './services/gameResult.service';
 
 describe('GameResultService', () => {
   describe('#getTotalPlayScoreByGameResult()', () => {
-    const table = [
+    const testCases = [
       {
         params: { gameResultId: 1, gameId: 1 },
         logicalScores: [10, 20],
@@ -25,7 +25,7 @@ describe('GameResultService', () => {
       },
     ];
 
-    test.each(table)(
+    test.each(testCases)(
       'params: $params',
       async ({ params, logicalScores, memoryScores, expected }) => {
         const logicalAnswerRepository = {
