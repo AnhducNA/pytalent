@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { BadRequestException, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Assessment } from '@entities/assessment.entity';
 import { DeleteResult, Repository } from 'typeorm';
@@ -6,12 +6,12 @@ import { AssessmentGame } from '@entities/assessmentGame.entity';
 import { AssessmentCandidate } from '@entities/assessmentCandidate.entity';
 import { CreateAssessmentInterface } from '@interfaces/assessment.interface';
 import { GameResult } from '@entities/gameResult.entity';
+import { AssessmentRepository } from './assessment.repository';
 
 @Injectable()
 export class AssessmentService {
   constructor(
-    @InjectRepository(Assessment)
-    private readonly assessmentRepository: Repository<Assessment>,
+    private readonly assessmentRepository: AssessmentRepository,
     @InjectRepository(AssessmentGame)
     private readonly assessmentGameRepository: Repository<AssessmentGame>,
     @InjectRepository(AssessmentCandidate)
@@ -37,27 +37,39 @@ export class AssessmentService {
     });
   }
 
-  async getAssessmentByHrId(hr_id: number) {
-    return this.assessmentRepository
-      .createQueryBuilder('assessment')
-      .where('hr_id = :hr_id', { hr_id: hr_id })
-      .getMany();
+  async getByHr(hrId: number) {
+    const data = await this.assessmentRepository.find({
+      where: { hr_id: hrId },
+      order: { id: 'DESC' },
+    });
+    return data;
   }
 
-  async getAssessmentByCandidateId(candidate_id: number) {
-    return this.assessmentCandidateRepository
-      .createQueryBuilder('assessment_candidate')
-      .select('assessment_candidate.id')
-      .addSelect('assessment_candidate.assessment_id')
-      .where('candidate_id = :candidate_id', { candidate_id: candidate_id })
-      .getMany();
+  async getByCandidate(candidateId: number): Promise<
+    {
+      name: string;
+      time_start: Date;
+      time_end: Date;
+    }[]
+  > {
+    await this.validateId(candidateId);
+    const data = await this.assessmentRepository.find({
+      select: ['id', 'name', 'time_start', 'time_end'],
+      relations: ['games'],
+      where: { candidates: { id: candidateId } },
+    });
+    return data;
   }
 
-  async getAssessmentGameByAssessmentId(assessment_id: number) {
+  async validateId(id: number) {
+    if (!id) throw new BadRequestException('Id not found');
+    return true;
+  }
+  async getWithGame(id: number) {
     return this.assessmentGameRepository
       .createQueryBuilder('assessment_game')
       .select('assessment_game.game_id')
-      .where('assessment_id = :assessment_id', { assessment_id: assessment_id })
+      .where('assessment_id = :assessment_id', { assessment_id: id })
       .getMany();
   }
 

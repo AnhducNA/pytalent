@@ -51,25 +51,15 @@ export class AssessmentController extends BaseController {
   )
   getAssessmentByHrId(@Request() req: any) {
     const hr_id = req['userLogin'].id;
-    return this.assessmentService.getAssessmentByHrId(hr_id);
+    return this.assessmentService.getByHr(hr_id);
   }
 
   @Get('assessment-by-candidate_login')
   @UseGuards(JwtAuthGuard)
-  async getAssessmentByCandidateId(@Req() req: any, @Res() res: any) {
-    const candidate_login = req['userLogin'];
-    return this.successResponse(
-      {
-        data: {
-          candidate_login: candidate_login,
-          assessment_candidate:
-            await this.assessmentService.getAssessmentByCandidateId(
-              candidate_login.id,
-            ),
-        },
-      },
-      res,
-    );
+  async getAssessmentByCandidateId(@Req() req: any, @Res() res: Response) {
+    const candidateLogin = req['userLogin'];
+    const data = await this.assessmentService.getByCandidate(candidateLogin.id);
+    return res.json(data);
   }
 
   @Get(':id')
@@ -80,8 +70,7 @@ export class AssessmentController extends BaseController {
   async findOne(@Req() req: any, @Res() res: any) {
     const id = req.params.id;
     const assessment_result = await this.assessmentService.findOne(id);
-    const assessment_game_list =
-      await this.assessmentService.getAssessmentGameByAssessmentId(id);
+    const assessment_game_list = await this.assessmentService.getWithGame(id);
     const assessment_candidate_list =
       await this.assessmentService.get_assessment_candidate_and_game_result_by_assessment_id(
         id,

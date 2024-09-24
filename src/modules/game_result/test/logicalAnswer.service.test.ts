@@ -1,7 +1,6 @@
 import { GameService } from '@modules/game/game.service';
-import { LogicalGameResultService } from './services/logicalAnswer.service';
-import { LogicalGameResultRepository } from './repositories/logicalGameResult.repository';
-import { GameResultRepository } from './repositories/gameResult.repository';
+import { LogicalGameResultService } from '../services/logicalAnswer.service';
+import { LogicalGameResultRepository } from '../repositories/logicalGameResult.repository';
 
 describe('LogicalGameResultService', () => {
   describe('#validateLogicalAnswer()', () => {
@@ -54,13 +53,13 @@ describe('LogicalGameResultService', () => {
   describe('#isFinalQuestion()', () => {
     const table = [
       {
-        indexQuestion: 5,
-        totalQuestion: 5,
+        indexQuestion: 20,
+        totalQuestion: 20,
         expected: true,
       },
       {
-        indexQuestion: 3,
-        totalQuestion: 5,
+        indexQuestion: 18,
+        totalQuestion: 20,
         expected: false,
       },
     ];
@@ -75,8 +74,8 @@ describe('LogicalGameResultService', () => {
         } as unknown as GameService;
 
         const service = new LogicalGameResultService(
-          {} as any, // Not needed for this test
-          {} as any, // Not needed for this test
+          {} as any,
+          {} as any,
           gameService,
         );
 
@@ -133,9 +132,9 @@ describe('LogicalGameResultService', () => {
 
     test.each(table)('params: $params', async ({ params, expected }) => {
       const service = new LogicalGameResultService(
-        {} as any, // Not needed for this test
-        {} as any, // Not needed for this test
-        {} as any, // Not needed for this test
+        {} as any,
+        {} as any,
+        {} as any,
       );
 
       const result = await service.checkCorrectAnswer(

@@ -2,12 +2,12 @@ import {
   Entity,
   PrimaryGeneratedColumn,
   Column,
-  OneToMany,
   ManyToMany,
   JoinTable,
 } from 'typeorm';
 import { BaseEntity } from './base.entity';
 import { User } from './user.entity';
+import { Game } from './game.entity';
 
 @Entity()
 export class Assessment extends BaseEntity {
@@ -39,4 +39,18 @@ export class Assessment extends BaseEntity {
     },
   })
   candidates: User[];
+
+  @ManyToMany(() => Game)
+  @JoinTable({
+    name: 'assessment_game',
+    joinColumn: {
+      name: 'assessment_id',
+      referencedColumnName: 'id',
+    },
+    inverseJoinColumn: {
+      name: 'game_id',
+      referencedColumnName: 'id',
+    },
+  })
+  games: Game[];
 }

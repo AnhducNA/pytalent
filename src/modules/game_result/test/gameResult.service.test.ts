@@ -1,6 +1,6 @@
-import { LogicalGameResultRepository } from './repositories/logicalGameResult.repository';
-import { MemoryGameResultRepository } from './repositories/memoryGameResult.repository';
-import { GameResultService } from './services/gameResult.service';
+import { LogicalGameResultRepository } from '../repositories/logicalGameResult.repository';
+import { MemoryGameResultRepository } from '../repositories/memoryGameResult.repository';
+import { GameResultService } from '../services/gameResult.service';
 
 describe('GameResultService', () => {
   describe('#getTotalPlayScoreByGameResult()', () => {

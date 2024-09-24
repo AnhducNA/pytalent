@@ -3,6 +3,7 @@ import { createMemoryGameResultInterface } from '@shared/interfaces/memoryGameRe
 import { MemoryGameResultRepository } from '../repositories/memoryGameResult.repository';
 import { GameResultRepository } from '../repositories/gameResult.repository';
 import { StatusGameResultEnum } from '@common/enum/status-game-result.enum';
+import { MemoryGameResult } from '@entities/memoryGameResult.entity';
 import { arraysEqualWithoutLength } from '@helper/function';
 
 @Injectable()
@@ -12,8 +13,8 @@ export class MemoryGameResultService {
     private gameResultRepository: GameResultRepository,
   ) {}
 
-  async getOneMemoryAnswer(id: number) {
-    return this.memoryAnswerRepository.findOne({
+  async getOneMemoryAnswer(id: number): Promise<MemoryGameResult> {
+    return await this.memoryAnswerRepository.findOne({
       relations: ['memory_game'],
       where: { id },
     });
