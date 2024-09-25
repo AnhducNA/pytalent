@@ -1,6 +1,6 @@
-import { LogicalGameResultRepository } from '../repositories/logicalGameResult.repository';
-import { MemoryGameResultRepository } from '../repositories/memoryGameResult.repository';
-import { GameResultService } from '../services/gameResult.service';
+import { LogicalGameResultRepository } from '../../../src/modules/game_result/repositories/logicalGameResult.repository';
+import { MemoryGameResultRepository } from '../../../src/modules/game_result/repositories/memoryGameResult.repository';
+import { GameResultService } from '../../../src/modules/game_result/services/gameResult.service';
 
 describe('GameResultService', () => {
   describe('#getTotalPlayScoreByGameResult()', () => {

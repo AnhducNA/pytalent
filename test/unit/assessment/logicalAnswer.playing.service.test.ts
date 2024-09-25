@@ -1,7 +1,7 @@
 import { GameService } from '@modules/game/game.service';
-import { LogicalGameResultService } from '../services/logicalAnswer.service';
-import { LogicalGameResultRepository } from '../repositories/logicalGameResult.repository';
-import { GameResultRepository } from '../repositories/gameResult.repository';
+import { LogicalGameResultService } from '../../../src/modules/game_result/services/logicalAnswer.service';
+import { LogicalGameResultRepository } from '../../../src/modules/game_result/repositories/logicalGameResult.repository';
+import { GameResultRepository } from '../../../src/modules/game_result/repositories/gameResult.repository';
 
 describe('LogicalGameResultService', () => {
   describe('#calculatePlayingLogical()', () => {
@@ -120,6 +120,7 @@ describe('LogicalGameResultService', () => {
             gameResultUpdate.id,
           );
         }
+
         expect(
           gameResultRepository.updatePlayTimeAndScore,
         ).toHaveBeenCalledWith({
