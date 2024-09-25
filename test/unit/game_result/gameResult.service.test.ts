@@ -36,7 +36,7 @@ describe('GameResultService', () => {
           getScoresOfCorrectAnswer: jest.fn().mockResolvedValue(memoryScores),
         } as unknown as MemoryGameResultRepository;
         const service = new GameResultService(
-          {} as any, // No need to mock gameResultRepository for this test
+          {} as any,
           logicalAnswerRepository,
           memoryAnswerRepository,
         );

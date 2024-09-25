@@ -39,7 +39,6 @@ describe('LogicalGameResultService', () => {
           {} as any, // Not used in this test
           gameService,
         );
-
         const result = await service.validateLogicalAnswer(
           idLogicalAnswer,
           indexQuestion,
@@ -189,13 +188,11 @@ describe('LogicalGameResultService', () => {
         const logicalAnswerRepository = {
           find: jest.fn().mockResolvedValue(findResult),
         } as unknown as LogicalGameResultRepository;
-
         const service = new LogicalGameResultService(
           logicalAnswerRepository,
           {} as any, // No need to mock other repositories for this test
           {} as any, // No need to mock gameService for this test
         );
-
         const result = await service.getHistoryAnswered(gameResultId);
         expect(result).toEqual(expected);
         expect(logicalAnswerRepository.find).toHaveBeenCalledWith({
