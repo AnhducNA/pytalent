@@ -4,13 +4,13 @@ function makeModuleNameMapper(srcPath, tsconfigPath) {
 
   const aliases = {};
 
-  delete paths['@*']
+  delete paths['@*'];
   Object.keys(paths).forEach((item) => {
     const key = item.replace('/*', '/(.*)');
     const path = paths[item][0].replace('/*', '/$1');
     aliases[key] = srcPath + '/' + path;
   });
-  console.log(aliases)
+  console.log(aliases);
 
   return aliases;
 }
@@ -19,6 +19,7 @@ const TS_CONFIG_PATH = './tsconfig.json';
 const SRC_PATH = '<rootDir>/src';
 
 const config = {
+  preset: "ts-jest",
   moduleNameMapper: makeModuleNameMapper(SRC_PATH, TS_CONFIG_PATH),
   moduleDirectories: ['node_modules'],
   testMatch: ['**/*.test.+(ts|tsx|js)'],
@@ -29,4 +30,3 @@ const config = {
 };
 
 module.exports = config;
-

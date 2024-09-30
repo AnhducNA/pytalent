@@ -69,7 +69,13 @@ export class GameResultService {
     candidateId: number,
     gameResultId: number,
   ) {
-    const gameResult = await this.gameResultRepository.getOneByCandidate(
+    const gameResult: {
+      id: number;
+      game_id: number;
+      play_time: number;
+      play_score: number;
+      status: StatusGameResultEnum;
+    } = await this.gameResultRepository.getInfoPlayed(
       gameResultId,
       candidateId,
     );
@@ -80,16 +86,16 @@ export class GameResultService {
             gameResultId,
             candidateId,
           );
-        return { gameResult, logicalAnswerHistory };
+        return { gameResult, historyPlay: logicalAnswerHistory };
       case 2:
         const memoryAnswerHistory =
           await this.memoryAnswerRepository.getByGameResultAndCandidate(
             gameResultId,
             candidateId,
           );
-        return { gameResult, memoryAnswerHistory };
+        return { gameResult, historyPlay: memoryAnswerHistory };
     }
-    return { candidateId, gameResultId };
+    return { gameResult, historyPlay: {} };
   }
 
   async deleteGameResultByAssessmentId(

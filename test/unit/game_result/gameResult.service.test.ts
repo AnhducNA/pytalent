@@ -1,10 +1,10 @@
-import { LogicalGameResultRepository } from './repositories/logicalGameResult.repository';
-import { MemoryGameResultRepository } from './repositories/memoryGameResult.repository';
-import { GameResultService } from './services/gameResult.service';
+import { LogicalGameResultRepository } from '../../../src/modules/game_result/repositories/logicalGameResult.repository';
+import { MemoryGameResultRepository } from '../../../src/modules/game_result/repositories/memoryGameResult.repository';
+import { GameResultService } from '../../../src/modules/game_result/services/gameResult.service';
 
 describe('GameResultService', () => {
   describe('#getTotalPlayScoreByGameResult()', () => {
-    const table = [
+    const testCases = [
       {
         params: { gameResultId: 1, gameId: 1 },
         logicalScores: [10, 20],
@@ -25,7 +25,7 @@ describe('GameResultService', () => {
       },
     ];
 
-    test.each(table)(
+    test.each(testCases)(
       'params: $params',
       async ({ params, logicalScores, memoryScores, expected }) => {
         const logicalAnswerRepository = {
@@ -36,7 +36,7 @@ describe('GameResultService', () => {
           getScoresOfCorrectAnswer: jest.fn().mockResolvedValue(memoryScores),
         } as unknown as MemoryGameResultRepository;
         const service = new GameResultService(
-          {} as any, // No need to mock gameResultRepository for this test
+          {} as any,
           logicalAnswerRepository,
           memoryAnswerRepository,
         );

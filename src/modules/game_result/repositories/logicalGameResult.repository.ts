@@ -1,6 +1,6 @@
 import { StatusLogicalGameResultEnum } from '@common/enum/status-logical-game-result.enum';
 import { LogicalGameResult } from '@entities/logicalGameResult.entity';
-import { BadRequestException, Injectable } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { IcreateLogicalGameResult } from '@shared/interfaces/logicalGameResult.interface';
 import { DataSource, Repository } from 'typeorm';
 
@@ -15,9 +15,6 @@ export class LogicalGameResultRepository extends Repository<LogicalGameResult> {
       where: { id },
       relations: ['logical_question'],
     });
-    if (!data) {
-      throw new BadRequestException('Logical answer does not exit');
-    }
     return data;
   }
   async createLogicalAnswer(payload: IcreateLogicalGameResult) {

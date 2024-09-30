@@ -18,8 +18,15 @@ export class GameResultRepository extends Repository<GameResult> {
     return gameResult;
   }
 
-  async getOneByCandidate(id: number, candidateId: number) {
-    const data = await this.findOne({
+  async getInfoPlayed(id: number, candidateId: number) {
+    const data: {
+      id: number;
+      game_id: number;
+      play_time: number;
+      play_score: number;
+      status: StatusGameResultEnum;
+    } = await this.findOne({
+      select: ['id', 'game_id', 'play_time', 'play_score', 'status'],
       where: { id, candidate_id: candidateId },
     });
     if (!data) {
@@ -27,14 +34,23 @@ export class GameResultRepository extends Repository<GameResult> {
     }
     return data;
   }
+
   async createGameResult(payload: createGameResultInterface) {
     return await this.save(payload);
   }
+
   async validateGameResult(id: number) {
     if (!id) {
       throw new BadRequestException('GameResult does not exit');
     }
-    const gameResult: GameResult = await this.findOne({ where: { id } });
+    const gameResult: {
+      game_id: number;
+      status: StatusGameResultEnum;
+      time_start: Date;
+    } = await this.findOne({
+      select: ['game_id', 'time_start', 'status'],
+      where: { id },
+    });
     // validate check gameResult finished or paused
     if (gameResult.status === StatusGameResultEnum.FINISHED) {
       throw new BadRequestException('Game completed');
@@ -49,13 +65,21 @@ export class GameResultRepository extends Repository<GameResult> {
     const validatePlayTime: boolean = await this.validatePlayTime(
       id,
       gameResult.time_start,
+      gameResult.game_id,
     );
     if (!validatePlayTime) {
       throw new BadRequestException(`Game's time is over.`);
     }
   }
 
-  async validatePlayTime(gameResultId: number, timeStart: Date) {
+  async validatePlayTime(
+    gameResultId: number,
+    timeStart: Date,
+    gameId: number,
+  ) {
+    if (gameId === 1) {
+      return false;
+    }
     const newPlayTime = Date.now() - timeStart.getTime();
     const totalGameTime = await this.getTotalGameTime(gameResultId);
     if (newPlayTime > totalGameTime) {
@@ -65,12 +89,12 @@ export class GameResultRepository extends Repository<GameResult> {
     return true;
   }
 
-  async getTotalGameTime(gameResultId: number): Promise<number> {
+  async getTotalGameTime(id: number): Promise<number> {
     const gameResult = await this.createQueryBuilder('game_result')
       .select('game_result.id', 'game_result_id')
       .addSelect(['game.total_time', 'game.total_question'])
       .innerJoin('game_result.game', 'game')
-      .where('game_result.id = :id', { id: gameResultId })
+      .where('game_result.id = :id', { id })
       .getOne();
     return gameResult.game.total_time;
   }
